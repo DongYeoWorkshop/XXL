@@ -23,16 +23,20 @@ export function initSecretModule() {
     const reportCloseBtn = document.getElementById('report-close-btn');
     const reportSubmitBtn = document.getElementById('report-submit-btn');
     const reportText = document.getElementById('report-text');
+    const charCount = document.getElementById('char-count');
 
     // 1. 비밀 페이지 진입 (제목 5번 클릭)
     if (titleEl) {
         titleEl.addEventListener('click', async () => {
             clickCount++;
             clearTimeout(clickTimer);
-            clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
+            
+            // 0.8초 안에 다음 클릭이 없으면 카운트 초기화 (빠른 연타 필요)
+            clickTimer = setTimeout(() => { clickCount = 0; }, 800);
 
             if (clickCount >= 5) {
                 clickCount = 0;
+                clearTimeout(clickTimer); // 성공 시 타이머 완전 제거
                 const pw = prompt("관리자 암호를 입력하세요.");
                 if (pw === null) return;
 
@@ -75,7 +79,12 @@ export function initSecretModule() {
 
     // 2. 설정 및 메모 저장 로직
     saveConfigBtn.onclick = () => {
-        localStorage.setItem('dyst_google_sheet_url', sheetViewInput.value.trim());
+        let url = sheetViewInput.value.trim();
+        if (url && !url.startsWith('http')) {
+            url = 'https://' + url;
+            sheetViewInput.value = url;
+        }
+        localStorage.setItem('dyst_google_sheet_url', url);
         showToast("설정이 저장되었습니다.");
         renderLocalReports(); // 링크 갱신
     };
@@ -86,10 +95,26 @@ export function initSecretModule() {
     };
 
     // 3. 제보하기 로직
-    reportOpenBtn.onclick = () => {
+    const openReportModal = () => {
         reportModal.style.display = 'flex';
         reportText.value = '';
+        if (charCount) charCount.textContent = '0 / 200';
     };
+
+    if (reportOpenBtn) reportOpenBtn.onclick = openReportModal;
+    
+    // 초기 화면의 제보 칸 클릭 이벤트 추가
+    const landingReportBtn = document.getElementById('landing-report-btn');
+    if (landingReportBtn) landingReportBtn.onclick = openReportModal;
+
+    // 실시간 글자 수 체크
+    if (reportText && charCount) {
+        reportText.oninput = () => {
+            const len = reportText.value.length;
+            charCount.textContent = `${len} / 200`;
+            charCount.style.color = len >= 200 ? '#dc3545' : '#888';
+        };
+    }
 
     reportCloseBtn.onclick = () => {
         reportModal.style.display = 'none';
@@ -113,12 +138,12 @@ export function initSecretModule() {
 
     function renderLocalReports() {
         const reports = JSON.parse(localStorage.getItem('dyst_user_reports') || '[]');
-        const sheetUrl = localStorage.getItem('dyst_google_sheet_url') || '#';
+        const sheetUrl = localStorage.getItem('dyst_google_sheet_url') || '';
         
         let html = `
             <div style="margin-bottom:15px; padding:10px; background:#2a2a2a; border-radius:4px; border:1px solid #444;">
                 <p style="margin:0 0 10px 0; font-size:0.85em; color:#aaa;">실시간 제보는 구글 시트에서 관리됩니다.</p>
-                <a href="${sheetUrl}" target="_blank" style="color:#ffa500; font-weight:bold; text-decoration:none;">📊 구글 시트 바로가기</a>
+                <button id="open-sheet-btn" style="background:none; border:none; color:#ffa500; font-weight:bold; cursor:pointer; padding:0; font-size:1em; text-decoration:underline;">📊 구글 시트 바로가기</button>
             </div>
         `;
 
@@ -132,7 +157,20 @@ export function initSecretModule() {
                 </div>
             `).join('');
         }
-        reportsList.innerHTML = html;
+        if (reportsList) reportsList.innerHTML = html;
+
+        // 버튼 클릭 이벤트 연결
+        const openBtn = document.getElementById('open-sheet-btn');
+        if (openBtn) {
+            openBtn.onclick = () => {
+                const url = localStorage.getItem('dyst_google_sheet_url');
+                if (url) {
+                    window.open(url, '_blank');
+                } else {
+                    alert("설정 페이지에서 구글 시트 주소를 먼저 저장해 주세요.");
+                }
+            };
+        }
     }
 
     // [구글 시트 전송 함수]

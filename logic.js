@@ -229,14 +229,12 @@ function updateSubStatList(subStats) {
     const isDesktop = window.innerWidth >= 1100;
     const isVisible = isDesktop || state.savedStats[state.currentId]?.subStatsListVisible === true;
     
+    // PC 버전일 경우 토글 헤더 숨김, 모바일은 보임(flex)
+    subStatToggleHeader.style.display = isDesktop ? 'none' : 'flex';
+    
+    // PC는 항상 보임, 모바일은 저장된 상태에 따라 보임
     subStatsContainer.style.display = isVisible ? 'block' : 'none';
     subStatToggleHeader.querySelector('span:last-child').textContent = isVisible ? '▲' : '▼';
-    
-    // PC 버전일 경우 토글 헤더 숨김 (항상 펼침)
-    if (isDesktop) {
-        subStatToggleHeader.style.display = 'none';
-        subStatsContainer.style.display = 'block';
-    }
 
     subStatToggleHeader.addEventListener('click', () => {
         if (window.innerWidth >= 1100) return; // PC에서는 클릭 무시

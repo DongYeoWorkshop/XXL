@@ -52,6 +52,13 @@ export function initHandlers(domElements, logicFunctions) {
             localStorage.setItem(`scrollPos_${state.currentId}`, window.scrollY);
         }
     });
+
+    // [추가] 화면 크기 변경 시 UI 즉시 갱신 (PC/모바일 전환 대응)
+    window.addEventListener('resize', () => {
+        if (state.currentId) {
+            logic.updateStats();
+        }
+    });
 }
 
 function setupHeaderListeners() {

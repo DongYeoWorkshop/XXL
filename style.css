@@ -824,6 +824,9 @@ body:not(.list-open) #content-display.hero-mode {
   .total-damage-label { display: none; }
   .comparison-slot { width: 100% !important; min-width: 0 !important; }
   .landing-desc-list { font-size: 0.85em; }
+  
+  /* 모바일에서 제보 플로팅 버튼 숨김 */
+  #report-open-btn { display: none !important; }
 }
 
 /* =========================================

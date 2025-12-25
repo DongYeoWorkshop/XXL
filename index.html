@@ -178,9 +178,9 @@
                 <div style="font-size: 0.75em; color: #888; margin-bottom: 3px;">최근 업데이트</div>
                 <div style="font-weight: bold; font-size: 0.9em; color: #333;">2025-12-25</div>
             </div>
-            <div style="background: #f8f9fa; border-radius: 6px; padding: 10px; border-left: 4px solid #007bff;">
-                <div style="font-size: 0.75em; color: #888; margin-bottom: 3px;">버전</div>
-                <div style="font-weight: bold; font-size: 0.9em; color: #333;">v1.3.0</div>
+            <div id="landing-report-btn" style="background: #f8f9fa; border-radius: 6px; padding: 10px; border-left: 4px solid #ffa500; cursor: pointer; transition: background 0.2s;">
+                <div style="font-size: 0.75em; color: #888; margin-bottom: 3px;">버그 제보 및 건의</div>
+                <div style="font-weight: bold; font-size: 0.9em; color: #333;">문의하기 📝</div>
             </div>
         </div>
 
@@ -247,7 +247,8 @@
 <div id="report-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
         <h3 style="margin-top: 0; color: #333;">📢 버그 제보 및 건의</h3>
-        <textarea id="report-text" placeholder="오류 내용이나 개선 사항을 자유롭게 적어주세요." style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: none; font-family: inherit; margin-bottom: 10px;"></textarea>
+        <textarea id="report-text" maxlength="200" placeholder="오류 내용이나 개선 사항을 자유롭게 적어주세요. (최대 200자)" style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: none; font-family: inherit; margin-bottom: 5px;"></textarea>
+        <div id="char-count" style="text-align: right; font-size: 0.75em; color: #888; margin-bottom: 10px;">0 / 200</div>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button id="report-close-btn" style="padding: 8px 16px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">취소</button>
             <button id="report-submit-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">보내기</button>
