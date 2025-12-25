@@ -7,7 +7,7 @@ import { state, constants } from './state.js';
 import { charData } from './data.js'; // 추가
 import { initLogic, updateStats, saveCurrentStats, updateCharacterListIndicators } from './logic.js?v=100';
 import { initHandlers, onExtraSliderChange, handleImageClick, setupDragScroll, setupBuffSearchListeners } from './handlers.js?v=100';
-import { initSecretModule } from './secret.js';
+import { initSecretModule, initCloudSharing } from './secret.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     // 1. DOM 요소 선택
@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initLogic(dom);
     initHandlers(dom, { updateStats, saveCurrentStats });
     initSecretModule(); // 비밀 모듈 초기화
+    initCloudSharing(); // [추가] 클라우드 공유 모듈 초기화
 
     // 3. 이벤트 리스너 연결
 

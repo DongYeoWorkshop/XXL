@@ -172,6 +172,31 @@
 5. 적용 버프 섹션에서 다른 캐릭터와의 시너지를 확인해보세요.
 6. "근태"탭에서 저장한 딜표로 딜량을 비교할 수 있습니다.</span></p>
         </div>
+
+        <!-- 데이터 클라우드 공유 섹션 -->
+        <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left;">
+            <h4 style="margin: 0 0 10px 0; color: #333; display: flex; align-items: center; justify-content: space-between;">
+                <span>☁️ 데이터 클라우드 공유</span>
+                <span style="font-size: 0.7em; color: #888; font-weight: normal; border: 1px solid #ddd; padding: 1px 5px; border-radius: 4px;">Beta</span>
+            </h4>
+            <p style="font-size: 0.85em; color: #666; margin: 0 0 15px 0; line-height: 1.4;">
+                현재 기기의 모든 데이터를 서버에 저장하여 ID를 발급받거나, 다른 기기의 ID를 입력해 데이터를 불러옵니다.
+            </p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <button id="cloud-save-btn" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;">
+                    <span>📤</span> 서버에 저장 (ID 발급)
+                </button>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center; background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
+                <span style="font-size: 1.2em;">📥</span>
+                <input type="text" id="cloud-load-id" placeholder="공유 ID 8자리 입력" style="flex: 1; border: none; background: transparent; font-size: 0.95em; outline: none; text-align: center; letter-spacing: 1px; color: #333; font-weight: bold;">
+                <button id="cloud-load-btn" style="padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9em; transition: background 0.2s;">
+                    불러오기
+                </button>
+            </div>
+        </div>
         
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
             <div style="background: #f8f9fa; border-radius: 6px; padding: 10px; border-left: 4px solid #007bff;">

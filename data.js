@@ -248,7 +248,17 @@ export const charData = {
         calc: [{ max: 45 }] },
       { id: "baade_skill5", excludeFromBuffSearch: true, decimalPlaces: 2, buffEffects: { "평타뎀증": { max: 60 } }, buffDesc: "[각흔] 보통공격 데미지 {0}% 증가", hasToggle: true, toggleType: "isAppliedStamped", name: "광맥 직감", icon: "icon/passive5.webp", desc: "대상이 [각흔]을 보유하고 있을 경우 바드의 보통공격 데미지 {0}% 증가", calc: [{ max: 60 }] },
       { id: "baade_skill6", excludeFromBuffSearch: true, decimalPlaces: 2, buffEffects: { "기초공증": { max: 15 }, "기초HP증가": { max: 15 } }, buffDesc: "기초공격력/HP {0}% 증가", name: "고강도 훈련 성과", icon: "icon/passive5.webp", desc: "자신의 기초 공격력, 기초 HP {0}% 증가", calc: [{ max: 15 }] },
-      { id: "baade_skill7", excludeFromBuffSearch: true, decimalPlaces: 2, buffEffects: { "필살기뎀증": { max: 45 } }, buffDesc: "아군이 필살기 사용 시 필살기의 데미지 {0}% 증가", name: "집중 분쇄", icon: "icon/passive5.webp", desc: "[각흔]을 보유한 적을 보통공격으로 타격 시 2턴 간 바드의 필살기 데미지 {0}% 증가", calc: [{ max: 45 }] },
+      { id: "baade_skill7", 
+        excludeFromBuffSearch: true, 
+        decimalPlaces: 2, 
+        buffEffects: { "필살기뎀증": { max: 45 } }, 
+        hasToggle: true, 
+        toggleType: "isAppliedStamped",         
+        buffDesc: "[각흔] 필살기 데미지 {0}% 증가", 
+        name: "집중 분쇄", 
+        icon: "icon/passive5.webp", 
+        desc: "[각흔]을 보유한 적을 보통공격으로 타격 시 2턴 간 바드의 필살기 데미지 {0}% 증가", 
+        calc: [{ max: 45 }] },
             { id: "baade_stamp_passive", name: "각흔 추가타", icon: "images/sigilwebp/sigil_baade.webp", excludeFromBuffSearch: true, isUltExtra: true, damageDeal: [{ type: "추가공격", val: { max: 174.75 } }] }
           ]
         },

@@ -190,3 +190,123 @@ export function initSecretModule() {
         });
     }
 }
+
+// [추가] 클라우드 데이터 공유 (저장/불러오기) 기능
+export function initCloudSharing() {
+    // 제공해주신 웹 앱 URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVY5XzPD-1Ab44Rbd_CCYwT0fn49irDmuNT6JmZ4G3MECdGZoxvDFU1-IZBHmInvPw8A/exec";
+
+    const saveBtn = document.getElementById('cloud-save-btn');
+    const loadBtn = document.getElementById('cloud-load-btn');
+    const loadInput = document.getElementById('cloud-load-id');
+
+    // 1. 서버에 저장하기 (ID 발급)
+    if (saveBtn) {
+        saveBtn.onclick = async () => {
+            if (!confirm("현재 기기의 모든 데이터를 서버에 저장하시겠습니까?")) return;
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span>⏳</span> 저장 중...';
+
+            try {
+                // 8자리 랜덤 숫자 ID 생성 (10000000 ~ 99999999)
+                const randomId = Math.floor(10000000 + Math.random() * 90000000);
+                
+                // 로컬 스토리지의 주요 데이터 수집
+                const dataToSave = {
+                    stats: JSON.parse(localStorage.getItem('dyst_stats') || '{}'),
+                    snapshots: JSON.parse(localStorage.getItem('dyst_snapshots') || '[]'),
+                    reports: JSON.parse(localStorage.getItem('dyst_user_reports') || '[]'),
+                    config: {
+                        sheetUrl: localStorage.getItem('dyst_google_sheet_url') || '',
+                        memo: localStorage.getItem('dyst_admin_memo') || ''
+                    },
+                    meta: {
+                        version: '1.2.1', // state.js 버전 참조
+                        date: new Date().toLocaleString()
+                    }
+                };
+
+                // 전송
+                // fetch는 CORS 문제로 인해 mode: 'no-cors'를 쓰면 응답을 못 받으므로,
+                // Apps Script를 'text/plain' 등으로 응답하게 하거나, 
+                // 여기서는 간단히 'no-cors'로 보내고 성공 가정(또는 jsonp 방식 등)을 써야 하는데,
+                // 보통 Apps Script Web App은 리다이렉트를 하므로 fetch가 기본적으로는 응답 내용을 못 읽습니다.
+                // 하지만 POST로 보내고 에러가 안 나면 성공으로 간주하거나,
+                // form 태그를 동적으로 생성해서 target을 iframe으로 보내는 꼼수를 쓰기도 합니다.
+                
+                // 여기서는 가장 표준적인 fetch + CORS (Apps Script가 JSON 반환 시) 시도
+                // * Apps Script 배포 시 "액세스 권한: 모든 사용자"여야 CORS 에러 없이 응답 수신 가능 *
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id: randomId,
+                        data: dataToSave
+                    })
+                    // Content-Type 헤더를 넣으면 CORS 프리플라이트 요청이 발생하여 실패할 수 있음.
+                    // Apps Script는 text/plain으로 보내면 잘 받음.
+                });
+
+                const json = await response.json();
+                
+                if (json.result === 'success') {
+                    prompt("데이터 저장이 완료되었습니다!\n아래 ID를 복사하여 다른 기기에서 불러오세요.", randomId);
+                } else {
+                    alert("저장 실패: " + (json.message || "알 수 없는 오류"));
+                }
+
+            } catch (err) {
+                console.error(err);
+                alert("통신 중 오류가 발생했습니다. (콘솔 확인)");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<span>📤</span> 서버에 저장 (ID 발급)';
+            }
+        };
+    }
+
+    // 2. 서버에서 불러오기
+    if (loadBtn && loadInput) {
+        loadBtn.onclick = async () => {
+            const id = loadInput.value.replace(/[^0-9]/g, ''); // 숫자만 남김
+            if (id.length < 8) return alert("올바른 8자리 ID를 입력해주세요.");
+
+            if (!confirm("데이터를 불러오면 현재 기기의 기존 데이터는 덮어씌워집니다.\n계속하시겠습니까?")) return;
+
+            loadBtn.disabled = true;
+            loadBtn.textContent = '불러오는 중...';
+
+            try {
+                // GET 요청으로 데이터 조회
+                const response = await fetch(`${SCRIPT_URL}?id=${id}`);
+                const json = await response.json();
+
+                if (json.result === 'success') {
+                    const data = json.data;
+                    
+                    // 데이터 복원
+                    if (data.stats) localStorage.setItem('dyst_stats', JSON.stringify(data.stats));
+                    if (data.snapshots) localStorage.setItem('dyst_snapshots', JSON.stringify(data.snapshots));
+                    if (data.reports) localStorage.setItem('dyst_user_reports', JSON.stringify(data.reports));
+                    if (data.config) {
+                        if (data.config.sheetUrl) localStorage.setItem('dyst_google_sheet_url', data.config.sheetUrl);
+                        if (data.config.memo) localStorage.setItem('dyst_admin_memo', data.config.memo);
+                    }
+
+                    alert("데이터 복원이 완료되었습니다. 페이지를 새로고침합니다.");
+                    location.reload();
+                } else {
+                    alert("불러오기 실패: " + (json.message || "데이터를 찾을 수 없습니다."));
+                }
+
+            } catch (err) {
+                console.error(err);
+                alert("통신 중 오류가 발생했습니다.");
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.textContent = '불러오기';
+            }
+        };
+    }
+}
