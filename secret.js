@@ -194,7 +194,7 @@ export function initSecretModule() {
 // [추가] 클라우드 데이터 공유 (저장/불러오기) 기능
 export function initCloudSharing() {
     // 제공해주신 웹 앱 URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVY5XzPD-1Ab44Rbd_CCYwT0fn49irDmuNT6JmZ4G3MECdGZoxvDFU1-IZBHmInvPw8A/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwGJVEQlH8NhVWLwcgkBEcD9aSQL4dkVSfc5i44SgQX88ub8zOXwd0avofD63VZg3IDA/exec";
 
     const saveBtn = document.getElementById('cloud-save-btn');
     const loadBtn = document.getElementById('cloud-load-btn');
