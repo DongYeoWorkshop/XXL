@@ -203,10 +203,10 @@ export function initCloudSharing() {
     // 1. 서버에 저장하기 (ID 발급)
     if (saveBtn) {
         saveBtn.onclick = async () => {
-            if (!confirm("현재 기기의 모든 데이터를 서버에 저장하시겠습니까?")) return;
+            if (!confirm("현재 계산기 설정을 저장하고 공유 코드를 발급받으시겠습니까?")) return;
 
             saveBtn.disabled = true;
-            saveBtn.innerHTML = '<span>⏳</span> 저장 중...';
+            saveBtn.innerHTML = '<span>⏳</span> 처리 중...';
 
             try {
                 // 8자리 랜덤 숫자 ID 생성 (10000000 ~ 99999999)
@@ -228,32 +228,23 @@ export function initCloudSharing() {
                 };
 
                 // 전송
-                // fetch는 CORS 문제로 인해 mode: 'no-cors'를 쓰면 응답을 못 받으므로,
-                // Apps Script를 'text/plain' 등으로 응답하게 하거나, 
-                // 여기서는 간단히 'no-cors'로 보내고 성공 가정(또는 jsonp 방식 등)을 써야 하는데,
-                // 보통 Apps Script Web App은 리다이렉트를 하므로 fetch가 기본적으로는 응답 내용을 못 읽습니다.
-                // 하지만 POST로 보내고 에러가 안 나면 성공으로 간주하거나,
-                // form 태그를 동적으로 생성해서 target을 iframe으로 보내는 꼼수를 쓰기도 합니다.
-                
-                // 여기서는 가장 표준적인 fetch + CORS (Apps Script가 JSON 반환 시) 시도
-                // * Apps Script 배포 시 "액세스 권한: 모든 사용자"여야 CORS 에러 없이 응답 수신 가능 *
-                
+                // CORS Preflight(OPTIONS)를 피하기 위해 Content-Type 헤더를 명시하지 않거나 text/plain 사용
+                // Google Apps Script는 text/plain으로 오는 body도 JSON.parse()로 처리 가능
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({
                         id: randomId,
                         data: dataToSave
                     })
-                    // Content-Type 헤더를 넣으면 CORS 프리플라이트 요청이 발생하여 실패할 수 있음.
-                    // Apps Script는 text/plain으로 보내면 잘 받음.
+                    // headers: { 'Content-Type': 'application/json' }  <-- 이거 절대 넣지 말 것 (CORS 에러 원인)
                 });
 
                 const json = await response.json();
                 
                 if (json.result === 'success') {
-                    prompt("데이터 저장이 완료되었습니다!\n아래 ID를 복사하여 다른 기기에서 불러오세요.", randomId);
+                    prompt("공유 코드가 발급되었습니다!\n아래 코드를 복사하여 다른 기기에서 입력하세요.", randomId);
                 } else {
-                    alert("저장 실패: " + (json.message || "알 수 없는 오류"));
+                    alert("발급 실패: " + (json.message || "알 수 없는 오류"));
                 }
 
             } catch (err) {
@@ -261,7 +252,7 @@ export function initCloudSharing() {
                 alert("통신 중 오류가 발생했습니다. (콘솔 확인)");
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = '<span>📤</span> 서버에 저장 (ID 발급)';
+                saveBtn.innerHTML = '<span>📤</span> 공유 코드 발급받기';
             }
         };
     }
@@ -270,9 +261,9 @@ export function initCloudSharing() {
     if (loadBtn && loadInput) {
         loadBtn.onclick = async () => {
             const id = loadInput.value.replace(/[^0-9]/g, ''); // 숫자만 남김
-            if (id.length < 8) return alert("올바른 8자리 ID를 입력해주세요.");
+            if (id.length < 8) return alert("올바른 8자리 코드를 입력해주세요.");
 
-            if (!confirm("데이터를 불러오면 현재 기기의 기존 데이터는 덮어씌워집니다.\n계속하시겠습니까?")) return;
+            if (!confirm("데이터를 불러오면 현재 기기의 설정이 덮어씌워집니다.\n계속하시겠습니까?")) return;
 
             loadBtn.disabled = true;
             loadBtn.textContent = '불러오는 중...';
