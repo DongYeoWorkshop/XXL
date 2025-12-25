@@ -54,8 +54,11 @@ export function calculateCharacterStats(charId, charData, skillLevels, isUltStam
                 : parseInt(allSavedStats?.[appliedCharId]?.s1 || 0);
             
             const thresholds = [0, 0, 0, 0, 30, 50, 75]; 
-            if (skillIdx >= 4 && skillIdx <= 6) {
-                isUnlockedByBreakthrough = (breakthroughValue >= thresholds[skillIdx]);
+            // [수정] 테스트 더미는 돌파 제한 무시
+            if (appliedCharId !== 'test_dummy') {
+                if (skillIdx >= 4 && skillIdx <= 6) {
+                    isUnlockedByBreakthrough = (breakthroughValue >= thresholds[skillIdx]);
+                }
             }
             if (!isUnlockedByBreakthrough) return;
 
@@ -169,6 +172,7 @@ export function calculateCharacterStats(charId, charData, skillLevels, isUltStam
                             const effectData = buffSkill.buffEffects[effectStat];
                             let valueToAdd = 0;
 
+                            // [수정] 커스텀 입력(테스트 더미) 값 우선 적용
                             if (buffSkill.isCustomInput && buff.customValue !== undefined) {
                                 valueToAdd = buff.customValue;
                             } else if (typeof effectData === 'object' && effectData !== null) {
@@ -192,7 +196,12 @@ export function calculateCharacterStats(charId, charData, skillLevels, isUltStam
                             } else if (typeof effectData === 'number') {
                                 valueToAdd = effectData;
                             }
-                            valueToAdd *= stackMultiplier;
+                            
+                            // 커스텀 입력이 아닐 때만 스택 곱하기 (커스텀은 사용자가 최종값을 입력한다고 가정)
+                            if (!buffSkill.isCustomInput) {
+                                valueToAdd *= stackMultiplier;
+                            }
+                            
                             if (typeof buffSkill.decimalPlaces === 'number') valueToAdd = parseFloat(valueToAdd.toFixed(buffSkill.decimalPlaces));
                             stats[effectStat] += valueToAdd;
                         }

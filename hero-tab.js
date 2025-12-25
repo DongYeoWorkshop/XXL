@@ -58,12 +58,63 @@ export function renderHeroTab(dom, updateStatsCallback) {
         const records = snapshot.records || [];
         const charTitle = charData[charId]?.title || charId;
         const totalDmg = snapshot.totalDamage || 0;
+        
+        // 스펙 정보 문자열 생성
+        let specTextHtml = "";
+        
+        // 기본 폰트 크기 설정
+        let nameFontSize = "0.95em";
+        let specFontSize = "0.72em";
+
+        if (snapshot.stats) {
+            const { lv, s1, s2 } = snapshot.stats;
+            
+            // 돌파 수치를 게임 내 표기 방식으로 변환
+            let brText = "";
+            if (s1 >= 75) brText = "5성";
+            else if (s1 >= 50) brText = `4성 ${s1 - 50}단계`;
+            else if (s1 >= 30) brText = `3성 ${s1 - 30}단계`;
+            else if (s1 >= 15) brText = `2성 ${s1 - 15}단계`;
+            else if (s1 >= 5)  brText = `1성 ${s1 - 5}단계`;
+            else brText = `0성 ${s1}단계`;
+
+            const specContent = `Lv.${lv} / ${brText} / 적합도 ${s2}`;
+            
+            // [추가] 태블릿 구간(601~1099px) 자동 폰트 조절 로직
+            const winWidth = window.innerWidth;
+            if (winWidth > 600 && winWidth < 1100) {
+                const totalLen = charTitle.length + specContent.length;
+                // 길이가 길어지면 폰트 축소 (임계값 26자로 하향 조정)
+                if (totalLen > 26) {
+                    nameFontSize = "0.7em";
+                    specFontSize = "0.55em";
+                } else if (totalLen > 20) {
+                    nameFontSize = "0.85em";
+                    specFontSize = "0.65em";
+                }
+            }
+
+            // 한 줄로 표기
+            specTextHtml = `<span style="font-size:${specFontSize}; color:#888; font-weight:normal; margin-left:6px; letter-spacing:-0.01em;">${specContent}</span>`;
+        }
+
         container.style.display = 'block';
         container.innerHTML = '';
         
         const header = document.createElement('div');
         header.style.cssText = `border-bottom: 2px solid #8b4513; padding-bottom: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;`;
-        header.innerHTML = `<div style="font-weight: bold; color: #333; display: flex; align-items: center; gap: 8px;"><img src="images/${charId}.webp" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1px solid #ccc;">${charTitle}</div><div style="font-size: 0.9em; font-weight: bold; color: #d35400;">${totalDmg.toLocaleString()}</div>`;
+        
+        // [수정] 이름과 스펙을 한 줄(flex-direction: row)로 배치 + 동적 폰트 적용
+        header.innerHTML = `
+            <div style="font-weight: bold; color: #333; display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1;">
+                <img src="images/${charId}.webp" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #ccc; flex-shrink: 0;">
+                <div style="display:flex; align-items: baseline; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <span style="font-size: ${nameFontSize}; transition: font-size 0.2s;">${charTitle}</span>
+                    ${specTextHtml}
+                </div>
+            </div>
+            <div style="font-size: 0.9em; font-weight: bold; color: #d35400; margin-left: 10px; flex-shrink: 0;">${totalDmg.toLocaleString()}</div>
+        `;
         container.appendChild(header);
         
         if (records.length === 0) { container.innerHTML += '<div style="text-align:center; color:#999; padding:20px;">기록 없음</div>'; return; }

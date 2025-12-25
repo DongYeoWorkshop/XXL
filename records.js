@@ -224,12 +224,17 @@ function updateTotalDamage(container, charId, saveCurrentStats) {
                         return sum + (parseInt(rec.damage.replace(/,/g, '')) || 0) * (rec.count || 1);
                     }, 0);
                     
-                    // [수정] 스냅샷 추가 로직
+                    // [수정] 스냅샷 추가 로직 (스펙 정보 포함)
+                    const lvVal = parseInt(document.getElementById('level-slider').value) || 1;
+                    const brVal = parseInt(document.getElementById('extra1-slider').value) || 0;
+                    const fitVal = parseInt(document.getElementById('extra2-slider').value) || 0;
+
                     const newSnapshot = {
                         id: Date.now().toString(), // 고유 ID
                         charId: charId,
                         totalDamage: total,
                         records: JSON.parse(JSON.stringify(records)), // 깊은 복사
+                        stats: { lv: lvVal, s1: brVal, s2: fitVal }, // 스펙 저장
                         timestamp: new Date().toISOString()
                     };
                     

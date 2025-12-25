@@ -106,9 +106,12 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
             const ownerBr = isOwnerCurrent ? parseInt(document.getElementById('extra1-slider').value) : parseInt(ownerSaved.s1 || 0);
             
             let isDisabledByBreakthrough = false;
-            if (skillIdx >= 4 && skillIdx <= 6) {
-                const thresholds = [0, 0, 0, 0, 30, 50, 75]; 
-                if (ownerBr < thresholds[skillIdx]) isDisabledByBreakthrough = true;
+            // [수정] 테스트 더미는 돌파 제한 무시
+            if (buffCharId !== 'test_dummy') {
+                if (skillIdx >= 4 && skillIdx <= 6) {
+                    const thresholds = [0, 0, 0, 0, 30, 50, 75]; 
+                    if (ownerBr < thresholds[skillIdx]) isDisabledByBreakthrough = true;
+                }
             }
 
             let skillLevel;
@@ -244,6 +247,50 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
 
             buffItem.appendChild(textContainer);
 
+            // [추가] 커스텀 입력(테스트 더미) 처리
+            if (skill.isCustomInput) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.value = buff.customValue || 0;
+                input.style.cssText = `width: 50px; margin-left: auto; margin-right: 5px; text-align: right; padding: 2px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;`;
+                
+                // onchange로 값 업데이트 (참조 안정성 강화)
+                input.onchange = (e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    
+                    // appliedBuffs 배열에서 현재 버프 객체를 다시 찾아 업데이트
+                    // (렌더링 과정에서 참조가 달라질 수 있으므로 안전하게 검색)
+                    const currentBuffList = appliedBuffs[buffCharId];
+                    if (currentBuffList) {
+                        const targetBuff = currentBuffList.find(b => b.skillId === skillId);
+                        if (targetBuff) {
+                            targetBuff.customValue = val;
+                        }
+                    }
+                    
+                    updateStatsCallback();
+                    saveCurrentStatsCallback();
+                };
+                
+                // 클릭 이벤트 전파 방지 (버프 아이템 클릭 방지)
+                input.onclick = (e) => e.stopPropagation();
+                
+                buffItem.appendChild(input);
+                
+                // [수정] 고정공격력(custom_stat_8)인 경우 % 단위를 생략
+                if (skill.id !== 'custom_stat_8') {
+                    const unitSpan = document.createElement('span');
+                    unitSpan.textContent = '%';
+                    unitSpan.style.cssText = `font-size: 0.85em; color: #666; margin-right: 5px;`;
+                    buffItem.appendChild(unitSpan);
+                } else {
+                    // 고정공격력은 단위 없이 여백만 추가
+                    const marginSpan = document.createElement('span');
+                    marginSpan.style.marginRight = '5px';
+                    buffItem.appendChild(marginSpan);
+                }
+            }
+
             if (skill.hasToggle) {
                 const toggleType = skill.toggleType || 'isAppliedStamped';
                 
@@ -292,10 +339,23 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
                 removeBtn.onclick = (e) => {
                     e.stopPropagation();
                     removeAppliedBuff(buffCharId, skillId, appliedBuffs);
+                    
+                    // [수정] UI 즉시 갱신 로직 강화
                     updateStatsCallback();
                     if (typeof saveCurrentStatsCallback === 'function') {
                         saveCurrentStatsCallback();
                     }
+                    
+                    // 현재 하단 스킬 리스트에 표시 중인 캐릭터가 삭제된 버프의 주인이라면 리스트도 갱신
+                    const selectionArea = document.getElementById('buff-skill-selection-area');
+                    if (selectionArea && selectionArea.style.display !== 'none') {
+                        const headerH4 = selectionArea.querySelector('h4');
+                        if (headerH4 && headerH4.textContent.includes(buffCharData.title)) {
+                            // 스킬 리스트 다시 그리기
+                            displayBuffSkills(buffCharId, charData, selectionArea, appliedBuffs, addAppliedBuff, removeAppliedBuff, renderAppliedBuffsDisplay, updateStatsCallback, null, currentSkillLevels, getDynamicDescFn, savedStats, saveCurrentStatsCallback);
+                        }
+                    }
+
                     // [추가] 아이콘 목록 갱신
                     if (typeof window.triggerIconListUpdate === 'function') {
                         window.triggerIconListUpdate();
