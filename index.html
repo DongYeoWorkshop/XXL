@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>동여성 공방</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="icon/main32x32.PNG">
+  <link rel="icon" type="image/png" sizes="16x16" href="icon/main16x16.PNG">
+  <link rel="stylesheet" href="style.css?v=2.0.0">
+</head>
+
+<body>
+
+<!-- 상단 고정 헤더 + 캐릭터 목록 통합 래퍼 -->
+<div id="sticky-wrapper">
+  <div id="char-list-container">
+    <div id="sort-container">
+      <div class="sort-icon-all" title="전체 보기">ALL</div>
+      <img src="icon/fire.webp" class="sort-icon" data-attr="0" title="불 속성 정렬">
+      <img src="icon/water.webp" class="sort-icon" data-attr="1" title="물 속성 정렬">
+      <img src="icon/wood.webp" class="sort-icon" data-attr="2" title="나무 속성 정렬">
+      <img src="icon/light.webp" class="sort-icon" data-attr="3" title="빛 속성 정렬">
+      <img src="icon/dark.webp" class="sort-icon" data-attr="4" title="어둠 속성 정렬">
+      <div class="sort-icon-fav" title="즐겨찾기 보기">★</div>
+    </div>
+    <div class="image-row">
+      <img src="images/hero.webp" class="main-image" style="background-color: black;" data-id="hero">
+      <img src="images/tayangsuyi.webp" class="main-image" style="background-color: black;" data-id="tayangsuyi">
+      <img src="images/choiyuhyun.webp" class="main-image" style="background-color: black;" data-id="choiyuhyun">
+      <img src="images/kumoyama.webp" class="main-image" style="background-color: black;" data-id="kumoyama">
+      <img src="images/khafka.webp" class="main-image" style="background-color: black;" data-id="khafka">
+      <img src="images/beernox.webp" class="main-image" style="background-color: black;" data-id="beernox">
+      <img src="images/kyrian.webp" class="main-image" style="background-color: black;" data-id="kyrian">
+      <img src="images/meng.webp" class="main-image" style="background-color: black;" data-id="meng">
+      <img src="images/baade.webp" class="main-image" style="background-color: black;" data-id="baade">
+      <img src="images/locke.webp" class="main-image" style="background-color: black;" data-id="locke">
+      <img src="images/orem.webp" class="main-image" style="background-color: black;" data-id="orem">
+      <img src="images/leo.webp" class="main-image" style="background-color: black;" data-id="leo">
+      <img src="images/tyrantino.webp" class="main-image" style="background-color: black;" data-id="tyrantino">
+      <img src="images/wang.webp" class="main-image" style="background-color: black;" data-id="wang">
+      <img src="images/anuberus.webp" class="main-image" style="background-color: black;" data-id="anuberus">
+      <img src="images/shinrirang.webp" class="main-image" style="background-color: black;" data-id="shinrirang">
+      <img src="images/tamrang.webp" class="main-image" style="background-color: black;" data-id="tamrang">
+      <img src="images/goldenryder.webp" class="main-image" style="background-color: black;" data-id="goldenryder">
+      <img src="images/jetblack.webp" class="main-image" style="background-color: black;" data-id="jetblack">
+      <img src="images/rutenix.webp" class="main-image" style="background-color: black;" data-id="rutenix">
+      <img src="images/duncan.webp" class="main-image" style="background-color: black;" data-id="duncan">
+      <img src="images/famido.webp" class="main-image" style="background-color: black;" data-id="famido">
+    </div>
+  </div>
+
+  <div id="sticky-header" class="sticky-header">
+    <div class="sticky-content" style="padding-left: 5px;">
+      <button id="char-list-toggle-btn" class="header-btn">≡ 목록</button>
+      <span id="sticky-header-title">동여성 공방</span>
+      <span id="sticky-attr"></span>
+      <span id="sticky-name"></span>
+      <span id="sticky-lv"></span>
+      <span id="sticky-br"></span>
+      <span id="sticky-fit"></span>
+    </div>
+  </div>
+</div>
+
+<!-- 텍스트가 표시될 영역 -->
+
+<!-- 텍스트가 표시될 영역 -->
+<div id="content-display">
+  <!-- 상단 캐릭터 핵심 정보 (1열 고정) -->
+  <div class="char-header-row">
+    <h2 id="display-title"></h2>
+    <div id="info-display" style="display: none; margin-top: 5px; margin-bottom: 15px; font-size: 0.95em; color: #666; justify-content: center; align-items: center; gap: 10px;">
+      <!-- 속성 and 포지션 will go here -->
+    </div>
+  </div>
+
+  <!-- 오른쪽 컬럼 (스탯/슬라이더) : 모바일에서는 상단 배치 -->
+  <div class="side-content-column">
+    <div id="calc-and-stats-row" style="display: none; gap: 15px; margin-top: 15px; align-items: center;">
+      
+      <!-- 왼쪽: 슬라이더 영역 -->
+      <div id="calc-area" style="flex: 1; display: none; padding-top: 0; border-top: none;">
+        
+        <!-- 레벨 슬라이더 -->
+        <div class="slider-group">
+          <label class="slider-label">Lv. <span id="level-val">1</span></label>
+          <div class="slider-box">
+            <input type="range" id="level-slider" min="1" max="60" value="1" list="level-ticks">
+          </div>
+          <datalist id="level-ticks">
+            <option value="1"></option>
+            <option value="5"></option>
+            <option value="10"></option>
+            <option value="15"></option>
+            <option value="20"></option>
+            <option value="25"></option>
+            <option value="30"></option>
+            <option value="35"></option>
+            <option value="40"></option>
+            <option value="45"></option>
+            <option value="50"></option>
+            <option value="55"></option>
+            <option value="60"></option>
+          </datalist>
+        </div>
+
+        <!-- 추가 슬라이더들 (이제 세로로 쌓임) -->
+        <div id="bonus-sliders" style="display: none; flex-direction: column;">
+          
+          <!-- 돌파 슬라이더 -->
+          <div class="slider-group">
+            <label class="slider-label" style="display: flex; align-items: center; justify-content: flex-start; gap: 5px;">
+                돌파 <span id="extra1-val">0</span>
+                <div style="display: flex; flex-direction: column; gap: 0; margin-top: 2px;">
+                    <button id="br-up-btn" style="padding: 0; line-height: 1; background: none; border: none; cursor: pointer; font-size: 0.7em; color: #007bff;">▲</button>
+                    <button id="br-down-btn" style="padding: 0; line-height: 1; background: none; border: none; cursor: pointer; font-size: 0.7em; color: #007bff;">▼</button>
+                </div>
+            </label>
+            <div class="slider-box">
+              <input type="range" id="extra1-slider" min="0" max="75" value="0" list="breakthrough-ticks" style="width: 100%;">
+            </div>
+            <datalist id="breakthrough-ticks">
+              <option value="0"></option>
+              <option value="5"></option>
+              <option value="15"></option>
+              <option value="30"></option>
+              <option value="50"></option>
+              <option value="75"></option>
+            </datalist>
+          </div>
+
+          <!-- 적합도 슬라이더 -->
+          <div class="slider-group">
+            <label class="slider-label">적합도 <span id="extra2-val">0</span></label>
+            <div class="slider-box">
+              <input type="range" id="extra2-slider" min="0" max="5" value="0" list="fitness-ticks" style="width: 100%;">
+            </div>
+            <datalist id="fitness-ticks">
+              <option value="0"></option>
+              <option value="1"></option>
+              <option value="2"></option>
+              <option value="3"></option>
+              <option value="4"></option>
+              <option value="5"></option>
+            </datalist>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 메인 스탯 영역 -->
+      <div id="stats-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <ul id="display-stats" class="stat-list" style="margin: 0;"></ul>
+      </div>
+
+    </div> <!-- end row -->
+
+    <div id="sub-stats-wrapper"></div>
+  </div>
+
+  <!-- 왼쪽 컬럼 (스킬 정보/버프) : 모바일에서는 하단 배치 -->
+  <div class="main-content-column">
+    <!-- 초기 랜딩 페이지 -->
+    <div id="landing-page" class="hero-dashboard" style="text-align: center; display: block;">
+        <h2 style="margin-top: 0; color: #ffa500; border-bottom: 2px solid #eee0d0; padding-bottom: 10px;">동여성 공방</h2>
+        <div style="background: #fff5e6; border: 1px solid #eee0d0; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.05); text-align: left;">
+            <p style="white-space: pre-wrap; line-height: 1.7; color: #333; margin: 0;">[주요 기능]
+<span class="landing-desc-list">1. 상단 캐릭터 목록에서 분석할 대상을 선택하세요.
+2. 레벨과 돌파, 적합도를 지정해 스탯을 조절할 수 있습니다.
+3. 스킬 레벨, 자가버프의 토글 등을 조절할 수 있습니다.
+3. 스킬 아이콘을 클릭해 각 스킬의 데미지를 확인하세요.
+4. '+' 버튼으로 스킬의 데미지를 기록해 합산할 수 있습니다.
+5. 적용 버프 섹션에서 다른 캐릭터와의 시너지를 확인해보세요.
+6. "근태"탭에서 저장한 딜표로 딜량을 비교할 수 있습니다.</span></p>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div style="background: #f8f9fa; border-radius: 6px; padding: 10px; border-left: 4px solid #007bff;">
+                <div style="font-size: 0.75em; color: #888; margin-bottom: 3px;">최근 업데이트</div>
+                <div style="font-weight: bold; font-size: 0.9em; color: #333;">2025-12-25</div>
+            </div>
+            <div style="background: #f8f9fa; border-radius: 6px; padding: 10px; border-left: 4px solid #007bff;">
+                <div style="font-size: 0.75em; color: #888; margin-bottom: 3px;">버전</div>
+                <div style="font-weight: bold; font-size: 0.9em; color: #333;">v1.3.0</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 10px; background: #2a2a2a; border: 1px solid #444; border-radius: 8px;">
+            <button id="landing-reset-btn" style="width: 100%; padding: 8px; background: none; border: none; color: #dc3545; font-size: 0.85em; font-weight: bold; cursor: pointer;">
+                ⚙️ 전체 데이터 및 캐시 초기화
+            </button>
+        </div>
+    </div>
+
+    <div id="new-section-area" style="display: none;">
+      <!-- 동적으로 캐릭터 스킬 정보 등이 렌더링됩니다 -->
+    </div>
+
+    <!-- 적용 버프 섹션 -->
+    <div id="buff-application-area" style="display: none;">
+      
+      <!-- Tab Header -->
+      <div style="display: flex; align-items: flex-end; margin-top: -46px; margin-bottom: 15px; margin-left: 0px;">
+          <div style="background: #30363d; color: #ffa500; font-size: 0.75em; font-weight: bold; padding: 6px 16px; border-radius: 8px 8px 0 0; border: 1px solid #444; border-bottom: none; z-index: 1; box-shadow: 0 -3px 6px rgba(0,0,0,0.3);">적용 버프</div>
+      </div>
+
+      <!-- Header Row: Reset Button + Search Input -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; position: relative;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+              <button id="reset-buffs-btn" style="padding: 2px 8px; font-size: 0.7em; background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; color: #666;">초기화</button>
+          </div>
+          
+          <!-- Search Input Container -->
+          <div style="position: relative; width: 50%;">
+              <input type="text" id="buff-char-search" placeholder="캐릭터 이름을 입력" style="width: 100%; padding: 6px 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 0.9em; box-sizing: border-box; outline: none;">
+              
+              <!-- Search Results (Dropdown) -->
+              <div id="buff-search-results" style="display: none; position: absolute; top: 105%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 8px; background-color: #fff; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <!-- 검색 결과가 여기에 표시됩니다 -->
+              </div>
+          </div>
+      </div>
+
+      <!-- Currently Applied Buffs Display -->
+      <div id="currently-applied-buffs" style="margin-top: 5px; padding-top: 5px; border-top: 1px solid #e0e0e0;">
+        <div id="applied-buffs-list">
+            <!-- 적용된 버프 스킬이 여기에 표시됩니다 -->
+        </div>
+      </div>
+
+      <div id="buff-skill-selection-area" style="border: 1px solid #eee; border-radius: 5px; background-color: #fff; padding: 10px; min-height: 100px; display: none;">
+        <!-- 선택된 캐릭터의 스킬이 여기에 표시됩니다 -->
+      </div>
+    </div>
+
+    <!-- 스킬 섹션 (2열 그리드) -->
+    <div id="skill-container" class="skill-grid" style="display: none;"></div>
+  </div>
+
+</div>
+
+<!-- ▼▼▼ 외부 데이터 파일 로드 ▼▼▼ -->
+
+<!-- 이용자 제보 플로팅 버튼 -->
+<button id="report-open-btn" title="버그 제보 및 문의" style="position: fixed; bottom: 20px; right: 20px; width: 44px; height: 44px; border-radius: 50%; background: #ffa500; color: white; border: none; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999; display: flex; align-items: center; justify-content: center;">📝</button>
+
+<!-- 제보 모달 -->
+<div id="report-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; color: #333;">📢 버그 제보 및 건의</h3>
+        <textarea id="report-text" placeholder="오류 내용이나 개선 사항을 자유롭게 적어주세요." style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: none; font-family: inherit; margin-bottom: 10px;"></textarea>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="report-close-btn" style="padding: 8px 16px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">취소</button>
+            <button id="report-submit-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">보내기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 비밀 관리자 페이지 레이어 -->
+<div id="secret-admin-page" class="modal-overlay" style="display: none; background: #0d1117; z-index: 2000;">
+    <div style="width: 100%; max-width: 800px; padding: 20px; color: #eee; height: 100vh; overflow-y: auto; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #ffa500;">🔒 공방 관리자 공간</h2>
+            <button id="secret-close-btn" style="background: none; border: 1px solid #444; color: #888; padding: 5px 12px; border-radius: 4px; cursor: pointer;">나가기</button>
+        </div>
+        
+        <div class="admin-grid" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+            <!-- 설정 섹션 -->
+            <div style="background: #1c2128; border: 1px solid #333; border-radius: 8px; padding: 15px;">
+                <h4 style="margin-top: 0; color: #ffa500;">⚙️ 시스템 설정</h4>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8em; color: #888; display: block; margin-bottom: 5px;">구글 시트 보기 주소 (관리용)</label>
+                    <input type="text" id="sheet-view-url" placeholder="https://docs.google.com/spreadsheets/d/..." style="width: 100%; padding: 8px; background: #0d1117; color: #eee; border: 1px solid #444; border-radius: 4px;">
+                </div>
+                <button id="save-config-btn" style="width: 100%; padding: 8px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">설정 저장</button>
+            </div>
+
+            <!-- 개인 개발 노트 섹션 -->
+            <div style="background: #1c2128; border: 1px solid #333; border-radius: 8px; padding: 15px;">
+                <h4 style="margin-top: 0;">📝 개발자 메모 (나만 보임)</h4>
+                <textarea id="admin-memo" style="width: 100%; height: 200px; background: #0d1117; color: #00ff00; border: 1px solid #444; border-radius: 4px; padding: 10px; font-family: monospace; resize: vertical;" placeholder="여기에 나만의 할 일을 기록하세요..."></textarea>
+                <button id="save-memo-btn" style="margin-top: 10px; width: 100%; padding: 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">메모 저장</button>
+            </div>
+
+            <!-- 수신된 제보 섹션 (로컬 테스트용) -->
+            <div style="background: #1c2128; border: 1px solid #333; border-radius: 8px; padding: 15px;">
+                <h4 style="margin-top: 0;">📩 최근 수신된 제보 (현재 기기)</h4>
+                <div id="received-reports-list" style="max-height: 300px; overflow-y: auto; font-size: 0.9em; color: #ccc;">
+                    <!-- 제보 목록이 여기에 렌더링됨 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="main.js?v=20251225"></script>
+
+</body>
+</html>
