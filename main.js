@@ -37,6 +37,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 2. 모듈 초기화 (DOM 주입)
     initLogic(dom);
+    
+    // [추가] 초기 로딩 시 랜딩 모드 활성화 (PC에서 1열 보기)
+    if (!state.currentId) {
+        document.getElementById('content-display').classList.add('landing-mode');
+    }
+
     initHandlers(dom, { updateStats, saveCurrentStats });
     initSecretModule(); // 비밀 모듈 초기화
     initCloudSharing(); // [추가] 클라우드 공유 모듈 초기화

@@ -871,6 +871,27 @@ body:not(.list-open) #content-display.hero-mode {
     display: none;
   }
 
+  /* [추가] 랜딩 페이지 전용 모드 (오른쪽 공백 제거) */
+  #content-display.landing-mode {
+    grid-template-columns: 1fr !important;
+    display: block !important;
+  }
+
+  #content-display.landing-mode::before {
+    display: none !important; /* 세로 경계선 숨김 */
+  }
+
+  #content-display.landing-mode .side-content-column {
+    display: none !important; /* 오른쪽 빈 공간 숨김 */
+  }
+
+  #content-display.landing-mode .main-content-column {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 800px; /* 너무 퍼지지 않게 중앙 정렬 */
+    margin: 0 auto;
+  }
+
   .main-content-column { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; }
   .side-content-column { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; gap: 15px; }
 
