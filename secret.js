@@ -194,7 +194,7 @@ export function initSecretModule() {
 // [추가] 클라우드 데이터 공유 (저장/불러오기) 기능
 export function initCloudSharing() {
     // 제공해주신 웹 앱 URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwGJVEQlH8NhVWLwcgkBEcD9aSQL4dkVSfc5i44SgQX88ub8zOXwd0avofD63VZg3IDA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdcMybPn0A98Ed47H34egawd0sL1j4ZHaRDW0gW3Ifyo_DT09oDdom3U8LIxSoyxbMlw/exec";
 
     const saveBtn = document.getElementById('cloud-save-btn');
     const loadBtn = document.getElementById('cloud-load-btn');
@@ -212,14 +212,13 @@ export function initCloudSharing() {
                 // 8자리 랜덤 숫자 ID 생성 (10000000 ~ 99999999)
                 const randomId = Math.floor(10000000 + Math.random() * 90000000);
                 
-                // 로컬 스토리지의 주요 데이터 수집
+                // 로컬 스토리지의 주요 데이터 수집 (용량 최적화를 위해 불필요한 데이터 제외)
                 const dataToSave = {
                     stats: JSON.parse(localStorage.getItem('dyst_stats') || '{}'),
                     snapshots: JSON.parse(localStorage.getItem('dyst_snapshots') || '[]'),
-                    reports: JSON.parse(localStorage.getItem('dyst_user_reports') || '[]'),
+                    // reports, memo: 공유 시 개인적인 이력이나 메모는 제외함
                     config: {
-                        sheetUrl: localStorage.getItem('dyst_google_sheet_url') || '',
-                        memo: localStorage.getItem('dyst_admin_memo') || ''
+                        sheetUrl: localStorage.getItem('dyst_google_sheet_url') || ''
                     },
                     meta: {
                         version: '1.2.1', // state.js 버전 참조
