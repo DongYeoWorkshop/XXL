@@ -78,7 +78,10 @@ function setupHeaderListeners() {
             const statsWrapper = document.getElementById('stats-wrapper');
             const charHeaderRow = document.querySelector('.char-header-row');
             
-            if (contentDisplay) contentDisplay.classList.remove('hero-mode');
+            if (contentDisplay) {
+                contentDisplay.classList.remove('hero-mode');
+                contentDisplay.classList.add('landing-mode');
+            }
             if (charHeaderRow) charHeaderRow.style.display = 'none';
             if (dom.buffApplicationArea) dom.buffApplicationArea.style.display = 'none';
             if (dom.skillContainer) dom.skillContainer.style.display = 'none';
@@ -143,6 +146,15 @@ function setupHeaderListeners() {
     document.getElementById('sticky-lv')?.addEventListener('click', () => cycleValue(dom.sliderInput, 1, 60, 5));
     document.getElementById('sticky-br')?.addEventListener('click', () => cycleThresholds(dom.extraSlider1, [0, 5, 15, 30, 50, 75]));
     document.getElementById('sticky-fit')?.addEventListener('click', () => cycleValue(dom.extraSlider2, 0, 5, 1));
+
+    // [추가] 속성 아이콘 클릭 시 Hero 탭으로 이동
+    const stickyAttr = document.getElementById('sticky-attr');
+    if (stickyAttr) {
+        stickyAttr.onclick = () => {
+            const heroImg = document.querySelector('.main-image[data-id="hero"]');
+            if (heroImg) handleImageClick(heroImg);
+        };
+    }
 
     // 증감 버튼
     document.getElementById('br-up-btn')?.addEventListener('click', () => adjustSlider(dom.extraSlider1, 1, 75));
@@ -242,6 +254,7 @@ export function handleImageClick(img) {
     const infoDisplay = document.getElementById('info-display');
     
     const contentDisplay = document.getElementById('content-display');
+    if (contentDisplay) contentDisplay.classList.remove('landing-mode'); // [수정] 캐릭터 선택 시 랜딩 모드 해제
     
     if (id === 'hero') {
         // [Hero 전용: 딜비교 화면] ---------------------------------------
@@ -368,16 +381,16 @@ export function handleImageClick(img) {
 
 function setupInitialNewSection(id, data, brVal) {
     dom.newSectionArea.innerHTML = `
-        <div class="skill-detail-display" style="padding:0; min-height:auto; border-bottom:1px solid #8b4513; margin-bottom:5px;">
+        <div class="skill-detail-display">
             <!-- 초기 상태 탭 유지 -->
-            <div style="display: flex; align-items: flex-end; margin-top: -41px; margin-bottom: 15px; margin-left: 0px;">
-                <div style="background: #30363d; color: #ffa500; font-size: 0.75em; font-weight: bold; padding: 6px 16px; border-radius: 8px 8px 0 0; border: 1px solid #444; border-bottom: none; z-index: 1; box-shadow: 0 -3px 6px rgba(0,0,0,0.3);">스킬 데미지 계산</div>
+            <div class="skill-detail-tab-tag">
+                <div class="skill-detail-tab-content">스킬 데미지 계산</div>
             </div>
             <p style="margin:0; color:#888; font-size:0.85em; text-align:center; padding:20px 0;">아이콘을 클릭하여 상세 정보를 확인하세요.</p>
         </div>
-        <div style="display:flex; align-items:flex-end; justify-content:space-between; padding-top:2px;">
+        <div class="icon-list-row">
             <div class="detail-icon-list"></div>
-            <div style="display:flex; align-items:flex-end; gap: 10px;">
+            <div class="controls-wrapper">
                 <div id="custom-controls-container" style="display: flex; gap: 8px; align-items: flex-end;"></div>
                 <div id="global-target-control"></div>
             </div>

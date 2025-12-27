@@ -11,25 +11,25 @@ export function updateSkillDetailDisplay(skill, idx, dom, logic) {
     const detailDisplay = dom.newSectionArea.querySelector('.skill-detail-display');
     if (!detailDisplay) return;
 
-    const headerIconStyle = (idx === 7) ? 'background-color: black;' : '';
+    const headerIconStyle = (idx === 7) ? 'passive-max' : '';
 
     detailDisplay.innerHTML = `
-        <div style="display: flex; align-items: flex-end; margin-top: -41px; margin-bottom: 15px; margin-left: 0px;">
-            <div style="background: #30363d; color: #ffa500; font-size: 0.75em; font-weight: bold; padding: 6px 16px; border-radius: 8px 8px 0 0; border: 1px solid #444; border-bottom: none; z-index: 1; box-shadow: 0 -3px 6px rgba(0,0,0,0.3);">스킬 데미지 계산</div>
+        <div class="skill-detail-tab-tag">
+            <div class="skill-detail-tab-content">스킬 데미지 계산</div>
         </div>
-        <div class="skill-detail-header" style="display: flex; align-items: center; gap: 12px; min-height: 85px;">
-            <div class="skill-detail-icon-container" style="display: flex; align-items: center; position: relative;">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 3px; position: relative; z-index: 2;">
-                    <img src="${skill.icon}" class="skill-detail-icon" style="${headerIconStyle} margin-bottom: 0;">
-                    <button class="record-damage-btn" title="데미지 기록 추가" style="margin: 0; width: 45px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; border-color: #007bff; color: #007bff; background: #fff; border-radius: 4px; cursor: pointer;">+</button>
+        <div class="skill-detail-header-row">
+            <div class="skill-detail-icon-wrapper">
+                <div class="skill-detail-icon-column">
+                    <img src="${skill.icon}" class="skill-detail-main-icon ${headerIconStyle}">
+                    <button class="record-add-btn" title="데미지 기록 추가">+</button>
                 </div>
             </div>
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <div class="skill-detail-type" style="font-size: 0.8em; color: #888; margin-bottom: 2px; font-weight: bold;"></div>
-                <h3 class="skill-detail-name" style="margin-top: 0; margin-bottom: 4px;">${skill.name} <span class="skill-detail-level"></span></h3>
-                <p class="skill-detail-damage" style="margin: 0;"></p>
+            <div class="skill-detail-text-col">
+                <div class="skill-detail-type-label"></div>
+                <h3 class="skill-detail-title">${skill.name} <span class="skill-detail-level-span"></span></h3>
+                <p class="skill-detail-damage-val"></p>
             </div>
-            <div id="attribute-container-${state.currentId}" style="display: flex; flex-direction: column; align-items: center; min-width: 70px; justify-content: center;"></div>
+            <div id="attribute-container-${state.currentId}" class="attribute-container"></div>
         </div>
         <div style="height: 5px;"></div>
     `;
@@ -38,8 +38,8 @@ export function updateSkillDetailDisplay(skill, idx, dom, logic) {
     
     // [확실한 복구] 상세 정보 큰 아이콘 및 '+' 버튼 클릭 이벤트
     setTimeout(() => {
-        const bigIcon = detailDisplay.querySelector('.skill-detail-icon');
-        const plusBtn = detailDisplay.querySelector('.record-damage-btn');
+        const bigIcon = detailDisplay.querySelector('.skill-detail-main-icon');
+        const plusBtn = detailDisplay.querySelector('.record-add-btn');
         
         if (bigIcon) {
             bigIcon.style.cursor = 'default';
@@ -88,14 +88,14 @@ export function setupAttributeControl(charId, logic) {
              const attrIdx = constants.attributeList.indexOf(attr);
              const wins = { 0: 2, 1: 0, 2: 1, 3: 4, 4: 3 };
              const loses = { 0: 1, 1: 2, 2: 0, 3: 4, 4: 3 };
-             if (wins[myAttrIdx] === attrIdx) glowColor = 'green';
+             if (wins[myAttrIdx] === attrIdx) glowColor = '#00ff00';
              else if (loses[myAttrIdx] === attrIdx) {
-                 if (myAttrIdx <= 2 && attrIdx <= 2) glowColor = 'red';
-                 if ((myAttrIdx === 3 && attrIdx === 4) || (myAttrIdx === 4 && attrIdx === 3)) glowColor = 'green';
+                 if (myAttrIdx <= 2 && attrIdx <= 2) glowColor = '#ff0000';
+                 if ((myAttrIdx === 3 && attrIdx === 4) || (myAttrIdx === 4 && attrIdx === 3)) glowColor = '#00ff00';
              }
         }
-        const glowStyle = glowColor ? `background: ${glowColor === 'green' ? '#00ff00' : '#ff0000'}; filter: blur(4px); opacity: 0.8; box-shadow: 0 0 10px ${glowColor === 'green' ? '#00ff00' : '#ff0000'}; pointer-events: none;` : '';
-        othersHtml += `<div style="position: relative; width: 30px; height: 30px; margin: 2px; display: flex; align-items: center; justify-content: center;">${glowColor ? `<div style="position: absolute; width: 18px; height: 18px; transform: rotate(45deg); ${glowStyle}"></div>` : ''}<img src="${constants.attributeImageMap[attr]}" class="other-attribute-icon" data-attr="${attr}" style="width: 24px; height: 24px; cursor: pointer; opacity: 0.7; z-index: 1; position: relative; -webkit-user-drag: none; user-drag: none;" title="${attr} 속성"></div>`;
+        const glowStyle = glowColor ? `background: ${glowColor}; box-shadow: 0 0 10px ${glowColor}; filter: blur(4px); opacity: 0.8;` : '';
+        othersHtml += `<div class="attr-control-item">${glowColor ? `<div class="attr-control-glow" style="${glowStyle}"></div>` : ''}<img src="${constants.attributeImageMap[attr]}" class="other-attribute-icon attr-control-img" data-attr="${attr}" title="${attr} 속성"></div>`;
     });
 
     let currentGlowColor = '';
@@ -103,15 +103,15 @@ export function setupAttributeControl(charId, logic) {
     if (myAttrIdx >= 0 && myAttrIdx < 5 && currentAttr !== constants.attributeList[myAttrIdx]) {
          const wins = { 0: 2, 1: 0, 2: 1, 3: 4, 4: 3 };
          const loses = { 0: 1, 1: 2, 2: 0, 3: 4, 4: 3 };
-         if (wins[myAttrIdx] === currentAttrIdx) currentGlowColor = 'green';
+         if (wins[myAttrIdx] === currentAttrIdx) currentGlowColor = '#00ff00';
          else if (loses[myAttrIdx] === currentAttrIdx) {
-             if (myAttrIdx <= 2 && currentAttrIdx <= 2) currentGlowColor = 'red';
-             if ((myAttrIdx === 3 && currentAttrIdx === 4) || (myAttrIdx === 4 && currentAttrIdx === 3)) currentGlowColor = 'green';
+             if (myAttrIdx <= 2 && currentAttrIdx <= 2) currentGlowColor = '#ff0000';
+             if ((myAttrIdx === 3 && currentAttrIdx === 4) || (myAttrIdx === 4 && currentAttrIdx === 3)) currentGlowColor = '#00ff00';
          }
     }
-    const currentGlowStyle = currentGlowColor ? `background: ${currentGlowColor === 'green' ? '#00ff00' : '#ff0000'}; filter: blur(6px); opacity: 0.9; box-shadow: 0 0 15px ${currentGlowColor === 'green' ? '#00ff00' : '#ff0000'}; pointer-events: none;` : '';
+    const currentGlowStyle = currentGlowColor ? `background: ${currentGlowColor}; box-shadow: 0 0 15px ${currentGlowColor}; filter: blur(6px); opacity: 0.9;` : '';
     
-    container.innerHTML = `<div style="display: flex; justify-content: center; margin-bottom: 0px; min-width: 60px;">${othersHtml}</div><div style="display: flex; justify-content: center; margin-top: -4px;"><div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">${currentGlowColor ? `<div style="position: absolute; width: 30px; height: 30px; transform: rotate(45deg); ${currentGlowStyle}"></div>` : ''}<img src="${constants.attributeImageMap[currentAttr]}" class="current-attribute-icon" style="width: 38px; height: 38px; cursor: pointer; z-index: 1; position: relative; -webkit-user-drag: none; user-drag: none;" alt="${currentAttr} 속성"></div></div>`;
+    container.innerHTML = `<div class="attr-control-others">${othersHtml}</div><div class="attr-control-current-wrapper"><div class="attr-control-current-box">${currentGlowColor ? `<div class="attr-control-current-glow" style="${currentGlowStyle}"></div>` : ''}<img src="${constants.attributeImageMap[currentAttr]}" class="current-attribute-icon attr-control-current-img" alt="${currentAttr} 속성"></div></div>`;
 
     container.querySelectorAll('.other-attribute-icon').forEach(icon => {
         icon.onclick = (e) => {
@@ -141,11 +141,11 @@ export function renderCustomControls(charId, data, logic) {
 
     data.customControls.forEach(ctrl => {
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = `display: flex; flex-direction: column; align-items: center; min-width: 40px;`;
+        wrapper.className = 'custom-control-group';
 
         // 라벨
         const label = document.createElement('div');
-        label.style.cssText = `font-size: 0.7em; color: #888; margin-bottom: 2px; white-space: nowrap;`;
+        label.className = 'custom-control-label';
         label.textContent = ctrl.label || ctrl.id;
         wrapper.appendChild(label);
 
@@ -159,7 +159,7 @@ export function renderCustomControls(charId, data, logic) {
         }
 
         if (ctrl.type === 'counter') {
-            btn.style.cssText = `width:32px; height:32px; border-radius:50%; border:1px solid #28a745; background:#fff; color:#28a745; font-weight:bold; cursor:pointer; transition:all 0.1s; padding:0; display:flex; align-items:center; justify-content:center;`;
+            btn.className = 'custom-counter-btn';
             btn.textContent = currentVal;
             
             btn.onclick = () => {
@@ -177,9 +177,8 @@ export function renderCustomControls(charId, data, logic) {
                 renderCustomControls(charId, data, logic); // 리렌더링 (값 갱신)
             };
         } else if (ctrl.type === 'toggle') {
-            btn.style.cssText = `width:32px; height:32px; border-radius:4px; border:1px solid ${currentVal ? '#28a745' : '#ccc'}; background:${currentVal ? '#28a745' : '#fff'}; color:${currentVal ? '#fff' : '#ccc'}; font-weight:bold; cursor:pointer; transition:all 0.1s; padding:0; display:flex; align-items:center; justify-content:center;`;
+            btn.className = `custom-toggle-btn ${currentVal ? 'on' : 'off'}`;
             btn.textContent = currentVal ? "ON" : "OFF";
-            btn.style.fontSize = "0.8em";
 
             btn.onclick = () => {
                 const nextVal = !currentVal;
@@ -211,9 +210,9 @@ export function renderGlobalTargetControl(charId, data, logic) {
 
     const count = state.savedStats[charId]?.commonMultiTargetCount || 1;
     container.innerHTML = `
-        <div id="multi-target-control" style="margin-right: 15px; display: flex; flex-direction: column; align-items: center;">
-            <div style="font-size: 0.7em; color: #888; margin-bottom: 2px;">대상 수</div>
-            <button class="multi-target-btn" style="width:32px; height:32px; border-radius:50%; border:1px solid #007bff; background:#fff; color:#007bff; font-weight:bold;">${count}</button>
+        <div id="multi-target-control" class="target-control-group">
+            <div class="target-control-label">대상 수</div>
+            <button class="target-control-btn">${count}</button>
         </div>
     `;
 
@@ -245,7 +244,9 @@ export function renderSkillIconList(charId, breakthroughValue, dom, logic) {
         if ((i === 4 && breakthroughValue < 30) || (i === 5 && breakthroughValue < 50) || (i === 6 && breakthroughValue < 75)) return;
 
         const isSelected = state.selectedSkillIndex === i && !state.selectedIsExternal;
-        html += `<img src="${s.icon}" class="detail-icon-list-item ${isSelected ? 'selected' : ''}" data-idx="${i}" title="${s.name}" style="${i === 7 ? 'background:black;' : ''}">`;
+        // 7번 스킬(인덱스 7)인 경우 배경색 처리를 위한 클래스 추가
+        const extraClass = (i === 7) ? 'passive-max' : ''; 
+        html += `<img src="${s.icon}" class="detail-icon-list-item ${isSelected ? 'selected' : ''} ${extraClass}" data-idx="${i}" title="${s.name}">`;
     });
 
     // 2. 외부 추가데미지 버프 아이콘들
@@ -253,7 +254,7 @@ export function renderSkillIconList(charId, breakthroughValue, dom, logic) {
         state.currentExtraDamages.forEach((extra, i) => {
             const isSelected = state.selectedSkillIndex === i && state.selectedIsExternal;
             // 외부 버프임을 나타내는 보라색 테두리 또는 스타일을 살짝 가미할 수 있습니다.
-            html += `<img src="${extra.icon}" class="detail-icon-list-item ${isSelected ? 'selected' : ''}" data-idx="${i}" data-is-external="true" title="[추가데미지] ${extra.name}" style="border-color: #a333c8;">`;
+            html += `<img src="${extra.icon}" class="detail-icon-list-item ${isSelected ? 'selected' : ''}" data-idx="${i}" data-is-external="true" title="[추가데미지] ${extra.name}">`;
         });
     }
 

@@ -31,7 +31,7 @@ export function showSimpleTooltip(target, text) {
 
     const tooltip = document.createElement('div');
     tooltip.className = 'buff-tooltip';
-    tooltip.innerHTML = `<div style="font-weight:bold; color:#fff; text-align:center;">${text}</div>`;
+    tooltip.innerHTML = `<div class="tooltip-content" style="font-weight:bold;">${text}</div>`;
     document.body.appendChild(tooltip);
 
     // 임시 렌더링 후 위치 계산을 위해 visible 설정 없이 append만 먼저 함
@@ -88,8 +88,8 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
 
         if (buffCharId !== currentId && !externalBuffLabelAdded) {
             const separator = document.createElement('div');
-            separator.style.cssText = `display: flex; align-items: center; text-align: center; margin: 8px 0 5px; color: #999; font-size: 0.72em; font-weight: bold;`;
-            separator.innerHTML = `<div style="flex-grow: 1; border-top: 1px dashed #444;"></div><span style="padding: 0 10px;">외부 버프</span><div style="flex-grow: 1; border-top: 1px dashed #444;"></div>`;
+            separator.className = 'buff-separator';
+            separator.innerHTML = `<div class="buff-separator-line"></div><span style="padding: 0 10px;">외부 버프</span><div class="buff-separator-line"></div>`;
             container.appendChild(separator);
             externalBuffLabelAdded = true;
         }
@@ -195,12 +195,12 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
             }
 
             const textContainer = document.createElement('div');
-            textContainer.style.cssText = 'display:flex; align-items:center; flex-grow:1; overflow:hidden;'; // 넘침 방지 추가
+            textContainer.className = 'buff-text-container';
 
             if (skill.icon) {
                 const skillIcon = document.createElement('img');
                 skillIcon.src = skill.icon;
-                skillIcon.style.cssText = 'width:24px; height:24px; border-radius:4px; margin-right:8px; border:1px solid #000; cursor:default; background-color: black; flex-shrink:0;'; // 찌그러짐 방지
+                skillIcon.className = 'buff-icon';
                 
                 // PC용: 마우스 오버 시 툴팁 표시
                 skillIcon.addEventListener('mouseenter', (e) => {
@@ -241,8 +241,8 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
             }
 
             textContainer.insertAdjacentHTML('beforeend', `
-                <span class="buff-name-label" style="font-weight:bold; font-size:0.85em; margin-right:10px; white-space:nowrap; flex-shrink:0;">${skill.name} (Lv.${skillLevel})</span>
-                <span style="font-size:${descFontSize}; color:#777; white-space:nowrap; letter-spacing:${descLetterSpacing}; overflow:visible;">${descriptionText}</span>
+                <span class="buff-name-label">${skill.name} (Lv.${skillLevel})</span>
+                <span class="buff-desc" style="font-size:${descFontSize}; letter-spacing:${descLetterSpacing};">${descriptionText}</span>
             `);
 
             buffItem.appendChild(textContainer);
@@ -252,7 +252,7 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
                 const input = document.createElement('input');
                 input.type = 'number';
                 input.value = buff.customValue || 0;
-                input.style.cssText = `width: 50px; margin-left: auto; margin-right: 5px; text-align: right; padding: 2px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;`;
+                input.className = 'buff-custom-input';
                 
                 // onchange로 값 업데이트 (참조 안정성 강화)
                 input.onchange = (e) => {
@@ -281,7 +281,7 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
                 if (skill.id !== 'custom_stat_8') {
                     const unitSpan = document.createElement('span');
                     unitSpan.textContent = '%';
-                    unitSpan.style.cssText = `font-size: 0.85em; color: #666; margin-right: 5px;`;
+                    unitSpan.className = 'buff-unit-span';
                     buffItem.appendChild(unitSpan);
                 } else {
                     // 고정공격력은 단위 없이 여백만 추가
@@ -315,7 +315,11 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
                 const counterBtn = document.createElement('button');
                 // [수정] isControllable을 사용하여 실제 비활성화 및 시각적 처리
                 const isBtnDisabled = !isControllable;
-                counterBtn.style.cssText = `width: 26px; height: 26px; min-width: 26px; flex-shrink: 0; border-radius: 50%; border: 1px solid #007bff; background: #fff; color: #007bff; font-weight: bold; cursor: ${isBtnDisabled ? 'not-allowed' : 'pointer'}; margin-left: auto; font-size: 0.85em; display: flex; align-items: center; justify-content: center; padding: 0; opacity: ${isBtnDisabled ? '0.4' : '1'};`;
+                counterBtn.className = 'btn-circle-small';
+                if (isBtnDisabled) {
+                    counterBtn.style.opacity = '0.4'; // 동적 상태라 인라인 유지 또는 클래스 분리 가능
+                    counterBtn.style.cursor = 'not-allowed';
+                }
                 counterBtn.textContent = countVal;
                 counterBtn.disabled = isBtnDisabled;
                 counterBtn.onclick = () => {
@@ -335,7 +339,7 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
                 const removeBtn = document.createElement('button');
                 removeBtn.innerHTML = '×';
                 removeBtn.title = '버프 제거';
-                removeBtn.style.cssText = `margin-left: 10px; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #dc3545; background: #fff; color: #dc3545; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; padding: 0;`;
+                removeBtn.className = 'btn-remove-small';
                 removeBtn.onclick = (e) => {
                     e.stopPropagation();
                     removeAppliedBuff(buffCharId, skillId, appliedBuffs);
@@ -443,13 +447,8 @@ export function renderBuffSearchResults(matchingChars, charData, buffSearchResul
 
     matchingChars.forEach(charId => {
         const item = document.createElement('div');
-        item.style.padding = '8px 10px';
-        item.style.cursor = 'pointer';
-        item.style.borderBottom = '1px solid #f0f0f0';
+        item.className = 'buff-search-item';
         item.textContent = charData[charId].title;
-        
-        item.onmouseover = () => item.style.backgroundColor = '#f9f9f9';
-        item.onmouseout = () => item.style.backgroundColor = '#fff';
         
         item.onclick = () => {
             buffCharSearchEl.value = charData[charId].title;
@@ -468,22 +467,17 @@ export function displayBuffSkills(charId, charData, container, appliedBuffs, add
     const char = charData[charId];
     
     const header = document.createElement('div');
-    header.style.display = 'flex';
-    header.style.justifyContent = 'space-between';
-    header.style.alignItems = 'center'; // 수직 중앙 정렬 추가
-    header.style.marginBottom = '10px';
+    header.className = 'buff-select-header';
     header.innerHTML = `
         <h4 style="margin: 0;">${char.title} 스킬</h4>
         <button onclick="this.parentElement.parentElement.style.display='none'" 
-                style="padding: 2px 6px; font-size: 0.8em; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px; line-height: 1;">X</button>
+                class="btn-close-x">X</button>
     `;
     container.appendChild(header);
 
     char.skills.filter(s => !s.excludeFromBuffSearch).forEach(skill => {
         const item = document.createElement('div');
-        item.style.display = 'flex';
-        item.style.alignItems = 'center';
-        item.style.marginBottom = '5px';
+        item.className = 'buff-select-item';
 
         const isApplied = appliedBuffs[charId]?.some(b => b.skillId === skill.id);
         const checkbox = document.createElement('input');
@@ -540,10 +534,11 @@ export function displayBuffSkills(charId, charData, container, appliedBuffs, add
         }
         
         const label = document.createElement('label');
+        label.className = 'buff-select-label';
         // [도장]일 때만 강조 색상 적용
         const isTrueStamp = (labelText === "[도장]");
-        const labelColor = isTrueStamp ? "#007bff" : "#888";
-        label.innerHTML = `<span style="color:${labelColor}; font-weight:${isTrueStamp ? 'bold' : 'normal'}; margin-right:5px;">${labelText}</span> ${skill.name}`;
+        const labelClass = isTrueStamp ? "buff-select-label-stamp" : "buff-select-label-normal";
+        label.innerHTML = `<span class="${labelClass}">${labelText}</span> ${skill.name}`;
         
         item.appendChild(checkbox);
         item.appendChild(label);

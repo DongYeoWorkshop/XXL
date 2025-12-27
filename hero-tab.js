@@ -95,62 +95,64 @@ export function renderHeroTab(dom, updateStatsCallback) {
             }
 
             // 한 줄로 표기
-            specTextHtml = `<span style="font-size:${specFontSize}; color:#888; font-weight:normal; margin-left:6px; letter-spacing:-0.01em;">${specContent}</span>`;
+            specTextHtml = `<span class="comp-spec" style="font-size:${specFontSize};">${specContent}</span>`;
         }
 
         container.style.display = 'block';
         container.innerHTML = '';
         
         const header = document.createElement('div');
-        header.style.cssText = `border-bottom: 2px solid #8b4513; padding-bottom: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;`;
+        header.className = 'comp-header';
         
         // [수정] 이름과 스펙을 한 줄(flex-direction: row)로 배치 + 동적 폰트 적용
         header.innerHTML = `
-            <div style="font-weight: bold; color: #333; display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1;">
-                <img src="images/${charId}.webp" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #ccc; flex-shrink: 0;">
-                <div style="display:flex; align-items: baseline; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    <span style="font-size: ${nameFontSize}; transition: font-size 0.2s;">${charTitle}</span>
+            <div class="comp-char-info">
+                <img src="images/${charId}.webp" class="comp-char-img">
+                <div class="comp-text-wrapper">
+                    <span class="comp-name" style="font-size: ${nameFontSize};">${charTitle}</span>
                     ${specTextHtml}
                 </div>
             </div>
-            <div style="font-size: 0.9em; font-weight: bold; color: #d35400; margin-left: 10px; flex-shrink: 0;">${totalDmg.toLocaleString()}</div>
+            <div class="comp-total-dmg">${totalDmg.toLocaleString()}</div>
         `;
         container.appendChild(header);
         
         if (records.length === 0) { container.innerHTML += '<div style="text-align:center; color:#999; padding:20px;">기록 없음</div>'; return; }
         
         const list = document.createElement('div');
-        list.style.cssText = `font-size: 0.85em; display: flex; flex-direction: column; gap: 2px;`;
+        list.className = 'comp-record-list';
         records.forEach(rec => {
             if (rec.isTurnSeparator) {
                 const sep = document.createElement('div');
                 sep.className = 'turn-separator';
                 sep.style.margin = '10px 0 5px'; // 비교표 내부용 미세조정
-                sep.innerHTML = `<div class="turn-line" style="border-color:#eee;"></div><span class="turn-label" style="color:#ccc;">${rec.turnNumber}턴</span><div class="turn-line" style="border-color:#eee;"></div>`;
+                sep.innerHTML = `<div class="turn-line"></div><span class="turn-label">${rec.turnNumber}턴</span><div class="turn-line"></div>`;
                 list.appendChild(sep);
                 return;
             }
             const row = document.createElement('div');
-            row.style.cssText = `display: flex; justify-content: space-between; padding: 3px 5px; background: #f9f9f9; border-radius: 4px;`;
+            row.className = 'comp-record-row';
             const rawDmg = parseInt(rec.damage.replace(/,/g, '')) || 0;
             const totalRowDmg = rawDmg * (rec.count || 1);
-            row.innerHTML = `<div style="color: #555;">${rec.name} ${rec.count > 1 ? `<span style="color:#ff4d4d; font-weight:bold; font-size:0.9em;">x${rec.count}</span>` : ''}</div><div style="font-weight: bold; color: #333;">${totalRowDmg.toLocaleString()}</div>`;
+            
+            // [수정] 타입 라벨 표시 추가
+            const typeTag = rec.type ? `<span style="color:#999; margin-right:4px;">[${rec.type}]</span>` : '';
+            
+            row.innerHTML = `<div class="comp-record-name">${typeTag}${rec.name} ${rec.count > 1 ? `<span class="comp-record-count">x${rec.count}</span>` : ''}</div><div class="comp-record-val">${totalRowDmg.toLocaleString()}</div>`;
             list.appendChild(row);
         });
         container.appendChild(list);
     };
 
     const contentPadding = document.createElement('div');
-    contentPadding.style.cssText = `padding: 40px 10px 10px 10px; position: relative;`;
+    contentPadding.className = 'hero-content-padding';
     
     const headerDiv = document.createElement('div');
     headerDiv.className = 'snapshot-header-tools';
-    headerDiv.style.cssText = `position: absolute; top: -35px; right: 10px; display: flex; justify-content: flex-end; align-items: center; z-index: 10;`;
     
     const clearAllBtn = document.createElement('button');
     clearAllBtn.textContent = '전체 기록 삭제';
-    clearAllBtn.className = 'header-btn-sub'; // 향후 CSS 통합 가능
-    clearAllBtn.style.cssText = `padding: 4px 12px; font-size: 0.8em; background: #fff; color: #dc3545; border: 1px solid #dc3545; border-radius: 4px; cursor: pointer; font-weight: bold;`;
+    clearAllBtn.className = 'header-btn-sub'; 
     
     if (!hasSnapshots) clearAllBtn.style.display = 'none';
     clearAllBtn.onclick = () => {
@@ -220,7 +222,7 @@ export function renderHeroTab(dom, updateStatsCallback) {
         contentPadding.appendChild(imgGrid);
     } else {
         const emptyMsg = document.createElement('div');
-        emptyMsg.style.cssText = `padding: 10px; text-align: center; color: #666; font-size: 1em;`;
+        emptyMsg.style.cssText = `padding: 10px; text-align: center; color: #666; font-size: 1em;`; // 간단한 건 유지하되 추후 이동 가능
         emptyMsg.textContent = '저장된 비교 기록이 없습니다.';
         contentPadding.appendChild(emptyMsg);
     }

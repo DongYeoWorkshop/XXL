@@ -1,0 +1,345 @@
+/* skills.css - 스킬, 버프, 기록, Hero 탭 관련 스타일 */
+
+/* =========================================
+   Skill Detail View (중간 섹션)
+   ========================================= */
+.skill-detail-display {
+    padding: 0;
+    min-height: auto;
+    border-bottom: 1px solid #8b4513;
+    margin-bottom: 5px;
+    color: var(--text-dark);
+}
+
+.skill-detail-tab-tag {
+    display: flex;
+    align-items: flex-end;
+    margin-top: -41px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+.skill-detail-tab-content {
+    background: #30363d;
+    color: #ffa500;
+    font-size: 0.75em;
+    font-weight: bold;
+    padding: 6px 16px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #444;
+    border-bottom: none;
+    z-index: 1;
+    box-shadow: 0 -3px 6px rgba(0,0,0,0.3);
+}
+
+.skill-detail-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 85px;
+}
+
+.skill-detail-icon-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.skill-detail-icon-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+    position: relative;
+    z-index: 2;
+}
+
+.skill-detail-main-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 6px;
+    border: 1px solid #000;
+    flex-shrink: 0;
+    background-color: black;
+    margin-bottom: 0;
+    cursor: default;
+}
+.skill-detail-main-icon.passive-max { background-color: black; }
+
+.record-add-btn {
+    margin: 0;
+    width: 45px;
+    height: 24px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-color: #007bff;
+    color: #007bff;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.skill-detail-text-col {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.skill-detail-type-label {
+    font-size: 0.8em;
+    color: #888;
+    margin-bottom: 2px;
+    font-weight: bold;
+}
+
+.skill-detail-title {
+    margin-top: 0;
+    margin-bottom: 4px;
+    font-size: 1.1em;
+    color: #000;
+}
+
+.skill-detail-level-span {
+    font-size: 0.75em;
+    color: #aaa;
+    font-weight: normal;
+}
+
+.skill-detail-damage-val {
+    margin: 0;
+    font-weight: bold;
+    color: #fff;
+}
+
+.extra-dmg-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    border: 1px solid #000;
+    margin-left: -10px;
+    background: black;
+    position: relative;
+    z-index: 1;
+}
+
+/* =========================================
+   Icon List & Controls
+   ========================================= */
+.icon-list-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-top: 2px;
+}
+
+.detail-icon-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 5px;
+    margin-bottom: 5px;
+}
+
+.detail-icon-list-item {
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    border: 2px solid #000;
+    cursor: pointer;
+    background-color: black;
+    transition: all 0.2s;
+}
+.detail-icon-list-item.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+    transform: scale(1.1);
+}
+.detail-icon-list-item[data-is-external="true"] {
+    border-color: #a333c8;
+}
+
+.controls-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+/* Custom Controls */
+.custom-control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 40px;
+}
+
+.custom-control-label {
+    font-size: 0.7em;
+    color: #888;
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+
+.custom-counter-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: 1px solid #28a745;
+    background: #fff; color: #28a745; font-weight: bold; cursor: pointer;
+    transition: all 0.1s; padding: 0; display: flex; align-items: center; justify-content: center;
+}
+
+.custom-toggle-btn {
+    width: 32px; height: 32px; border-radius: 4px; font-weight: bold; cursor: pointer;
+    transition: all 0.1s; padding: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 0.8em;
+}
+.custom-toggle-btn.on { border: 1px solid #28a745; background: #28a745; color: #fff; }
+.custom-toggle-btn.off { border: 1px solid #ccc; background: #fff; color: #ccc; }
+
+/* Global Target Control */
+.target-control-group {
+    margin-right: 15px; display: flex; flex-direction: column; align-items: center;
+}
+.target-control-label { font-size: 0.7em; color: #888; margin-bottom: 2px; }
+.target-control-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: 1px solid #007bff;
+    background: #fff; color: #007bff; font-weight: bold; cursor: pointer;
+}
+
+/* Attribute Control */
+.attr-control-others { display: flex; justify-content: center; margin-bottom: 0px; min-width: 60px; }
+.attr-control-item { position: relative; width: 30px; height: 30px; margin: 2px; display: flex; align-items: center; justify-content: center; }
+.attr-control-glow { position: absolute; width: 18px; height: 18px; transform: rotate(45deg); pointer-events: none; }
+.attr-control-img { width: 24px; height: 24px; cursor: pointer; opacity: 0.7; z-index: 1; position: relative; -webkit-user-drag: none; user-drag: none; }
+.attr-control-current-wrapper { display: flex; justify-content: center; margin-top: -4px; }
+.attr-control-current-box { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+.attr-control-current-glow { position: absolute; width: 30px; height: 30px; transform: rotate(45deg); pointer-events: none; }
+.attr-control-current-img { width: 38px; height: 38px; cursor: pointer; z-index: 1; position: relative; -webkit-user-drag: none; user-drag: none; }
+
+/* =========================================
+   Buff Display
+   ========================================= */
+.buff-separator {
+    display: flex; align-items: center; text-align: center; margin: 8px 0 5px; color: #999; font-size: 0.72em; font-weight: bold;
+}
+.buff-separator-line { flex-grow: 1; border-top: 1px dashed #444; }
+
+.applied-buff-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    color: var(--text-dark);
+}
+.applied-buff-item.buff-off-state { opacity: 0.5; background-color: #f9f9f9; }
+
+.buff-text-container { display: flex; align-items: center; flex-grow: 1; overflow: hidden; }
+.buff-icon { width: 24px; height: 24px; border-radius: 4px; margin-right: 8px; border: 1px solid #000; cursor: default; background-color: black; flex-shrink: 0; }
+.buff-name-label { font-weight: bold; font-size: 0.85em; margin-right: 10px; white-space: nowrap; flex-shrink: 0; }
+.buff-desc { white-space: nowrap; overflow: visible; color: #777; }
+
+.buff-custom-input { width: 50px; margin-left: auto; margin-right: 5px; text-align: right; padding: 2px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; }
+.buff-unit-span { font-size: 0.85em; color: #666; margin-right: 5px; }
+
+/* Buff Search Result Item */
+.buff-search-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+.buff-search-item:hover { background-color: #f9f9f9; }
+
+/* Buff Selection List Item */
+.buff-select-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.buff-select-item { display: flex; align-items: center; margin-bottom: 5px; }
+.buff-select-label span { margin-right: 5px; }
+.buff-select-label-stamp { color: #007bff; font-weight: bold; }
+.buff-select-label-normal { color: #888; font-weight: normal; }
+
+
+/* =========================================
+   Damage Records
+   ========================================= */
+.damage-record-container {
+    margin-top: 10px; padding: 10px; border-top: 1px dashed var(--border-light); font-size: 0.85em; background: #fff5e6; border-radius: 5px;
+}
+
+.total-damage-display {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #ddd;
+}
+.record-btn-group { display: flex; gap: 5px; }
+.record-btn { padding: 2px 8px; font-size: 0.75em; cursor: pointer; border-radius: 4px; font-weight: bold; background: #fff; }
+.record-btn-clear { border: 1px solid #333; color: #333; } /* Default style, customized in JS? No, move here */
+.record-btn-next { border: 1px solid #28a745; color: #28a745; }
+.record-btn-save { border: 1px solid #007bff; color: #007bff; }
+.record-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+
+.total-damage-text { color: #333; font-weight: bold; }
+.total-damage-label { font-size: 0.8em; color: #666; }
+
+.record-item {
+    display: flex; justify-content: space-between; margin-bottom: 2px; cursor: pointer; border-bottom: 1px solid #eee; padding-bottom: 1px;
+}
+.record-item:hover { background-color: #f0f0f0; }
+.record-item-left { display: flex; align-items: center; }
+.record-type-tag { color: #999; font-size: 0.9em; margin-right: 4px; }
+.record-name { color: #666; }
+.record-count { color: #ff4d4d; font-weight: bold; margin-left: 5px; }
+.record-val { font-weight: bold; } /* Color comes from inline style usually (damage color) */
+
+/* =========================================
+   Hero Tab
+   ========================================= */
+.hero-graph-container {
+    display: flex; flex-direction: column; align-items: stretch; background: #fffbf5; padding: 0;
+    border: 1px solid #eee0d0; border-radius: 8px; margin-bottom: 10px;
+    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.1); margin-top: 0; width: 100%; grid-column: 1 / -1;
+}
+
+.hero-tab-tag { display: flex; align-items: flex-end; margin-top: -46px; margin-left: -1px; margin-bottom: 0; }
+.hero-tag-content {
+    background: #30363d; color: #ffa500; font-size: 0.75em; font-weight: bold;
+    padding: 6px 16px; border-radius: 8px 8px 0 0; border: 1px solid #444; border-bottom: none;
+    z-index: 1; box-shadow: 0 -3px 6px rgba(0,0,0,0.3);
+}
+
+.hero-content-padding { padding: 40px 10px 10px 10px; position: relative; }
+.snapshot-header-tools { position: absolute; top: -35px; right: 10px; display: flex; justify-content: flex-end; align-items: center; z-index: 10; }
+.header-btn-sub { padding: 4px 12px; font-size: 0.8em; background: #fff; color: #dc3545; border: 1px solid #dc3545; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+.graph-img-grid {
+    display: flex; flex-wrap: nowrap; gap: 20px; align-items: end; overflow-x: auto;
+    padding-bottom: 10px; scrollbar-width: none; cursor: grab; -ms-overflow-style: none;
+}
+.graph-img-grid::-webkit-scrollbar { display: none; }
+
+.snapshot-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; flex: 0 0 auto; }
+.snapshot-del-btn {
+    position: absolute; top: 0; right: 0; width: 20px; height: 20px; background: #dc3545; color: white;
+    border: none; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+.snapshot-img {
+    width: 70px; height: 180px; object-fit: cover; border-radius: 6px; border: 2px solid #ddd;
+    cursor: copy; background: black; margin-bottom: 8px;
+}
+.snapshot-dmg-label { font-size: 0.85em; font-weight: bold; color: #d35400; margin-bottom: 4px; }
+.snapshot-bar-container { width: 50px; height: 100px; background: #eee; border-radius: 4px; position: relative; margin-bottom: 0; display: flex; align-items: flex-end; overflow: hidden; }
+.snapshot-bar { width: 100%; background: linear-gradient(to top, #ffa500, #ff8c00); transition: height 0.5s ease-out; }
+
+.comparison-tables-container { display: flex; flex-wrap: wrap; gap: 15px; width: 100%; grid-column: 1 / -1; margin-top: 10px; align-items: flex-start; }
+.comparison-slot { width: calc(50% - 8px); flex: 0 0 auto; min-width: 300px; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+.comp-header { border-bottom: 2px solid #8b4513; padding-bottom: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.comp-char-info { font-weight: bold; color: #333; display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1; }
+.comp-char-img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #ccc; flex-shrink: 0; }
+.comp-text-wrapper { display: flex; align-items: baseline; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comp-name { transition: font-size 0.2s; }
+.comp-spec { color: #888; font-weight: normal; margin-left: 6px; letter-spacing: -0.01em; }
+.comp-total-dmg { font-size: 0.9em; font-weight: bold; color: #d35400; margin-left: 10px; flex-shrink: 0; }
+.comp-record-list { font-size: 0.85em; display: flex; flex-direction: column; gap: 2px; }
+.comp-record-row { display: flex; justify-content: space-between; padding: 3px 5px; background: #f9f9f9; border-radius: 4px; }
+.comp-record-name { color: #555; }
+.comp-record-val { font-weight: bold; color: #333; }
+.comp-record-count { color: #ff4d4d; font-weight: bold; font-size: 0.9em; }

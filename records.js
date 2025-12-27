@@ -7,8 +7,8 @@ import { saveSnapshots } from './storage.js';
  * 현재 데미지를 기록 목록에 추가합니다.
  */
 export function recordCurrentDamage(skill, detailDisplay, skillIdx, currentId, saveCurrentStats) {
-    const damageText = detailDisplay.querySelector('.skill-detail-damage')?.textContent;
-    const damageColor = detailDisplay.querySelector('.skill-detail-damage')?.style.color || 'black';
+    const damageText = detailDisplay.querySelector('.skill-detail-damage-val')?.textContent;
+    const damageColor = detailDisplay.querySelector('.skill-detail-damage-val')?.style.color || 'black';
 
     // [수정] 라벨이 없어도 숫자 형식이면 기록 가능하도록 변경
     if (damageText && damageText.trim() !== '') {
@@ -23,16 +23,25 @@ export function recordCurrentDamage(skill, detailDisplay, skillIdx, currentId, s
         const damageVal = finalSum.toLocaleString();
         if (!state.damageRecords[currentId]) state.damageRecords[currentId] = [];
         
-        // [수정] 스킬 유형 대신 데미지 유형 표시
-        let typeLabelTxt = "공격";
-        if (skill.damageDeal && skill.damageDeal.length > 0) {
-            typeLabelTxt = skill.damageDeal[0].type;
-        } else if (skill.ratioEffects && skill.ratioEffects["고정공증"]) {
-            typeLabelTxt = "공격력 가산";
-        } else if (skill.healDeal) {
-            typeLabelTxt = "회복";
-        } else if (skill.barrierDeal) {
-            typeLabelTxt = "배리어";
+        // [수정] 스킬 슬롯 기반 타입 라벨링 (보통공격, 필살기, 패시브N, 도장)
+        let typeLabelTxt = "기타";
+        
+        if (skill.isExternal) {
+            // 외부 버프는 데미지 타입 그대로 사용 (예: 추가공격)
+            if (skill.damageDeal && skill.damageDeal.length > 0) typeLabelTxt = skill.damageDeal[0].type;
+            else typeLabelTxt = "외부";
+        } else {
+            if (skillIdx === 0) typeLabelTxt = "보통공격";
+            else if (skillIdx === 1) typeLabelTxt = "필살기";
+            else if (skillIdx >= 2 && skillIdx <= 6) typeLabelTxt = `패시브${skillIdx - 1}`;
+            else if (skillIdx === 7 || skill.isUltExtra) typeLabelTxt = "도장";
+            else {
+                // 예외 케이스: 데미지 타입 사용
+                if (skill.damageDeal && skill.damageDeal.length > 0) typeLabelTxt = skill.damageDeal[0].type;
+                else if (skill.ratioEffects && skill.ratioEffects["고정공증"]) typeLabelTxt = "공격력 가산";
+                else if (skill.healDeal) typeLabelTxt = "회복";
+                else if (skill.barrierDeal) typeLabelTxt = "배리어";
+            }
         }
 
         const records = state.damageRecords[currentId];
@@ -104,37 +113,38 @@ export function renderDamageRecords(charId, parentContainer, saveCurrentStats) {
     // 실제 데미지 기록(구분선 제외)이 있는지 확인
     const hasData = records.some(r => !r.isTurnSeparator);
 
-    records.forEach((rec, idx) => {
-        if (rec.isTurnSeparator) {
-            // 턴 구분선 렌더링 (--- 1턴 ---)
-            const separator = document.createElement('div');
-            separator.className = 'turn-separator';
-            
-            const lineLeft = document.createElement('div');
-            lineLeft.className = 'turn-line';
-            
-            const label = document.createElement('span');
-            label.className = 'turn-label';
-            label.textContent = `${rec.turnNumber}턴`;
-            
-            const lineRight = document.createElement('div');
-            lineRight.className = 'turn-line';
-            
-            separator.appendChild(lineLeft);
-            separator.appendChild(label);
-            separator.appendChild(lineRight);
-            
+            records.forEach((rec, idx) => {
+            if (rec.isTurnSeparator) {
+                // 턴 구분선 렌더링 (--- 1턴 ---)
+                const separator = document.createElement('div');
+                separator.className = 'turn-separator';
+                
+                const lineLeft = document.createElement('div');
+                lineLeft.className = 'turn-line';
+                
+                const label = document.createElement('span');
+                label.className = 'turn-label';
+                label.textContent = `${rec.turnNumber}턴`;
+                
+                const lineRight = document.createElement('div');
+                lineRight.className = 'turn-line';
+                
+                separator.appendChild(lineLeft);
+                separator.appendChild(label);
+                separator.appendChild(lineRight);
+                
             separator.onclick = () => {
                 if (rec.turnNumber === 1) return; // 1턴은 삭제 불가
                 
-                // 현재 구분선부터 다음 구분선 전까지의 항목 개수 계산
-                let deleteCount = 1;
-                for (let i = idx + 1; i < records.length; i++) {
-                    if (records[i].isTurnSeparator) break;
-                    deleteCount++;
+                // [수정] 마지막 턴인지 확인 (이후에 다른 턴 구분선이 없어야 함)
+                const hasLaterTurn = records.slice(idx + 1).some(r => r.isTurnSeparator);
+                if (hasLaterTurn) {
+                    showToast('마지막 턴부터 순서대로 지울 수 있습니다.');
+                    return;
                 }
                 
-                state.damageRecords[charId].splice(idx, deleteCount);
+                // 현재 구분선부터 끝까지 삭제 (해당 턴 전체 삭제)
+                state.damageRecords[charId].splice(idx);
                 renderDamageRecords(charId, parentContainer, saveCurrentStats);
                 saveCurrentStats();
             };
@@ -159,25 +169,30 @@ export function renderDamageRecords(charId, parentContainer, saveCurrentStats) {
         const totalDmg = rawDmg * (rec.count || 1);
         const displayDmg = totalDmg.toLocaleString();
 
-        const typeLabel = rec.type ? `<span style="color:#999; font-size:0.9em; margin-right:4px;">[${rec.type}]</span>` : '';
-        const countLabel = (rec.count > 1) ? `<span style="color:#ff4d4d; font-weight:bold; margin-left:5px;">x${rec.count}</span>` : '';
+        const typeLabel = rec.type ? `<span class="record-type-tag">[${rec.type}]</span>` : '';
+        const countLabel = (rec.count > 1) ? `<span class="record-count">x${rec.count}</span>` : '';
         
         item.innerHTML = `
-            <div style="display:flex; align-items:center;">
+            <div class="record-item-left">
                 ${typeLabel}
-                <span style="color:#666;">${rec.name}</span>
+                <span class="record-name">${rec.name}</span>
                 ${countLabel}
             </div>
-            <span style="color:${rec.color}; font-weight:bold;">${displayDmg}</span>
+            <span class="record-val" style="color:${rec.color};">${displayDmg}</span>
         `;
         item.onclick = () => {
+            // [수정] 현재 항목이 마지막 턴에 속해있는지 확인
+            const hasLaterTurn = records.slice(idx + 1).some(r => r.isTurnSeparator);
+            if (hasLaterTurn) {
+                showToast('현재 진행 중인 턴의 기록만 지울 수 있습니다.');
+                return;
+            }
             state.damageRecords[charId].splice(idx, 1);
             renderDamageRecords(charId, parentContainer, saveCurrentStats);
             saveCurrentStats();
         };
         container.appendChild(item);
-    });
-}
+    });}
 
 function updateTotalDamage(container, charId, saveCurrentStats) {
     const records = state.damageRecords[charId] || [];
@@ -192,16 +207,13 @@ function updateTotalDamage(container, charId, saveCurrentStats) {
 
     const div = document.createElement('div');
     div.className = 'total-damage-display';
-    div.style.cssText = `display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #ddd;`;
     
     const btnGroup = document.createElement('div');
-    btnGroup.style.display = 'flex';
-    btnGroup.style.gap = '5px';
+    btnGroup.className = 'record-btn-group';
 
     const clearBtn = document.createElement('button');
-    clearBtn.className = 'clear-all-btn';
+    clearBtn.className = 'record-btn record-btn-clear';
     clearBtn.textContent = '전체 삭제';
-    clearBtn.style.cssText = `padding: 2px 8px; font-size: 0.75em; cursor: pointer;`;
     clearBtn.onclick = () => {
         state.damageRecords[charId] = [];
         renderDamageRecords(charId, container.parentElement, saveCurrentStats);
@@ -210,15 +222,15 @@ function updateTotalDamage(container, charId, saveCurrentStats) {
 
     const nextTurnBtn = document.createElement('button');
     nextTurnBtn.textContent = '다음턴';
-    nextTurnBtn.style.cssText = `padding: 2px 8px; font-size: 0.75em; cursor: pointer; background: #fff; border: 1px solid #28a745; color: #28a745; border-radius: 4px; font-weight: bold;`;
+    nextTurnBtn.className = 'record-btn record-btn-next';
     nextTurnBtn.onclick = () => {
         startNextTurn(charId, container.parentElement.parentElement, saveCurrentStats);
     };
 
     const saveBtn = document.createElement('button');
     saveBtn.textContent = '저장';
-    saveBtn.style.cssText = `padding: 2px 8px; font-size: 0.75em; cursor: pointer; background: #fff; border: 1px solid #007bff; color: #007bff; border-radius: 4px; font-weight: bold;`;
-                saveBtn.onclick = () => {
+    saveBtn.className = 'record-btn record-btn-save';
+    saveBtn.onclick = () => {
                     const total = records.reduce((sum, rec) => {
                         if (rec.isTurnSeparator) return sum;
                         return sum + (parseInt(rec.damage.replace(/,/g, '')) || 0) * (rec.count || 1);
@@ -247,9 +259,6 @@ function updateTotalDamage(container, charId, saveCurrentStats) {
     if (!hasIcons) {
         [clearBtn, nextTurnBtn, saveBtn].forEach(btn => {
             btn.disabled = true;
-            btn.style.opacity = '0.4';
-            btn.style.cursor = 'not-allowed';
-            btn.style.filter = 'grayscale(1)';
         });
     }
 
@@ -258,9 +267,7 @@ function updateTotalDamage(container, charId, saveCurrentStats) {
     btnGroup.appendChild(saveBtn);
     
     const totalText = document.createElement('div');
-    totalText.innerHTML = `<span class="total-damage-label" style="font-size:0.8em; color:#666;">총 데미지:</span> ${total.toLocaleString()}`;
-    totalText.style.color = '#333';
-    totalText.style.fontWeight = 'bold';
+    totalText.innerHTML = `<span class="total-damage-label">총 데미지:</span> <span class="total-damage-text">${total.toLocaleString()}</span>`;
 
     div.appendChild(btnGroup);
     div.appendChild(totalText);

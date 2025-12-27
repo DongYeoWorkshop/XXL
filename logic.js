@@ -128,7 +128,7 @@ export function updateStats(level = parseInt(dom.sliderInput.value), skipBuffRen
     const 최종HP = 기초HP > 0 ? Math.floor(기초HP * (1 + (subStats["HP증가"] || 0) / 100)) : 0;
     
     // 6. UI 업데이트 실행
-    updateMainStatDisplay(기초공격력, 최종공격력, 기초HP, 최종HP);
+    updateMainStatDisplay(기초공격력, 최종공격력, 기초HP, 최종HP, baseStats);
     updateSubStatList(subStats);
     
     if (!skipBuffRender) {
@@ -176,32 +176,34 @@ function updateStickyHeader(level) {
 /**
  * 공격력, HP 등 주요 스탯을 화면에 출력합니다.
  */
-function updateMainStatDisplay(기초공격력, 최종공격력, 기초HP, 최종HP) {
+function updateMainStatDisplay(기초공격력, 최종공격력, 기초HP, 최종HP, baseStats) {
     dom.statsArea.innerHTML = '';
-    const addStatLi = (label, val) => {
+    const addStatLi = (label, val, tooltipText = null) => {
         const li = document.createElement('li');
         li.innerHTML = `<span class="stat-label">${label}</span> <span>${Math.floor(val).toLocaleString()}</span>`;
+        if (tooltipText) {
+            li.addEventListener('mouseenter', () => { if (!('ontouchstart' in window) && (navigator.maxTouchPoints <= 0)) { const tooltipControl = showSimpleTooltip(li, tooltipText); li.addEventListener('mouseleave', tooltipControl.onMouseLeave); } });
+            li.addEventListener('click', (e) => {
+                 e.stopPropagation();
+                 const existing = document.querySelector('.buff-tooltip');
+                 if (existing) { if (existing.timeoutId) clearTimeout(existing.timeoutId); existing.remove(); }
+                 const tooltipControl = showSimpleTooltip(li, tooltipText);
+                 const tooltipEl = document.querySelector('.buff-tooltip');
+                 if (tooltipEl) { tooltipEl.timeoutId = setTimeout(() => { tooltipControl.remove(); }, 3000); }
+                 const closeOnOutside = () => { tooltipControl.remove(); document.removeEventListener('click', closeOnOutside); };
+                 setTimeout(() => document.addEventListener('click', closeOnOutside), 50);
+            });
+        }
         dom.statsArea.appendChild(li);
         return li;
     };
 
-    addStatLi("기초공격력", 기초공격력);
+    // 기초공격력: 툴팁에 순수 베이스 공격력 표시
+    addStatLi("기초공격력", 기초공격력, `초기공격력 : ${baseStats["공격력"].toLocaleString()}`);
     addStatLi("공격력", 최종공격력);
     
     if (최종HP > 0) {
-        const hpLi = addStatLi("HP", 최종HP);
-        const tooltipText = `기초 HP : ${기초HP.toLocaleString()}`;
-        hpLi.addEventListener('mouseenter', () => { if (!('ontouchstart' in window) && (navigator.maxTouchPoints <= 0)) { const tooltipControl = showSimpleTooltip(hpLi, tooltipText); hpLi.addEventListener('mouseleave', tooltipControl.onMouseLeave); } });
-        hpLi.addEventListener('click', (e) => {
-             e.stopPropagation();
-             const existing = document.querySelector('.buff-tooltip');
-             if (existing) { if (existing.timeoutId) clearTimeout(existing.timeoutId); existing.remove(); }
-             const tooltipControl = showSimpleTooltip(hpLi, tooltipText);
-             const tooltipEl = document.querySelector('.buff-tooltip');
-             if (tooltipEl) { tooltipEl.timeoutId = setTimeout(() => { tooltipControl.remove(); }, 3000); }
-             const closeOnOutside = () => { tooltipControl.remove(); document.removeEventListener('click', closeOnOutside); };
-             setTimeout(() => document.addEventListener('click', closeOnOutside), 50);
-        });
+        addStatLi("HP", 최종HP, `기초 HP : ${기초HP.toLocaleString()}`);
     }
 }
 
@@ -351,22 +353,23 @@ function updateDetailViewDisplay(data, subStats, 기초공격력, 최종공격�
         } else if (skill.isUltExtra) { lv = state.currentSkillLevels[2] || 1; }
     }
 
-    const detailHeader = dom.newSectionArea.querySelector('.skill-detail-header');
-    if (!detailHeader) return;
+    // [수정] 클래스명 변경 반영
+    const detailHeaderRow = dom.newSectionArea.querySelector('.skill-detail-header-row');
+    if (!detailHeaderRow) return;
 
-    const bigIcon = detailHeader.querySelector('.skill-detail-icon');
+    const bigIcon = detailHeaderRow.querySelector('.skill-detail-main-icon');
     if (bigIcon) bigIcon.src = skill.icon;
 
-    const typeDiv = detailHeader.querySelector('.skill-detail-type');
+    const typeDiv = detailHeaderRow.querySelector('.skill-detail-type-label');
     if (typeDiv && skill.damageDeal) {
         const uniqueTypes = Array.from(new Set(skill.damageDeal.map(d => d.type)));
         typeDiv.textContent = (isExternal ? "[외부버프] " : "") + uniqueTypes.join(', ');
     }
     
-    const nameEl = detailHeader.querySelector('.skill-detail-name');
-    if (nameEl) nameEl.innerHTML = `${skill.name} <span class="skill-detail-level">(Lv.${lv})</span>`;
+    const nameEl = detailHeaderRow.querySelector('.skill-detail-title');
+    if (nameEl) nameEl.innerHTML = `${skill.name} <span class="skill-detail-level-span">(Lv.${lv})</span>`;
 
-    const detailDamageP = detailHeader.querySelector('.skill-detail-damage');
+    const detailDamageP = detailHeaderRow.querySelector('.skill-detail-damage-val');
     if (detailDamageP) {
         const attackerAttr = data.info?.속성;
         const targetAttr = constants.attributeList.indexOf(state.currentDisplayedAttribute);
@@ -395,7 +398,16 @@ function updateDetailViewDisplay(data, subStats, 기초공격력, 최종공격�
         detailDamageP.textContent = displayText;
 
         // 추가 아이콘 렌더링
-        const iconContainer = detailHeader.querySelector('.skill-detail-icon-container');
+        const iconContainer = detailHeaderRow.querySelector('.skill-detail-icon-column'); // 아이콘 컬럼 안에 추가하는 것으로 변경됨? 확인 필요
+        // detail-view.js 구조: .skill-detail-icon-wrapper > .skill-detail-icon-column > img, button
+        // 이전 로직: .skill-detail-icon-container 안에 추가했음. 
+        // detail-view.js 리팩토링 후 구조:
+        // <div class="skill-detail-icon-column">
+        //    <img ... class="skill-detail-main-icon">
+        //    <button ...>
+        // </div>
+        // 따라서 .skill-detail-icon-column을 타겟으로 잡아야 함.
+        
         if (iconContainer) {
             iconContainer.querySelectorAll('.extra-dmg-icon').forEach(el => el.remove());
             const dmgInfo = getFormattedDamage(skill, lv, isUltStamped, false, attackerAttr, targetAttr, subStats, 기초공격력, 최종공격력, 최종HP, idx);
@@ -404,7 +416,7 @@ function updateDetailViewDisplay(data, subStats, 기초공격력, 최종공격�
                     const img = document.createElement('img');
                     img.src = iconSrc;
                     img.className = 'extra-dmg-icon';
-                    img.style.cssText = 'width: 30px; height: 30px; border-radius: 4px; border: 1px solid #000; margin-left: -10px; background: black; position: relative; z-index: 1;';
+                    // 스타일은 CSS 클래스로 이동되었으므로 제거
                     iconContainer.appendChild(img);
                 });
             }

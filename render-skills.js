@@ -61,7 +61,7 @@ export function renderSkills(charId, charData, savedStats, currentSkillLevels, c
             <div class="skill-slider-container">
                 <input type="range" id="skill-slider-${charId}-${idx + 1}" min="1" max="10" value="${savedLv}" class="skill-slider" data-skill-index="${idx}">
             </div>
-            <div class="skill-embedded-description" style="display: block;">
+            <div class="skill-embedded-description">
                 <p class="embedded-skill-desc" style="font-size:0.85em; color:#eee; margin-top:10px;"></p>
             </div>
         `;

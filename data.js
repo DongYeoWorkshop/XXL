@@ -264,7 +264,6 @@ export const charData = {
         },
   "anuberus": {
     title: "아누비로스",
-    desc: "아누비로스에 대한 설명입니다.",
     base: { "공격력": 592, "HP": 2791 },
     growth: { "공격력": 1.05, "HP": 1.05 },
     info: { "속성": 4, "포지션": "방해" },
@@ -357,7 +356,7 @@ export const charData = {
       },
       {
         id: "anuberus_stamp_passive",
-        name: "도장 패시브: 흑구 백구 추가타",
+        name: "니히히~ 우리도 왔다!(도장)",
         icon: "images/sigilwebp/sigil_anuberus.webp",
         excludeFromBuffSearch: true,
         isUltExtra: true,
@@ -1850,7 +1849,7 @@ export const charData = {
         toggleType: "isAppliedStamped",        
         icon: "icon/attack(strong).webp", 
         desc: "(쿨타임 : 3턴) \n 자신의 기초 공격력을 {0}% 증가시킨 후 대상 적에게 {1}%의 데미지를 줌", 
-        stampDesc: "(쿨타임 : 3턴) \n 자신의 기초 공격력을 {0}% 증가시킨 후 대상 적에게 {1}%의 데미지를 줌 그리고 전사와 방해 포지션 아군에게 파미도의 기초공격력 {2}%만큼 공격력 가산", 
+        stampDesc: "(쿨타임 : 3턴) \n 2턴 간 자신의 기초 공격력을 {0}% 증가시킨 후 대상 적에게 {1}%의 데미지를 줌 그리고 전사와 방해 포지션 아군에게 2턴 간 파미도 기초공격력의 {2}%만큼 공격력 가산", 
         calc: [{ max: 30},{ max: 135, startRate:0.64,stampMax:150, startRate:0.64},{ max: 15}],
         damageDeal: [{ type: "필살공격", val: { max: 135, startRate:0.64 ,stampMax:150, startRate:0.64 } }]        
       }, 
