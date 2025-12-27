@@ -54,9 +54,14 @@ export function initHandlers(domElements, logicFunctions) {
     });
 
     // [추가] 화면 크기 변경 시 UI 즉시 갱신 (PC/모바일 전환 대응)
+    // 모바일 주소창 Show/Hide로 인한 높이 변경 시에는 갱신하지 않도록 가로폭 변경 체크
+    let lastWidth = window.innerWidth;
     window.addEventListener('resize', () => {
-        if (state.currentId) {
-            logic.updateStats();
+        if (window.innerWidth !== lastWidth) {
+            lastWidth = window.innerWidth;
+            if (state.currentId) {
+                logic.updateStats();
+            }
         }
     });
 }
@@ -481,6 +486,18 @@ export function setupDragScroll(slider, storageKey = null) {
         if (savedScrollPos) {
             slider.scrollLeft = parseInt(savedScrollPos);
         }
+    }
+
+    // [수정] 모바일(터치 디바이스)에서는 기본 스크롤을 사용하도록 드래그 로직 차단
+    // ontouchstart가 있거나 maxTouchPoints가 0보다 크면 터치 기기로 간주
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        // 단, 스크롤 위치 저장 기능은 유지
+        slider.addEventListener('scroll', () => {
+            if (storageKey) {
+                localStorage.setItem(storageKey, slider.scrollLeft);
+            }
+        });
+        return; 
     }
 
     slider.onmousedown = e => { 
