@@ -1,12 +1,12 @@
 // logic.js
-import { calculateCharacterStats, calculateDamage } from './calculations.js?v=20251225';
+import { calculateCharacterStats, calculateDamage } from './calculations.js';
 import { getSkillMultiplier, getDynamicDesc } from './formatter.js';
-import { renderAppliedBuffsDisplay, setFormattedDesc, showToast, showSimpleTooltip } from './ui.js?v=20251225';
+import { renderAppliedBuffsDisplay, setFormattedDesc, showToast, showSimpleTooltip } from './ui.js';
 import { saveCharacterStats } from './storage.js';
 import { getDisabledSkillIds, updateSkillStatesByBreakthrough } from './breakthrough.js';
 import { state, constants } from './state.js';
 import { charData } from './data.js';
-import { getFormattedDamage } from './damage-calculator.js?v=100';
+import { getFormattedDamage } from './damage-calculator.js';
 import { renderHeroTab, clearHeroTabRemnants } from './hero-tab.js';
 
 let dom = {};
@@ -17,8 +17,11 @@ export function initLogic(domElements) {
 
 export function saveCurrentStats() {
     if (!state.currentId) return;
+    
+    // 모든 탭 ID(캐릭터, hero, simulator)를 마지막 선택 상태로 저장
     localStorage.setItem('lastSelectedCharId', state.currentId);
-    if (state.currentId === 'hero') return;
+    
+    if (state.currentId === 'hero' || state.currentId === 'simulator') return;
 
     if (!state.savedStats[state.currentId]) state.savedStats[state.currentId] = {};
     const char = state.savedStats[state.currentId];
@@ -43,6 +46,14 @@ export function saveCurrentStats() {
     char.damageRecords = state.damageRecords[state.currentId] || [];
     
     if (!char.customValues) char.customValues = {};
+    
+    // [추가] 캐릭터 탭의 모든 customSlider / customCounter 값 읽어와 저장
+    const customInputs = dom.skillContainer.querySelectorAll('.skill-custom-input');
+    customInputs.forEach(input => {
+        const key = input.dataset.key;
+        if (key) char.customValues[key] = parseInt(input.value);
+    });
+
     saveCharacterStats(state.currentId, char);
     updateCharacterListIndicators();
 }
@@ -97,7 +108,7 @@ export function updateStats(level = parseInt(dom.sliderInput.value), skipBuffRen
 
     const baseStats = {};
     for (const key in data.base) {
-        let val = data.base[key] * Math.pow(data.growth[key], (level - 1));
+        let val = data.base[key] * Math.pow(constants.defaultGrowth, (level - 1));
         baseStats[key] = Math.floor(val * (1 + bonus1Rate) * (1 + bonus2Rate));
     }
 
@@ -150,25 +161,43 @@ function updateStickyHeader(level) {
     const infoSpans = ['sticky-name', 'sticky-attr', 'sticky-lv', 'sticky-br', 'sticky-fit'];
     const headerTitle = document.getElementById('sticky-header-title');
     
-    if (!state.currentId || state.currentId === 'hero') {
-        if (headerTitle) headerTitle.style.display = 'flex';
-        infoSpans.forEach(id => { const el = document.getElementById(id); if (el) { el.style.display = 'none'; el.innerText = ''; } });
+    // 특수 탭(null, hero, simulator)인 경우 캐릭터 정보 완전 차단
+    if (!state.currentId || state.currentId === 'hero' || state.currentId === 'simulator') {
+        if (headerTitle) {
+            headerTitle.style.setProperty('display', 'flex', 'important');
+            headerTitle.innerHTML = `<img src="icon/main.png" class="header-title-icon">동여성 공방`;
+        }
+        infoSpans.forEach(id => { 
+            const el = document.getElementById(id); 
+            if (el) {
+                el.style.setProperty('display', 'none', 'important'); // 강제 숨김
+                el.innerText = ''; // 텍스트 제거
+            }
+        });
     } else {
+        // 실제 캐릭터인 경우
         const data = charData[state.currentId];
         if (data) {
-            if (headerTitle) headerTitle.style.display = 'none';
-            infoSpans.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'flex'; });
+            if (headerTitle) headerTitle.style.setProperty('display', 'none', 'important');
             
-            document.getElementById('sticky-name').innerText = data.title;
+            infoSpans.forEach(id => { 
+                const el = document.getElementById(id); 
+                if (el) el.style.setProperty('display', 'flex', 'important'); // 강제 노출
+            });
+            
+            const nameEl = document.getElementById('sticky-name');
+            if (nameEl) nameEl.innerText = data.title;
+            
             const attrName = constants.attributeList[data.info?.속성];
-            document.getElementById('sticky-attr').innerHTML = `<img src="${constants.attributeImageMap[attrName]}" class="sticky-attr-icon">`;
+            const attrEl = document.getElementById('sticky-attr');
+            if (attrEl) attrEl.innerHTML = `<img src="${constants.attributeImageMap[attrName]}" class="sticky-attr-icon">`;
             
             const brVal = parseInt(dom.extraSlider1.value) || 0;
             const brText = (brVal < 5) ? `0성 ${brVal}단` : (brVal < 15) ? `1성 ${brVal - 5}단` : (brVal < 30) ? `2성 ${brVal - 15}단` : (brVal < 50) ? `3성 ${brVal - 30}단` : (brVal < 75) ? `4성 ${brVal - 50}단` : "5성";
             
-            document.getElementById('sticky-lv').innerText = `Lv.${level}`;
-            document.getElementById('sticky-br').innerText = brText;
-            document.getElementById('sticky-fit').innerText = `적합:${dom.extraSlider2.value}`;
+            if (document.getElementById('sticky-lv')) document.getElementById('sticky-lv').innerText = `Lv.${level}`;
+            if (document.getElementById('sticky-br')) document.getElementById('sticky-br').innerText = brText;
+            if (document.getElementById('sticky-fit')) document.getElementById('sticky-fit').innerText = `적합:${dom.extraSlider2.value}`;
         }
     }
 }

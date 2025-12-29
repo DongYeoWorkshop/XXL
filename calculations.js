@@ -1,6 +1,4 @@
 // calculations.js
-let isCurrentChar = null; // 레퍼런스 에러 방지용 임시 선언
-
 // 5가지 공격 분류: 보통공격, 필살공격, 추가공격, 도트공격, 기초공격
 
 export function calculateCharacterStats(charId, charData, skillLevels, isUltStamped, getSkillMultiplierFn, appliedBuffs, allCharData, allSavedStats, liveContext = {}) {

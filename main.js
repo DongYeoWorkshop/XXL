@@ -5,8 +5,8 @@ import { getDynamicDesc } from './formatter.js';
 import { addAppliedBuff, removeAppliedBuff } from './buffs.js';
 import { state, constants } from './state.js';
 import { charData } from './data.js'; // 추가
-import { initLogic, updateStats, saveCurrentStats, updateCharacterListIndicators } from './logic.js?v=100';
-import { initHandlers, onExtraSliderChange, handleImageClick, setupDragScroll, setupBuffSearchListeners } from './handlers.js?v=100';
+import { initLogic, updateStats, saveCurrentStats, updateCharacterListIndicators } from './logic.js';
+import { initHandlers, onExtraSliderChange, handleImageClick, setupDragScroll, setupBuffSearchListeners } from './handlers.js';
 import { initSecretModule, initCloudSharing } from './secret.js';
 
 document.addEventListener('DOMContentLoaded', function() {

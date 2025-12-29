@@ -214,7 +214,8 @@ export function renderHeroTab(dom, updateStatsCallback) {
             
             const dmgLabel = document.createElement('div');
             dmgLabel.className = 'snapshot-dmg-label';
-            const shortDmg = totalDmg >= 1000000 ? (totalDmg / 1000000).toFixed(1) + 'M' : totalDmg >= 1000 ? (totalDmg / 1000).toFixed(0) + 'K' : totalDmg;
+            // [수정] M 단위를 쓰지 않고 K 단위(정수)로 통일
+            const shortDmg = totalDmg >= 1000 ? (totalDmg / 1000).toFixed(0) + 'K' : totalDmg;
             dmgLabel.textContent = shortDmg;
             
             wrapper.appendChild(img); wrapper.appendChild(dmgLabel); wrapper.appendChild(barContainer); imgGrid.appendChild(wrapper);

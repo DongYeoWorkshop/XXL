@@ -9,10 +9,10 @@ export const charData = {
     title: "다양수이",
     desc: "다양수이에 대한 설명입니다.",
     base: { "공격력": 504, "HP": 2475 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 0, "포지션": "전사" },
     customControls: [
-      { id: "battle_spirit", type: "counter", label: "전의", min: 0, max: 9, initial: 0 }
+      { id: "battle_spirit", type: "counter", label: "전의", min: 0, max: 9, initial: 0, scope: "view" }
     ],
     defaultBuffSkills: ["tayangsuyi_skill8","tayangsuyi_skill3","tayangsuyi_skill4","tayangsuyi_skill5", "tayangsuyi_skill6", "tayangsuyi_skill7"],
     skills: [
@@ -67,7 +67,7 @@ export const charData = {
   "choiyuhyun": {
     title: "최유현",
     base: { "공격력": 520, "HP": 2403 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 2, "포지션": "전사" },
     defaultBuffSkills: ["choiyuhyun_skill8","choiyuhyun_skill3","choiyuhyun_skill4", "choiyuhyun_skill6"],
     skills: [
@@ -108,7 +108,7 @@ export const charData = {
   "khafka": {
     title: "카푸카",
     base: { "공격력": 525, "HP": 2380 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 2, "포지션": "방해" },
     defaultBuffSkills: ["khafka_skill3", "khafka_skill4", "khafka_skill4_cond", "khafka_skill5", "khafka_skill6",  "khafka_skill8"], 
     skills: [
@@ -218,7 +218,7 @@ export const charData = {
     title: "바드",
     desc: "바드에 대한 설명입니다.",
     base: { "공격력": 546, "HP": 2288 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 0, "포지션": "전사" },
     defaultBuffSkills: ["baade_skill3","baade_skill4","baade_skill5", "baade_skill6", "baade_skill7"],
     skills: [
@@ -265,7 +265,7 @@ export const charData = {
   "anuberus": {
     title: "아누비로스",
     base: { "공격력": 592, "HP": 2791 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 4, "포지션": "방해" },
     defaultBuffSkills: ["anuberus_skill3","anuberus_skill4", "anuberus_skill6", "anuberus_skill7"],
     skills: [
@@ -368,7 +368,7 @@ export const charData = {
     title: "쿠모야마",
     desc: "쿠모야마에 대한 설명입니다.",
     base: { "공격력": 440, "HP": 2835 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 2, "포지션": "수호" },
     defaultBuffSkills: ["kumoyama_skill3","kumoyama_skill4","kumoyama_skill5","kumoyama_skill6", "kumoyama_skill7"],
     skills: [
@@ -469,7 +469,7 @@ export const charData = {
     title: "비어녹스",
     desc: "비어녹스에 대한 설명입니다.",
     base: { "공격력": 470, "HP": 2652 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 2, "포지션": "보조" },
     defaultBuffSkills: ["beernox_skill1","beernox_skill2", "beernox_skill3", "beernox_skill4", "beernox_skill6","beernox_skill7","beernox_stamp_passive"], 
     skills: [
@@ -581,7 +581,7 @@ export const charData = {
     title: "기리안",
     desc: "기리안에 대한 설명입니다.",
     base: { "공격력": 545, "HP": 2291 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 2, "포지션": "힐러" },
     defaultBuffSkills: ["kyrian_skill3","kyrian_skill6"],
     skills: [
@@ -664,7 +664,7 @@ export const charData = {
     "meng": {
     title: "맹씨",
     base: { "공격력": 550, "HP": 2268 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 1, "포지션": "힐러" },
     defaultBuffSkills: ["meng_skill3","meng_skill6","meng_skill7"],
     skills: [
@@ -753,7 +753,7 @@ export const charData = {
   "locke": {
     title: "카 라트",
     base: { "공격력": 540, "HP": 2310 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 1, "포지션": "전사" },
     defaultBuffSkills: ["locke_skill8","locke_skill3", "locke_skill4", "locke_skill5", "locke_skill6"],
     skills: [
@@ -856,7 +856,7 @@ export const charData = {
   "orem": {
     title: "오렘",
     base: { "공격력": 444, "HP": 2808 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 1, "포지션": "수호" },
     defaultBuffSkills: ["orem_skill3", "orem_skill4", "orem_skill6"],
     skills: [
@@ -956,7 +956,7 @@ export const charData = {
     "leo": {
     title: "레오",
     base: { "공격력": 556, "HP": 2246 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 0, "포지션": "힐러" },
     defaultBuffSkills: ["leo_skill3","leo_skill5","leo_skill6","leo_skill7"],
     skills: [
@@ -1044,7 +1044,7 @@ export const charData = {
   "tyrantino": {
     title: "타란디오",
     base: { "공격력": 510, "HP": 2450 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 1, "포지션": "방해" },
     defaultBuffSkills: ["tyrantino_skill3", "tyrantino_skill6","tyrantino_skill7"],
     skills: [
@@ -1129,7 +1129,7 @@ export const charData = {
   "wang": {
     title: "멍",
     base: { "공격력": 475, "HP": 2626 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 2, "포지션": "보조" },
     defaultBuffSkills: ["wang_skill3", "wang_skill4","wang_skill5","wang_skill6","wang_skill7"],
     skills: [
@@ -1217,7 +1217,7 @@ export const charData = {
   "shinrirang": {
     title: "신리랑",
     base: { "공격력": 525, "HP": 2379 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 1, "포지션": "전사" },
     defaultBuffSkills: ["shinrirang_skill8","shinrirang_skill3", "shinrirang_skill4", "shinrirang_skill5", "shinrirang_skill6","shinrirang_skill7"],
     skills: [
@@ -1325,7 +1325,7 @@ export const charData = {
   "tamrang": {
     title: "탐랑",
     base: { "공격력": 515, "HP": 2427 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 0, "포지션": "방해" },
     defaultBuffSkills: ["tamrang_skill8","tamrang_skill3", "tamrang_skill4", "tamrang_skill5", "tamrang_skill6","tamrang_skill7"],
     skills: [
@@ -1432,7 +1432,7 @@ export const charData = {
   "goldenryder": {
     title: "골든라이더",
     base: { "공격력": 514, "HP": 2427 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 0, "포지션": "전사" },
     customControls: [
       { id: "blazing_stride", type: "counter", label: "열화질보", min: 0, max: 6, initial: 0 } ],  
@@ -1524,7 +1524,7 @@ export const charData = {
   "jetblack": {
     title: "제트블랙",
     base: { "공격력": 494, "HP": 2524 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 1, "포지션": "보조" },  
     defaultBuffSkills: ["jetblack_skill1","jetblack_skill2","jetblack_skill3", "jetblack_skill5", "jetblack_skill6"],
     skills: [
@@ -1614,7 +1614,7 @@ export const charData = {
   "rutenix": {
     title: "루테닉스",
     base: { "공격력": 495, "HP": 2525 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 2, "포지션": "방해" },  
     defaultBuffSkills: ["rutenix_skill2","rutenix_skill3", "rutenix_skill4","rutenix_skill5", "rutenix_skill6","rutenix_skill7"],
     skills: [
@@ -1708,7 +1708,6 @@ export const charData = {
   "duncan": {
     title: "던컨 찰스",
     base: { "공격력": 499, "HP": 2500 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
     info: { "속성": 0, "포지션": "보조" },
     defaultBuffSkills: ["duncan_skill3", "duncan_skill4", "duncan_skill6","duncan_skill7","duncan_skill8","duncan_skill9"],
     skills: [
@@ -1825,7 +1824,7 @@ export const charData = {
   "famido": {
     title: "파미도",
     base: { "공격력": 556, "HP": 2245 },
-    growth: { "공격력": 1.05, "HP": 1.05 },
+ 
     info: { "속성": 2, "포지션": "전사" },  
     defaultBuffSkills: ["famido_skill2","famido_skill3", "famido_skill4","famido_skill5", "famido_skill6","famido_skill7","famido_skill8","famido_skill9"],
     skills: [

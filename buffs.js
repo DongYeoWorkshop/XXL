@@ -1,6 +1,7 @@
 // buffs.js
 import { getSkillMultiplier, getDynamicDesc } from './formatter.js';
 import { charData } from './data.js'; // 추가
+import { constants } from './state.js'; // 추가
 
 /**
  * 버프 제공자의 최신 기초공격력을 계산하는 내부 헬퍼 함수
@@ -14,7 +15,7 @@ function getBuffOwnerBaseAtk(buffCharId, ownerSaved, charData, currentId, curren
 
     if (!ownerData || !ownerData.base) return 0;
 
-    const pureBaseAtk = ownerData.base["공격력"] * Math.pow(ownerData.growth["공격력"], (ownerLv - 1));
+    const pureBaseAtk = ownerData.base["공격력"] * Math.pow(constants.defaultGrowth, (ownerLv - 1));
     const bonus1Rate = ownerBr * 0.02;
     const bonus2Rate = ownerFit * 0.04;
     const ownerFitBaseAtk = Math.floor(pureBaseAtk * (1 + bonus1Rate) * (1 + bonus2Rate));

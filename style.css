@@ -262,6 +262,42 @@ body {
 .main-image.modified { border: 2px solid var(--accent-color); }
 .main-image.selected.modified { border: 2px solid var(--primary-color); box-shadow: 0 0 10px rgba(255, 165, 0, 0.8); }
 
+/* Special Navigation Column (Hero + Simulator) */
+.nav-column-special {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hero-nav-img, .simulator-nav-img {
+  height: 96px !important;
+  width: 80px !important;
+  border: 1px solid #6f42c1 !important; /* 보라색 테두리 추가 */
+}
+
+.hero-nav-img {
+  object-position: top !important;
+}
+
+.simulator-nav-img {
+  object-fit: contain !important;
+  padding: 10px;
+  background-color: #262c36 !important;
+}
+
+.simulator-nav-img:hover, .hero-nav-img:hover {
+  background-color: #30363d !important;
+}
+
+/* 선택(활성화) 시 스타일 통합 */
+.main-image.selected.hero-nav-img, 
+.main-image.selected.simulator-nav-img {
+  border: 2px solid #6f42c1 !important;
+  box-shadow: 0 0 10px rgba(111, 66, 193, 0.6);
+  transform: scale(1.05);
+}
+
 /* =========================================
    Main Content Area
    ========================================= */
@@ -758,6 +794,44 @@ body:not(.list-open) #content-display.hero-mode {
   white-space: nowrap;
 }
 
+/* =========================================
+   Simulator Layout (Responsive)
+   ========================================= */
+.sim-main-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media screen and (min-width: 1100px) {
+  #simulator-page {
+    grid-column: 1 / -1; /* 전체 너비 차지 */
+    width: 100%;
+  }
+
+  .sim-main-container {
+    display: grid;
+    grid-template-columns: 1fr 400px; /* 왼쪽(로그) 1 : 오른쪽(설정) 400px */
+    align-items: start;
+    gap: 30px;
+  }
+
+  .sim-pane-settings {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 70px;
+  }
+
+  .sim-pane-display {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
 /* Mobile Overrides (Max-width: 600px) */
 @media screen and (max-width: 600px) {
   .sticky-header {
@@ -874,16 +948,38 @@ body:not(.list-open) #content-display.hero-mode {
 @media screen and (min-width: 1100px) {
   #content-display {
     max-width: 1200px;
-    display: grid;
-    grid-template-columns: 1fr 420px;
+    display: grid !important; /* 다시 그리드 레이아웃 활성화 */
+    grid-template-columns: 1fr 420px; /* 왼쪽 상세, 오른쪽 스탯 */
     gap: 0 30px;
     align-items: start;
     text-align: left;
     position: relative;
   }
 
+  /* Hero 및 시뮬레이터 모드에서만 1열로 확장 */
+  #content-display.hero-mode {
+    grid-template-columns: 1fr !important;
+    display: block !important;
+  }
+
+  /* 캐릭터 페이지의 위치 지정 복구 */
+  .main-content-column { 
+    grid-column: 1; 
+    grid-row: 2; 
+    display: flex; 
+    flex-direction: column; 
+  }
+  
+  .side-content-column { 
+    grid-column: 2; 
+    grid-row: 2; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+  }
+
   .char-header-row {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1; /* 상단 이름 영역은 가로 전체 차지 */
     text-align: center;
     border-bottom: 1px solid #444;
     margin-bottom: 25px;
@@ -891,31 +987,55 @@ body:not(.list-open) #content-display.hero-mode {
   }
 
   #content-display::before {
-    content: "";
-    position: absolute;
-    top: 150px;
-    bottom: 20px;
-    right: 445px; 
-    width: 1px;
-    background-color: #444;
-    opacity: 0.6;
-  }
-
-  #content-display.hero-mode::before {
     display: none;
   }
+}
 
-  .main-content-column { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; }
-  .side-content-column { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; gap: 15px; }
+/* =========================================
+   Simulator Character Grid (Small Circular Icons)
+   ========================================= */
+.sim-char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+  gap: 12px;
+  justify-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px;
+}
 
-  #new-section-area, #buff-application-area, #skill-container, #calc-and-stats-row, #sub-stats-wrapper {
-    grid-column: auto !important; grid-row: auto !important; width: 100% !important; margin-top: 0 !important;
-  }
+.sim-char-pick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
 
-  #new-section-area { margin-top: 10px !important; }
-  #buff-application-area { margin-top: 40px !important; }
+.sim-char-pick-item img {
+  width: 55px !important;
+  height: 55px !important;
+  border-radius: 50% !important;
+  object-fit: cover;
+  object-position: top;
+  border: 2px solid #ddd;
+  background: #000;
+  transition: all 0.2s;
+}
 
-  #calc-and-stats-row { flex-direction: row !important; align-items: center !important; gap: 15px; }
-  #calc-area { flex: 1.2; width: auto !important; }
-  #stats-wrapper { flex: 1; width: auto !important; margin-top: 0; }
+.sim-char-pick-item:hover img {
+  border-color: #6f42c1;
+  transform: scale(1.1);
+}
+
+.sim-char-name {
+  font-size: 0.75em;
+  margin-top: 6px;
+  color: #666;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
 }

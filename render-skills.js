@@ -63,8 +63,71 @@ export function renderSkills(charId, charData, savedStats, currentSkillLevels, c
             </div>
             <div class="skill-embedded-description">
                 <p class="embedded-skill-desc" style="font-size:0.85em; color:#eee; margin-top:10px;"></p>
+                <!-- [추가] 커스텀 입력 요소 (전의 스택 등) -->
+                <div class="skill-custom-controls" style="margin-top: 10px;">
+                    ${skill.customSlider ? `
+                        <div style="display:flex; flex-direction:column; gap:5px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:#fff;">
+                                <span>${skill.customSlider.label}</span>
+                                <span class="custom-slider-val" style="font-weight:bold; color:yellow;">${saved.customValues?.[skill.customSlider.id] ?? skill.customSlider.initial ?? 0}</span>
+                            </div>
+                            <input type="range" 
+                                   class="skill-custom-input" 
+                                   data-key="${skill.customSlider.id}" 
+                                   min="${skill.customSlider.min}" 
+                                   max="${skill.customSlider.max}" 
+                                   value="${saved.customValues?.[skill.customSlider.id] ?? skill.customSlider.initial ?? 0}"
+                                   style="width:100%;">
+                        </div>
+                    ` : ''}
+                    ${skill.customCounter ? `
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding: 8px 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                            <span style="font-size:0.8em; color:#fff;">${skill.customCounter.label}</span>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <button class="counter-btn minus" style="width:20px; height:20px; border-radius:50%; border:1px solid #666; background:#444; color:#fff; cursor:pointer;">-</button>
+                                <span class="custom-counter-val" style="font-weight:bold; color:yellow; font-size:0.9em; min-width:15px; text-align:center;">${saved.customValues?.[skill.customCounter.id] ?? skill.customCounter.initial ?? 0}</span>
+                                <button class="counter-btn plus" style="width:20px; height:20px; border-radius:50%; border:1px solid #666; background:#444; color:#fff; cursor:pointer;">+</button>
+                                <input type="hidden" class="skill-custom-input" data-key="${skill.customCounter.id}" value="${saved.customValues?.[skill.customCounter.id] ?? skill.customCounter.initial ?? 0}">
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
             </div>
         `;
+
+        // 커스텀 입력 이벤트 처리
+        const customInputs = skillDiv.querySelectorAll('.skill-custom-input');
+        customInputs.forEach(input => {
+            const labelVal = input.closest('.skill-card').querySelector(input.type === 'range' ? '.custom-slider-val' : '.custom-counter-val');
+            
+            if (input.type === 'range') {
+                input.addEventListener('input', function(e) {
+                    e.stopPropagation();
+                    if (labelVal) labelVal.innerText = this.value;
+                    if (!saved.customValues) saved.customValues = {};
+                    saved.customValues[this.dataset.key] = parseInt(this.value);
+                    updateStatsCallback();
+                    saveCurrentStatsCallback();
+                });
+            } else {
+                const row = input.closest('div');
+                const plus = row.querySelector('.plus');
+                const minus = row.querySelector('.minus');
+                const updateCounter = (delta) => {
+                    let val = parseInt(input.value) + delta;
+                    val = Math.max(skill.customCounter.min, Math.min(skill.customCounter.max, val));
+                    input.value = val;
+                    if (labelVal) labelVal.innerText = val;
+                    if (!saved.customValues) saved.customValues = {};
+                    saved.customValues[input.dataset.key] = val;
+                    updateStatsCallback();
+                    saveCurrentStatsCallback();
+                };
+                plus.addEventListener('click', (e) => { e.stopPropagation(); updateCounter(1); });
+                minus.addEventListener('click', (e) => { e.stopPropagation(); updateCounter(-1); });
+            }
+            input.addEventListener('click', (e) => e.stopPropagation());
+        });
 
         // 도장 토글 이벤트 (필살기 전용)
         if (idx === 1) {

@@ -140,6 +140,9 @@ export function renderCustomControls(charId, data, logic) {
     const savedValues = state.savedStats[charId]?.customValues || {};
 
     data.customControls.forEach(ctrl => {
+        // [추가] 시뮬레이터 전용 컨트롤은 상세 뷰에서 제외
+        if (ctrl.scope === 'sim') return;
+
         const wrapper = document.createElement('div');
         wrapper.className = 'custom-control-group';
 
