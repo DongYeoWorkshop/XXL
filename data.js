@@ -775,7 +775,7 @@ export const charData = {
         name: "광야 포격 돌진", 
         icon: "icon/attack(strong).webp", 
         desc: "(쿨타임 : 3턴) \n 대상에게 공격력 {0}%의 데미지를 줌", 
-        stampDesc: "(쿨타임 : 3턴) \n 대상에게 공격력 {0}%의 데미지를 줌 \n* 도장 패시브 : HP가 50% 이상인 적을 보통공격 시 [호혈표지](3턴 지속)를 획득하며, [호혈표지]가 2중첩 이상일 경우 필살기 데미지 {1}% 증가",
+        stampDesc: "(쿨타임 : 3턴) \n 대상에게 공격력 {0}%의 데미지를 줌 \n* 도장 패시브 : HP가 50% 이상인 적을 보통공격 시 [호혈표지](5턴 지속)를 획득하며, [호혈표지]가 2중첩 이상일 경우 필살기 데미지 {1}% 증가",
         calc: [{ max: 200},{ max: 33.75}],
         damageDeal: [
             { type: "필살공격", val: { max: 200 } }
@@ -879,9 +879,9 @@ export const charData = {
         icon: "icon/attack(strong).webp", 
         desc: "(쿨타임 : 3턴) \n 자신의 최대 HP의 {0}% 만큼 아군 전체에게 2턴 지속 [배리어] 부여", 
         stampDesc: "(쿨타임 : 3턴) \n 자신의 최대 HP의 {0}% 만큼 아군 전체에게 2턴 지속의 [배리어] 부여 \n* 도장 패시브 : 각 아군이 [배리어]를 보유한 상태에서 적을 공격 할 경우 대상에게 공격자의 공격력 {1}% 만큼의 추가데미지를 줌",
-        calc: [{ max: 20},{ max: 25}],
+        calc: [{ max: 25},{ max: 25}],
         barrierDeal: [
-            { type: "HP필살배리어", val: { max: 20 } }
+            { type: "HP필살배리어", val: { max: 25 } }
         ]
       },
       {
@@ -899,14 +899,14 @@ export const charData = {
         id: "orem_skill4",
         excludeFromBuffSearch: true,
         decimalPlaces: 2,
-        buffDesc: "배리어 효과 {0}% 증가(최대 2중첩)", // 버프창 설명 추가
-        buffEffects: { "배리어증가": { max: 16}},        
-        hasCounter: true, // 카운터 버튼 필요
-        counterRange: { min: 0, max: 2 },
+        buffDesc: "배리어 효과 {0}% 증가", // 버프창 설명 추가
+        buffEffects: { "배리어증가": { max: 32}},        
+        hasToggle: true,
+        toggleType: "isAppliedStamped",    
         name: "전함 명령:엄수",
         icon: "icon/passive2.webp",
-        desc: "보통공격 시 50% 확률로 3턴 간 자신에게 배리어 효과 {0}% 증가 버프 부여(최대 2중첩)",
-        calc: [{ max: 16}]
+        desc: "보통공격 시 50% 확률로 3턴 간 자신에게 배리어 효과 {0}% 증가 버프 부여",
+        calc: [{ max: 32}]
       },
       { id: "orem_skill5", 
         excludeFromBuffSearch: true, 
@@ -1006,14 +1006,14 @@ export const charData = {
         id: "leo_skill5",
         excludeFromBuffSearch: true,
         decimalPlaces: 2,
-        buffEffects: { "지속회복증가": { max: 15 } },
+        buffEffects: { "지속회복증가": { max: 30 } },
         buffDesc: "지속회복 효과 {0}% 증가",        
         hasToggle: true,
         toggleType: "isAppliedStamped",         
         name: "Rose de Léon",
         icon: "icon/passive5.webp",
         desc: "레오가 방어 시 아군 전체에게 2턴 간 받는 지속회복 효과 {0}% 증가를 부여",
-        calc: [{ max: 15 }]
+        calc: [{ max: 30}]
       },
       { 
         id: "leo_skill6",
@@ -1030,14 +1030,14 @@ export const charData = {
         id: "leo_skill7",
         excludeFromBuffSearch: true,
         decimalPlaces: 2,
-        buffEffects: { "공증": { max: 24 } },
+        buffEffects: { "공증": { max: 48 } },
         buffDesc: "공격력 {0}% 증가",        
         hasToggle: true,
         toggleType: "isAppliedStamped",           
         name: "시선을 받는 중심", 
         icon: "icon/passive5.webp", 
         desc: "보통공격 시 50% 확률로 3턴 간 공격력 {0}% 증가",
-        calc: [{ max: 24 }]
+        calc: [{ max: 48 }]
       }
     ]
   },    
@@ -1693,7 +1693,7 @@ export const charData = {
         buffDesc: "피격 시 기초공격력 {0}% 증가",  
         name: "큐브 레이저 필드", 
         icon: "icon/passive2.webp", 
-        desc: "루테닉스가 피격 시 자신의 기초공격력 {0}% 증가", 
+        desc: "루테닉스가 피격 시 2턴 간 자신의 기초공격력 {0}% 증가", 
         calc: [{ max: 30 }]
       },
       {
@@ -1725,7 +1725,7 @@ export const charData = {
     title: "던컨 찰스",
     base: { "공격력": 499, "HP": 2500 },
     info: { "속성": 0, "포지션": "보조" },
-    defaultBuffSkills: ["duncan_skill3", "duncan_skill4", "duncan_skill6","duncan_skill7","duncan_skill8","duncan_skill9"],
+    defaultBuffSkills: ["duncan_skill2","duncan_skill3", "duncan_skill4", "duncan_skill6","duncan_skill7","duncan_skill8","duncan_skill9"],
     skills: [
        { 
         id: "duncan_skill1",
@@ -1743,7 +1743,7 @@ export const charData = {
         hasStampEffect: true,
         decimalPlaces: 2,
         buffEffects: { "공증": { max: 30,startRate:0.64} },
-        buffDesc: "공격력 {0}% 증가", 
+        buffDesc: "필살기 사용 시 공격력 {0}% 증가", 
         hasToggle: true,
         toggleType: "isAppliedStamped",                    
         name: "지팡이보다 먹힌다구!", 
@@ -1969,7 +1969,115 @@ export const charData = {
         calc: [{ max: 15 }]
       }                        
     ]
-  },            
+  }, 
+  "rikano": {
+    title: "리카노",
+    base: { "공격력": 476, "HP": 2525 },
+ 
+    info: { "속성": 0, "포지션": "방해" },
+    defaultBuffSkills: ["rikano_skill1", "rikano_skill2", "rikano_skill3", "rikano_skill4","rikano_skill6"], 
+    skills: [
+      { 
+        id: "rikano_skill1",
+        excludeFromBuffSearch: false,
+        decimalPlaces: 2,
+        buffEffects: { "뎀증디버프": { max: 6.25 } }, 
+        buffDesc: "받는 데미지 {0}% 증가 디버프 부여", 
+        hasToggle: true,
+        toggleType: "isAppliedStamped",        
+        name: "분위기 띄우기!", 
+        icon: "icon/attack.webp", 
+        desc: "대상에게 2턴 간 받는 데미지를 {0}% 증가시키는 디버프를 부여한 후 공격력 {1}%의 데미지를 줌", 
+        calc: [{ max: 6.25 }, { max: 75 }],
+        damageDeal: [{ type: "보통공격", val: { max: 75 } }]
+      },
+            {
+              id: "rikano_skill2",
+              excludeFromBuffSearch: false,
+              hasStampEffect: true,
+              decimalPlaces: 2,
+        buffEffects: { "뎀증디버프": { max: 15} }, 
+        stampBuffEffects: { "뎀증디버프": { max: 3.75} }, 
+        buffDesc: "받는 데미지 {0}% 증가 디버프 부여", 
+        hasToggle: true,
+        toggleType: "isApplied",                      
+              name: "스타 강아지☆출첵", 
+              icon: "icon/attack(strong).webp", 
+              desc: "(쿨타임 : 3턴) \n 대상에게 2턴 간 받는 데미지를 {0}% 증가시키는 디버프를 부여한 후 공격력 {1}%의 데미지를 줌", 
+              stampDesc: "(쿨타임 : 3턴) \n 대상에게 1턴 지속의 조롱 효과와 2턴 간 받는 데미지를 {0}% 증가시키는 디버프를 부여한 후 공격력 {1}%의 데미지를 줌",
+              calc: [{ max: 15, stampMax: 18.75 },{ max: 150, stampMax: 175 }],
+              damageDeal: [{ type: "필살공격", val: { max: 150, stampMax: 175 } }],
+            },
+            {
+        id: "rikano_skill3",
+        excludeFromBuffSearch: false,
+        decimalPlaces: 2,
+        buffEffects: { "공증": { max: 12, attributeMax: 18, targetAttribute: 0 } }, // 나무속성(2) 18%
+        buffDesc: "공격력 {0}% 증가", 
+        name: "불속성 공격 강화Ⅳ", 
+        icon: "icon/passive2.webp", 
+        desc: "아군 전체의 공격력을 {0}% 증가시키며, 영향을 받은 아군이 불속성일 경우 추가로 {1}% 증가", 
+        calc: [{ max: 12 }, { max: 6 }] 
+      },
+      {
+        id: "rikano_skill4",
+        excludeFromBuffSearch: false,
+        decimalPlaces: 2,
+        buffEffects: { "필살기뎀증": { max: 13.8 } }, 
+        buffDesc: "필살기 효과 {0}% 증가", 
+        name: "사이드라인 아이돌",
+        icon: "icon/passive2.webp",
+        desc: "아군 전체의 필살기 효과를 {0}% 만큼 증가시키고, 필살기 사용 시 1턴 간 대상에게 받는데미지 {1}% 증가 디버프 부여",
+        calc: [{ max: 13.8 }, { max: 12 }]
+      },
+      { id: "rikano_skill5", 
+        excludeFromBuffSearch: true, 
+        decimalPlaces: 2, 
+        name: "마음을 사로잡는 매력", 
+        icon: "icon/passive5.webp", 
+        desc: "필살기 사용 시 랜덤한 적 2명에게 공격력 {0}%로 필살공격으로 취급되는 데미지를 줌", 
+        calc: [{ max: 50 }],
+        damageDeal: [{ type: "필살공격", val: { max: 100 } }],        
+      },
+      {
+        id: "rikano_skill6",
+        excludeFromBuffSearch: true,
+        decimalPlaces: 2,
+        buffEffects: { "기초공증": { max: 15 },  "기초HP증가": { max: 15 } }, 
+        buffDesc: "기초공격력/HP {0}% 증가", // 버프창 설명 추가
+        name: "고강도 훈련 성과", 
+        icon: "icon/passive5.webp", 
+        desc: "자신의 기초 공격력, 기초 HP {0}% 증가", 
+        calc: [{ max: 15 }] 
+      },
+            {
+        id: "rikano_skill7",
+        excludeFromBuffSearch: false,
+        decimalPlaces: 2,
+        BuffEffects: { "뎀증": { max: 18 } }, 
+        buffDesc: "조롱 효과의 적 공격 시 데미지 {0}% 증가", 
+        hasToggle: true, 
+        toggleType: "isAppliedStamped",
+        name: "빛나는 스타", 
+        icon: "icon/passive5.webp", 
+        desc: "자신을 제외한 아군이 조롱 효과를 보유한 적을 공격 시 공격한 아군의 데미지 {0}% 증가", 
+        calc: [{ max: 18 }] 
+      },
+            { id: "rikano_skill8",
+        name: "사이드라인 아이돌[디버프]", 
+        excludeFromBuffSearch: false, 
+        decimalPlaces: 2, 
+        ignoreBreakthrough: true,
+        syncLevelWith: "rikano_skill4",
+        buffEffects: { "뎀증디버프": { max: 12 } }, 
+        buffDesc: "받는 데미지 {0}% 증가 디버프 부여", 
+        hasToggle: true, 
+        toggleType: "isAppliedStamped", 
+        icon: "icon/passive2.webp", 
+        calc: [{ max: 12 }]
+      }
+    ]
+  },             
   "test_dummy": {
     title: "커스텀 버프 (테스트용)",
     desc: "직접 수치를 입력하여 테스트할 수 있는 캐릭터입니다.",

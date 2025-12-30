@@ -49,48 +49,27 @@ function updateActionEditor(charId) {
  * 축 라벨 및 보조선 렌더링
  */
 function renderAxisLabels(axisData, yMax, type = 'dist') {
-    const yAxis = document.getElementById('sim-y-axis');
-    const xAxis = document.getElementById('sim-x-axis');
-    const grid = document.getElementById('sim-grid-lines');
-    const isMobile = window.innerWidth <= 768;
-    const gH = isMobile ? 140 : 220;
-
+    const yAxis = document.getElementById('sim-y-axis'), xAxis = document.getElementById('sim-x-axis'), grid = document.getElementById('sim-grid-lines');
+    const isMobile = window.innerWidth <= 768, gH = isMobile ? 140 : 220;
     if (yAxis && yMax) {
-        yAxis.style.position = 'relative';
-        yAxis.style.display = isMobile ? 'none' : 'block'; 
+        yAxis.style.position = 'relative'; yAxis.style.display = isMobile ? 'none' : 'block'; 
         if (type === 'dist') {
-            yAxis.style.width = isMobile ? '20px' : '25px';
-            yAxis.style.borderRight = '1px solid #eee';
-            yAxis.innerHTML = axisData.y.map(val => {
-                const label = val >= 10000 ? (val/1000).toFixed(0)+'K' : val.toLocaleString();
-                const bp = (val / yMax) * 100;
-                return `<div style="position:absolute;bottom:${bp}%;right:8px;transform:translateY(50%);white-space:nowrap;">${label}</div>`;
-            }).join('');
-        } else {
-            yAxis.innerHTML = '';
-            yAxis.style.borderRight = 'none'; 
-            yAxis.style.width = isMobile ? '20px' : '25px';
-        }
+            yAxis.style.width = isMobile ? '20px' : '25px'; yAxis.style.borderRight = '1px solid #eee';
+            yAxis.innerHTML = axisData.y.map(val => { const label = val >= 10000 ? (val/1000).toFixed(0)+'K' : val.toLocaleString(); const bp = (val / yMax) * 100; return `<div style="position:absolute;bottom:${bp}%;right:8px;transform:translateY(50%);white-space:nowrap;">${label}</div>`; }).join('');
+        } else { yAxis.innerHTML = ''; yAxis.style.borderRight = 'none'; yAxis.style.width = isMobile ? '20px' : '25px'; }
         if (grid) grid.innerHTML = axisData.y.map(val => val === 0 ? '' : `<div style="position:absolute;bottom:${(val/yMax)*100}%;width:100%;border-top:1px dashed #f0f0f0;"></div>`).join('');
     }
-    if (xAxis) {
-        xAxis.innerHTML = axisData.x.map(val => `<div style="position:absolute;left:${val.pos}%;top:0;width:0;overflow:visible;"><div style="width:1px;height:6px;background:#ddd;position:absolute;top:0;left:0;"><div style="position:absolute;bottom:6px;left:0;width:1px;height:${gH}px;border-left:1px dashed #f0f0f0;pointer-events:none;"></div></div><div style="transform:rotate(-60deg);transform-origin:right top;font-size:0.55em;color:#999;white-space:nowrap;margin-top:10px;text-align:right;width:100px;position:absolute;right:0;">${val.label}</div></div>`).join('');
-    }
+    if (xAxis) xAxis.innerHTML = axisData.x.map(val => `<div style="position:absolute;left:${val.pos}%;top:0;width:0;overflow:visible;"><div style="width:1px;height:6px;background:#ddd;position:absolute;top:0;left:0;"><div style="position:absolute;bottom:6px;left:0;width:1px;height:${gH}px;border-left:1px dashed #f0f0f0;pointer-events:none;"></div></div><div style="transform:rotate(-60deg);transform-origin:right top;font-size:0.55em;color:#999;white-space:nowrap;margin-top:10px;text-align:right;width:100px;position:absolute;right:0;">${val.label}</div></div>`).join('');
 }
 
 /**
- * 딜 그래프 렌더링 (에어리어 차트)
+ * 딜 그래프 렌더링
  */
 function renderDamageLineChart(charId) {
     const container = document.getElementById('sim-line-graph');
     const res = JSON.parse(localStorage.getItem(`sim_last_result_${charId}`));
     if (!container || !res || !res.turnData) return;
-    const isMobile = window.innerWidth <= 768;
-    const gH = isMobile ? 140 : 220;
-    const turnData = res.turnData;
-    const maxCum = Math.max(...turnData.map(d => d.cumulative));
-    const maxTrn = Math.max(...turnData.map(d => d.dmg));
-    const turnCount = turnData.length;
+    const isMobile = window.innerWidth <= 768, gH = isMobile ? 140 : 220, turnData = res.turnData, maxCum = Math.max(...turnData.map(d => d.cumulative)), maxTrn = Math.max(...turnData.map(d => d.dmg)), turnCount = turnData.length;
     let html = `<svg width="100%" height="100%" viewBox="0 0 400 ${gH}" preserveAspectRatio="none" style="overflow:visible;"><defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6f42c1" stop-opacity="0.3"/><stop offset="100%" stop-color="#6f42c1" stop-opacity="0"/></linearGradient></defs>`;
     turnData.forEach((d, i) => { const x = (i / (turnCount - 1)) * 400; const h = maxTrn ? (d.dmg / maxTrn) * (gH * 0.5) : 0; html += `<rect class="svg-bar-grow" x="${x-2}" y="${gH-h}" width="4" height="${h}" fill="#e0e0e0" rx="1" style="transform-box: fill-box;" />`; });
     let areaPath = `M 0,${gH} `; turnData.forEach((d, i) => { const x = (i / (turnCount - 1)) * 400; const y = gH - (d.cumulative / maxCum) * gH; areaPath += `L ${x},${y} `; }); areaPath += `L 400,${gH} Z`; html += `<path class="svg-bar-grow" d="${areaPath}" fill="url(#areaGrad)" style="transform-box: fill-box;" />`;
@@ -101,33 +80,24 @@ function renderDamageLineChart(charId) {
 }
 
 export function initSimulator() {
-    const simPage = document.getElementById('simulator-page');
-    const mainColumn = document.querySelector('.main-content-column');
-    const contentDisplay = document.getElementById('content-display');
-    if (simPage) simPage.style.setProperty('display', 'block', 'important');
-    if (mainColumn) mainColumn.style.setProperty('display', 'block', 'important');
-    if (contentDisplay) { contentDisplay.style.setProperty('display', 'block', 'important'); contentDisplay.classList.add('hero-mode'); }
-    const container = document.getElementById('simulator-content');
-    if (!container) return;
-    const savedCharId = localStorage.getItem('sim_last_char_id');
-    if (savedCharId && charData[savedCharId] && charData[savedCharId].base) renderSimulatorUI(savedCharId);
-    else renderCharacterSelector();
+    const simPage = document.getElementById('simulator-page'), mainColumn = document.querySelector('.main-content-column'), contentDisplay = document.getElementById('content-display');
+    if (simPage) simPage.style.setProperty('display', 'block', 'important'); if (mainColumn) mainColumn.style.setProperty('display', 'block', 'important'); if (contentDisplay) { contentDisplay.style.setProperty('display', 'block', 'important'); contentDisplay.classList.add('hero-mode'); }
+    const container = document.getElementById('simulator-content'); if (!container) return;
+    const savedCharId = localStorage.getItem('sim_last_char_id'); if (savedCharId && charData[savedCharId] && charData[savedCharId].base) renderSimulatorUI(savedCharId); else renderCharacterSelector();
 }
 
 function renderCharacterSelector() {
     localStorage.removeItem('sim_last_char_id');
-    const container = document.getElementById('simulator-content');
-    const validChars = Object.keys(charData).filter(id => charData[id].base && id !== 'test_dummy' && id !== 'hero');
+    const container = document.getElementById('simulator-content'), validChars = Object.keys(charData).filter(id => charData[id].base && id !== 'test_dummy' && id !== 'hero');
     const disabledIds = ['beernox', 'kyrian', 'meng', 'leo'];
     container.innerHTML = `<div style="text-align: center; padding: 20px 0;"><div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 30px;"><h3 style="margin: 0; color: #333;">분석할 캐릭터를 선택하세요</h3></div><div class="sim-char-grid">${validChars.map(id => { const isDisabled = disabledIds.includes(id); const style = isDisabled ? 'filter: grayscale(100%); opacity: 0.5; pointer-events: none; cursor: default;' : ''; return `<div class="sim-char-pick-item" data-id="${id}" style="${style}"><img src="images/${id}.webp"><div class="sim-char-name">${charData[id].title}</div></div>`; }).join('')}</div></div>`;
     container.querySelectorAll('.sim-char-pick-item').forEach(item => { if (item.style.pointerEvents !== 'none') { item.onclick = () => { localStorage.setItem('sim_last_char_id', item.dataset.id); renderSimulatorUI(item.dataset.id); }; } });
 }
 
 function renderSimAttributePicker(charId) {
-    const container = document.getElementById('sim-attribute-picker-container');
-    if (!container) return;
-    const currentAttrIdx = parseInt(localStorage.getItem(`sim_last_enemy_attr_${charId}`) || "0");
-    const myAttrIdx = charData[charId]?.info?.속성 ?? -1;
+    const container = document.getElementById('sim-attribute-picker-container'); if (!container) return;
+    const myAttrIdx = charData[charId]?.info?.속성 ?? 0;
+    const currentAttrIdx = parseInt(localStorage.getItem(`sim_last_enemy_attr_${charId}`) || String(myAttrIdx));
     let displayIdxs = new Set(); if (myAttrIdx >= 0) { displayIdxs.add(myAttrIdx); const rels = { 0: { win: 2, lose: 1 }, 1: { win: 0, lose: 2 }, 2: { win: 1, lose: 0 }, 3: { win: 4, lose: 4 }, 4: { win: 3, lose: 3 } }; const rel = rels[myAttrIdx]; if (rel.win !== null) displayIdxs.add(rel.win); if (rel.lose !== null) displayIdxs.add(rel.lose); } displayIdxs.add(currentAttrIdx);
     let othersHtml = ''; displayIdxs.forEach(idx => { if (idx === currentAttrIdx) return; const attrName = constants.attributeList[idx]; let gc = ''; if (myAttrIdx >= 0) { const wins = { 0: 2, 1: 0, 2: 1, 3: 4, 4: 3 }; const loses = { 0: 1, 1: 2, 2: 0, 3: 4, 4: 3 }; if (wins[myAttrIdx] === idx) gc = '#00ff00'; else if (loses[myAttrIdx] === idx) { if (myAttrIdx <= 2 && idx <= 2) gc = '#ff0000'; if ((myAttrIdx === 3 && idx === 4) || (myAttrIdx === 4 && idx === 3)) gc = '#00ff00'; } } othersHtml += `<div class="attr-control-item" style="width:24px;height:24px;margin:1px;position:relative;display:flex;align-items:center;justify-content:center;">${gc ? `<div style="position:absolute;width:14px;height:14px;background:${gc};box-shadow:0 0 8px ${gc};filter:blur(3px);opacity:0.7;transform:rotate(45deg);"></div>` : ''}<img src="${constants.attributeImageMap[constants.attributeList[idx]]}" class="sim-other-attr-icon" data-idx="${idx}" style="width:20px;height:20px;cursor:pointer;opacity:0.6;z-index:1;"></div>`; });
     const currName = constants.attributeList[currentAttrIdx]; let cgc = ''; if (myAttrIdx >= 0 && currentAttrIdx !== myAttrIdx) { const wins = { 0: 2, 1: 0, 2: 1, 3: 4, 4: 3 }; const loses = { 0: 1, 1: 2, 2: 0, 3: 4, 4: 3 }; if (wins[myAttrIdx] === currentAttrIdx) cgc = '#00ff00'; else if (loses[myAttrIdx] === currentAttrIdx) { if (myAttrIdx <= 2 && currentAttrIdx <= 2) cgc = '#ff0000'; if ((myAttrIdx === 3 && currentAttrIdx === 4) || (myAttrIdx === 4 && currentAttrIdx === 3)) cgc = '#00ff00'; } }
@@ -136,8 +106,7 @@ function renderSimAttributePicker(charId) {
 }
 
 function renderSimulatorUI(charId) {
-    const container = document.getElementById('simulator-content');
-    const data = charData[charId], sData = simCharData[charId] || {}, stats = state.savedStats[charId] || {};
+    const container = document.getElementById('simulator-content'), data = charData[charId], sData = simCharData[charId] || {}, stats = state.savedStats[charId] || {};
     const brText = (parseInt(stats.s1||0) < 5) ? `0성 ${parseInt(stats.s1||0)}단계` : (parseInt(stats.s1||0) < 15) ? `1성 ${parseInt(stats.s1||0)-5}단계` : (parseInt(stats.s1||0) < 30) ? `2성 ${parseInt(stats.s1||0)-15}단계` : (parseInt(stats.s1||0) < 50) ? `3성 ${parseInt(stats.s1||0)-30}단계` : (parseInt(stats.s1||0) < 75) ? `4성 ${parseInt(stats.s1||0)-50}단계` : "5성";
     const hasMulti = data.skills.some(s => s.isMultiTarget || (s.damageDeal && s.damageDeal.some(d => d.isMultiTarget || d.stampIsMultiTarget)));
     const savedTurns = localStorage.getItem('sim_last_turns') || "10", savedIters = localStorage.getItem('sim_last_iters') || "100", isMobile = window.innerWidth <= 768, gH = isMobile ? 140 : 220;
@@ -146,7 +115,7 @@ function renderSimulatorUI(charId) {
     container.innerHTML = `<div style="margin-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><button id="sim-back-to-list" style="background:#f0f0f0;border:1px solid #ddd;color:#666;cursor:pointer;font-size:0.8em;font-weight:bold;padding:5px 12px;border-radius:4px;">← 캐릭터 목록</button><div id="sim-info-icon" style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid #999; color: #999; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; font-weight: bold; margin-right: 5px;">i</div></div>
         <div class="sim-main-container"><div class="sim-pane-settings"><div style="position: relative; display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:12px;background:#fff;border:1px solid #eee0d0;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05);overflow:hidden;"><img src="images/${charId}.webp" class="sim-char-profile-img" style="width:55px;height:55px;border-radius:10px;object-fit:cover;border:2px solid #6f42c1;background:black;object-position:top;flex-shrink:0;cursor:pointer;" title="캐릭터 상세 정보로 이동"><div style="flex-grow:1;display:flex;align-items:center;justify-content:space-between;min-width:0;"><div style="min-width:0;flex:1;"><div style="display:flex;align-items:center;gap:8px;"><h3 style="margin:0;font-size:1.1em;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${data.title}</h3>${stats.stamp ? `<div style="background:black;border-radius:4px;padding:2px;display:flex;align-items:center;border:1px solid #444;flex-shrink:0;"><img src="images/sigilwebp/sigil_${charId}.webp" style="width:18px;height:18px;object-fit:contain;"></div>` : ''}</div><div style="font-size:0.75em;color:#888;margin-top:2px;">Lv.${stats.lv || 1} / ${brText} / 적합도 ${stats.s2 || 0}</div></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${hasMulti ? `<div style="display:flex;flex-direction:column;align-items:center;scale:0.9;flex-shrink:0;"><div style="font-size:0.65em;color:#888;margin-bottom:2px;">대상 수</div><button id="sim-target-btn" style="width:30px;height:30px;border-radius:50%;border:1px solid #6f42c1;background:#fff;color:#6f42c1;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${localStorage.getItem(`sim_last_target_${charId}`)||1}</button></div>` : ''}<div id="sim-attribute-picker-container"></div></div></div></div>
                 <div id="sim-custom-controls" style="display:none;background:#fff;border:1px solid #ddd;border-radius:12px;padding:15px;margin-bottom:15px;"><div id="sim-custom-list" style="display:flex;flex-wrap:wrap;gap:10px;"></div></div>
-                <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:15px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><div style="display:flex; flex-direction:column; gap:4px;"><label style="font-size:0.85em;font-weight:bold;color:#555;">진행 턴 수</label><div style="font-size:1.1em; font-weight:900; color:#6f42c1;"><span id="sim-turns-val">${savedTurns}</span>턴</div></div><button id="sim-edit-actions-btn" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;font-size:0.75em;padding:4px 10px;cursor:pointer;">⚙️ 행동 수정</button></div><div id="sim-turns-slider-container" style="margin: 10px 0 25px 0; padding: 5px 0;"><input type="range" id="sim-turns" min="1" max="30" value="${savedTurns}" step="1" list="sim-turns-ticks" style="width:100%; cursor:pointer; accent-color: #6f42c1;"><datalist id="sim-turns-ticks"><option value="1"></option><option value="5"></option><option value="10"></option><option value="15"></option><option value="20"></option><option value="25"></option><option value="30"></option></datalist></div><div id="sim-action-editor" style="display:none;background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:15px;max-height:280px;overflow-y:auto;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;"><span style="font-weight:bold;color:#6f42c1;font-size:0.8em;">⚙️ 행동 직접 지정</span><button id="sim-reset-pattern-btn" style="background:#fff;border:1px solid #dc3545;color:#dc3545;cursor:pointer;font-size:0.75em;font-weight:bold;padding:2px 8px;border-radius:4px;">초기화</button></div><div id="sim-action-list" style="display:flex;flex-direction:column;gap:5px;"></div></div><label style="display:block;font-size:0.85em;font-weight:bold;color:#555;margin-bottom:8px;">시뮬레이션 횟수</label><select id="sim-iterations" style="width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;background:#f9f9f9;font-weight:bold;"><option value="10" ${savedIters==="10"?'selected':''}>10회</option><option value="30" ${savedIters==="30"?'selected':''}>30회</option><option value="100" ${savedIters==="100"?'selected':''}>100회</option><option value="300" ${savedIters==="300"?'selected':''}>300회</option></select></div><button id="run-simulation-btn" style="width:100%;padding:16px;background:#6f42c1;color:white;border:none;border-radius:12px;font-weight:bold;cursor:pointer;font-size:1.1em;">분석 시작 🚀</button></div>
+                <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:15px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><div style="display:flex; align-items: center; gap:8px;"><label style="font-size:0.85em;font-weight:bold;color:#555;">진행 턴 수</label><div style="font-size:1.1em; font-weight:900; color:#6f42c1;"><span id="sim-turns-val">${savedTurns}</span>턴</div></div><button id="sim-edit-actions-btn" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;font-size:0.75em;padding:4px 10px;cursor:pointer;">⚙️ 행동 수정</button></div><div id="sim-turns-slider-container" style="margin: 10px 0 25px 0; padding: 5px 0;"><input type="range" id="sim-turns" min="1" max="30" value="${savedTurns}" step="1" list="sim-turns-ticks" style="width:100%; cursor:pointer; accent-color: #6f42c1;"><datalist id="sim-turns-ticks"><option value="1"></option><option value="5"></option><option value="10"></option><option value="15"></option><option value="20"></option><option value="25"></option><option value="30"></option></datalist></div><div id="sim-action-editor" style="display:none;background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:15px;max-height:280px;overflow-y:auto;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;"><span style="font-weight:bold;color:#6f42c1;font-size:0.8em;">⚙️ 행동 직접 지정</span><button id="sim-reset-pattern-btn" style="background:#fff;border:1px solid #dc3545;color:#dc3545;cursor:pointer;font-size:0.75em;font-weight:bold;padding:2px 8px;border-radius:4px;">초기화</button></div><div id="sim-action-list" style="display:flex;flex-direction:column;gap:5px;"></div></div><label style="display:block;font-size:0.85em;font-weight:bold;color:#555;margin-bottom:8px;">시뮬레이션 횟수</label><select id="sim-iterations" style="width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;background:#f9f9f9;font-weight:bold;"><option value="10" ${savedIters==="10"?'selected':''}>10회</option><option value="30" ${savedIters==="30"?'selected':''}>30회</option><option value="100" ${savedIters==="100"?'selected':''}>100회</option><option value="300" ${savedIters==="300"?'selected':''}>300회</option></select></div><button id="run-simulation-btn" style="width:100%;padding:16px;background:#6f42c1;color:white;border:none;border-radius:12px;font-weight:bold;cursor:pointer;font-size:1.1em;">분석 시작 🚀</button></div>
             <div class="sim-pane-display"><div id="simulation-result-area" style="display:none;"><div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h4 style="margin:0;color:#333;">분석 리포트</h4><div style="display:flex; gap:5px;"><button id="btn-show-dist" style="background:#6f42c1; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:0.75em; cursor:pointer;">분포도</button><button id="btn-show-dmg" style="background:#f0f0f0; color:#666; border:1px solid #ccc; padding:4px 10px; border-radius:4px; font-size:0.75em; cursor:pointer;">딜 그래프</button></div></div><div id="sim-graph-area" style="display:flex; height:${gH}px; margin-bottom:60px; padding-right:${isMobile ? '5px' : '15px'}; padding-left:0px; position:relative;"><div id="sim-y-axis" style="width: 25px; position: relative; font-size: 0.7em; color: #bbb; text-align: right; border-right: ${isMobile ? 'none' : '1px solid #eee'}; height: 100%;"></div><div style="flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; border-left: ${isMobile ? '1px solid #eee' : 'none'};"><div id="sim-grid-lines" style="position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></div><div id="sim-dist-graph" style="flex: 1; display: flex; align-items: flex-end; gap: 1px; border-bottom: 1px solid #eee; position: relative; z-index: 1; height: 100%;"></div><div id="sim-line-graph" style="display:none; flex: 1; position:relative; border-bottom: 1px solid #eee; z-index: 1; overflow: visible; height: 100%;"></div><div id="sim-x-axis" style="height: 0px; position: relative; width: 100%;"></div></div></div><div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; box-sizing: border-box;"><div style="background:#f8f9fa; padding: 10px 5px; border-radius:10px; text-align:center;"><div style="font-size: 0.65em; color:#999;">최소</div><div id="sim-min-dmg" style="font-weight:bold; font-size:${isMobile?'0.85em':'1em'};">0</div></div><div style="background:#6f42c1; padding: 10px 5px; border-radius:10px; text-align:center; color:white;"><div style="font-size: 0.65em; opacity:0.9;">평균</div><div id="sim-avg-dmg" style="font-weight: 900; font-size:${isMobile?'1em':'1.2em'};">0</div></div><div style="background:#f8f9fa; padding: 10px 5px; border-radius:10px; text-align:center;"><div style="font-size: 0.65em; color:#999;">최대</div><div id="sim-max-dmg" style="font-weight:bold; font-size:${isMobile?'0.85em':'1em'};">0</div></div></div></div><div id="sim-log" style="background:#1c2128;color:#4af626;padding:25px;border-radius:12px;font-family:monospace;max-height:400px;overflow-y:auto;line-height:1.6;"></div><div id="sim-result-actions" style="margin-top: 20px;"></div></div><div id="sim-empty-msg" style="text-align:center;padding:100px 20px;color:#bbb;border:2px dashed #eee;border-radius:15px;">분석 시작 버튼을 눌러주세요.</div></div></div>`;
 
     renderSimAttributePicker(charId);
@@ -156,62 +125,31 @@ function renderSimulatorUI(charId) {
     if (infoIcon) { import('./ui.js').then(ui => { const showTooltip = (e) => { e.stopPropagation(); const existing = document.querySelector('.buff-tooltip'); if (existing) existing.remove(); const tooltipControl = ui.showSimpleTooltip(infoIcon, tooltipText); setTimeout(() => tooltipControl.remove(), 3000); const closeOnOutside = () => { tooltipControl.remove(); document.removeEventListener('click', closeOnOutside); }; setTimeout(() => document.addEventListener('click', closeOnOutside), 50); }; infoIcon.onclick = showTooltip; infoIcon.onmouseenter = (e) => { if (!('ontouchstart' in window) && (navigator.maxTouchPoints <= 0)) { const tooltipControl = ui.showSimpleTooltip(infoIcon, tooltipText); infoIcon.addEventListener('mouseleave', tooltipControl.onMouseLeave, { once: true }); } }; }); }
 
     if (sData.customControls && sData.customControls.length > 0) {
-        const customWrapper = document.getElementById('sim-custom-controls');
-        const customList = document.getElementById('sim-custom-list');
+        const customWrapper = document.getElementById('sim-custom-controls'), customList = document.getElementById('sim-custom-list');
         customWrapper.style.display = 'block'; customList.innerHTML = '';
-        
         for (let i = 0; i < sData.customControls.length; i++) {
-            const ctrl = sData.customControls[i];
-            const nextCtrl = sData.customControls[i+1];
-            const savedVal = localStorage.getItem(`sim_custom_${charId}_${ctrl.id}`);
-            
-            // HP + 자동 체크박스 묶음 특수 레이아웃 (다른 박스와 동일한 1/3 크기)
+            const ctrl = sData.customControls[i], nextCtrl = sData.customControls[i+1], savedVal = localStorage.getItem(`sim_custom_${charId}_${ctrl.id}`);
             if (ctrl.id === 'enemy_hp' && nextCtrl && nextCtrl.id === 'auto_hp') {
-                const group = document.createElement('div');
-                group.style.cssText = `display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8f9fa; padding:8px 5px; border-radius:8px; border:1px solid #eee; flex: 0 0 calc(33.33% - 10px); min-width:80px; box-sizing:border-box;`;
+                const group = document.createElement('div'); group.style.cssText = `display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8f9fa; padding:8px 5px; border-radius:8px; border:1px solid #eee; flex: 0 0 calc(33.33% - 10px); min-width:80px; box-sizing:border-box;`;
                 const label = document.createElement('span'); label.style.cssText = `font-size:0.6em; color:#888; font-weight:bold; margin-bottom:4px; text-align:center; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;`; label.textContent = "적 HP (%)";
                 const row = document.createElement('div'); row.style.cssText = `display:flex; align-items:center; gap:5px;`;
-                
                 const autoSaved = (localStorage.getItem(`sim_custom_${charId}_${nextCtrl.id}`) === 'true');
-                
-                const input = document.createElement('input'); input.type = 'number'; input.min = 0; input.max = 100; 
-                input.value = parseInt(savedVal) || ctrl.initial || 0;
-                input.disabled = autoSaved;
+                const input = document.createElement('input'); input.type = 'number'; input.min = 0; input.max = 100; input.value = parseInt(savedVal) || ctrl.initial || 0; input.disabled = autoSaved;
                 input.style.cssText = `width:38px; padding:2px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none; font-size:0.8em; opacity: ${autoSaved ? '0.5' : '1'};`;
                 input.onchange = () => { let val = Math.max(0, Math.min(100, parseInt(input.value) || 0)); input.value = val; localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, val); };
-                
                 const checkWrapper = document.createElement('label'); checkWrapper.style.cssText = `display:flex; align-items:center; gap:2px; font-size:0.65em; font-weight:bold; color:#666; cursor:pointer;`;
-                const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = autoSaved;
-                checkbox.style.cssText = `width:12px; height:12px; cursor:pointer; margin:0;`;
-                checkbox.onchange = (e) => {
-                    const checked = e.target.checked;
-                    localStorage.setItem(`sim_custom_${charId}_${nextCtrl.id}`, checked);
-                    input.disabled = checked;
-                    input.style.opacity = checked ? '0.5' : '1';
-                };
-                
+                const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = autoSaved; checkbox.style.cssText = `width:12px; height:12px; cursor:pointer; margin:0;`;
+                checkbox.onchange = (e) => { const checked = e.target.checked; localStorage.setItem(`sim_custom_${charId}_${nextCtrl.id}`, checked); input.disabled = checked; input.style.opacity = checked ? '0.5' : '1'; };
                 checkWrapper.appendChild(checkbox); checkWrapper.appendChild(document.createTextNode("자동"));
                 row.appendChild(input); row.appendChild(checkWrapper); group.appendChild(label); group.appendChild(row); customList.appendChild(group);
                 i++; continue;
             }
-
-            const item = document.createElement('div');
-            item.style.cssText = `display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8f9fa; padding:8px 5px; border-radius:8px; border:1px solid #eee; flex: 0 0 calc(33.33% - 10px); min-width:80px; box-sizing:border-box;`;
+            const item = document.createElement('div'); item.style.cssText = `display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8f9fa; padding:8px 5px; border-radius:8px; border:1px solid #eee; flex: 0 0 calc(33.33% - 10px); min-width:80px; box-sizing:border-box;`;
             const label = document.createElement('span'); label.style.cssText = `font-size:0.65em; color:#888; font-weight:bold; margin-bottom:4px; text-align:center; width:100%;`; label.textContent = ctrl.label;
             const ctrlElement = document.createElement('div');
-            if (ctrl.type === 'input') {
-                const input = document.createElement('input'); input.type = 'number'; input.value = parseInt(savedVal) || ctrl.initial || 0;
-                input.style.cssText = `width:50px; padding:3px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none;`;
-                input.onchange = () => { localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, input.value); }; ctrlElement.appendChild(input);
-            } else if (ctrl.type === 'toggle') {
-                const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = (savedVal === 'true' || (savedVal === null && ctrl.initial === true));
-                checkbox.style.cssText = `width:16px; height:16px; cursor:pointer;`;
-                checkbox.onchange = (e) => { localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, e.target.checked); }; ctrlElement.appendChild(checkbox);
-            } else {
-                const btn = document.createElement('button'); btn.style.cssText = `background:#fff; border:1px solid #6f42c1; color:#6f42c1; font-weight:bold; font-size:0.9em; padding:4px 12px; border-radius:20px; cursor:pointer; min-width:40px;`;
-                btn.textContent = parseInt(savedVal) || ctrl.initial || 0;
-                btn.onclick = () => { let next = parseInt(btn.textContent) + 1; if (next > ctrl.max) next = ctrl.min; btn.textContent = next; localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, next); }; ctrlElement.appendChild(btn);
-            }
+            if (ctrl.type === 'input') { const input = document.createElement('input'); input.type = 'number'; input.value = parseInt(savedVal) || ctrl.initial || 0; input.style.cssText = `width:50px; padding:3px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none;`; input.onchange = () => { localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, input.value); }; ctrlElement.appendChild(input); }
+            else if (ctrl.type === 'toggle') { const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = (savedVal === 'true' || (savedVal === null && ctrl.initial === true)); checkbox.style.cssText = `width:16px; height:16px; cursor:pointer;`; checkbox.onchange = (e) => { localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, e.target.checked); }; ctrlElement.appendChild(checkbox); }
+            else { const btn = document.createElement('button'); btn.style.cssText = `background:#fff; border:1px solid #6f42c1; color:#6f42c1; font-weight:bold; font-size:0.9em; padding:4px 12px; border-radius:20px; cursor:pointer; min-width:40px;`; btn.textContent = parseInt(savedVal) || ctrl.initial || 0; btn.onclick = () => { let next = parseInt(btn.textContent) + 1; if (next > ctrl.max) next = ctrl.min; btn.textContent = next; localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, next); }; ctrlElement.appendChild(btn); }
             item.appendChild(label); item.appendChild(ctrlElement); customList.appendChild(item);
         }
     }
@@ -280,8 +218,11 @@ function runSimulation(charId) {
     const iterations = parseInt(itersSelect.value);
     const data = charData[charId], sData = simCharData[charId] || {};
     const targetCount = parseInt(document.getElementById('sim-target-btn')?.innerText || "1");
-    const enemyAttrIdx = parseInt(localStorage.getItem(`sim_last_enemy_attr_${charId}`) || "0");
+    // [수정] 적 속성 정보 확실히 가져오기 (기본값은 무상성을 위해 본인 속성 권장)
+    const savedEnemyAttr = localStorage.getItem(`sim_last_enemy_attr_${charId}`);
+    const enemyAttrIdx = (savedEnemyAttr !== null) ? parseInt(savedEnemyAttr) : (data.info?.속성 ?? 0);
     const myAttrIdx = data.info?.속성;
+
     let manualPattern = []; try { manualPattern = JSON.parse(localStorage.getItem(`sim_pattern_${charId}`)) || []; } catch(e) { manualPattern = []; }
     const customValues = {}; 
     if (sData.customControls) {
@@ -300,11 +241,19 @@ function runSimulation(charId) {
     const bonus2Rate = fitVal * 0.04;
     const fitBaseAtk = Math.floor(pureBaseAtk * (1 + bonus1Rate) * (1 + bonus2Rate));
     const passiveStats = { "기초공증": 0, "공증": 0, "고정공증": 0, "뎀증": 0, "평타뎀증": 0, "필살기뎀증": 0, "트리거뎀증": 0, "뎀증디버프": 0, "속성디버프": 0, "HP증가": 0, "기초HP증가": 0, "회복증가": 0, "배리어증가": 0, "지속회복증가": 0 };
+    
     data.skills.forEach((s, idx) => {
+        const isDefaultBuff = data.defaultBuffSkills?.includes(s.id);
+        // [수정] 필살기(idx 1)는 기본 버프 리스트에 있더라도 패시브 스탯 수집에서 제외
+        if (!isDefaultBuff || idx === 1) return;
+
+        // [추가] 동적 상태(카운터, 토글, 커스텀링크)를 가진 스킬은 정적 집계에서 제외 (sim_data.js에서 동적 처리됨)
+        if (s.hasCounter || s.hasToggle || s.customLink) return;
+
         const th = [0, 0, 0, 0, 30, 50, 75]; if (idx >= 4 && idx <= 6 && brVal < th[idx]) return;
-        if (!s.hasToggle && !s.hasCounter && !s.customLink && data.defaultBuffSkills?.includes(s.id) && s.buffEffects) {
+        if (s.buffEffects) {
             const sLv = stats.skills?.[`s${idx+1}`] || 1; const sRate = getSkillMultiplier(sLv, s.startRate || 0.6);
-            for (const k in s.buffEffects) { if (passiveStats.hasOwnProperty(k)) { const ef = s.buffEffects[k]; let valToAdd = 0; if (typeof ef === 'object' && ef !== null) { let baseMax = ef.max; if (ef.targetAttribute !== undefined && myAttrIdx === ef.targetAttribute && ef.attributeMax !== undefined) { baseMax = ef.attributeMax; } valToAdd = (baseMax !== undefined ? baseMax * sRate : ef.fixed) || 0; } else { valToAdd = ef || 0; } passiveStats[k] += valToAdd; } }
+            for (const k in s.buffEffects) { if (passiveStats.hasOwnProperty(k)) { const ef = s.buffEffects[k]; let valToAdd = 0; if (typeof ef === 'object' && ef !== null) { let baseMax = ef.max; if (ef.targetAttribute !== undefined && data.info.속성 === ef.targetAttribute && ef.attributeMax !== undefined) { baseMax = ef.attributeMax; } valToAdd = (baseMax !== undefined ? baseMax * sRate : ef.fixed) || 0; } else { valToAdd = ef || 0; } passiveStats[k] += valToAdd; } }
         }
     });
     const iterationResults = [];
@@ -318,61 +267,44 @@ function runSimulation(charId) {
             const skill = isUlt ? ultSkill : data.skills[0], sLv = isUlt ? (stats.skills?.s2 || 1) : (stats.skills?.s1 || 1), isStamped = isUlt && stats.stamp;
             let tDmg = 0;
             if (isDefend) { logs.push(`${t}턴: [방어] - +0`); } else {
-                let dynamicBonus = { extraHits: [] }; if (sData.onCalculateDamage) dynamicBonus = sData.onCalculateDamage({ t, turns, isUlt, charData: data, stats, simState, customValues, targetCount }) || { extraHits: [] };
-                const totalAtk = Math.floor(Math.floor(fitBaseAtk * (1 + (passiveStats["기초공증"] || 0) / 100)) * (1 + (passiveStats["공증"] || 0) / 100) + (passiveStats["고정공증"] || 0));
-                                const dynD = (typeof dynamicBonus === 'object') ? (dynamicBonus["뎀증"] || 0) : 0;
-                                const dynU = (typeof dynamicBonus === 'object') ? (dynamicBonus["필살기뎀증"] || 0) : 0;
-                                const dynP = (typeof dynamicBonus === 'object') ? (dynamicBonus["평타뎀증"] || 0) : 0;
-                                const dynT = (typeof dynamicBonus === 'object') ? (dynamicBonus["트리거뎀증"] || 0) : 0;
-                                const dynDebuff = (typeof dynamicBonus === 'object') ? (dynamicBonus["뎀증디버프"] || 0) : 0;
-                                const dynAttr = (typeof dynamicBonus === 'object') ? (dynamicBonus["속성디버프"] || 0) : 0;
-                                const dynFixed = (typeof dynamicBonus === 'object') ? (dynamicBonus["고정공증"] || 0) : 0;
-                
-                                let mainDmg = 0;
-                                if (skill.damageDeal && !dynamicBonus.skipMainDamage) {
-                                    skill.damageDeal.forEach(entry => {
-                                        const coef = (isStamped && entry.val.stampMax !== undefined) ? entry.val.stampMax : entry.val.max;
-                                        if (coef === undefined || coef === null) return;
-                                        const finalCoef = parseFloat((coef * getSkillMultiplier(sLv, skill.startRate || 0.6)).toFixed(skill.decimalPlaces || 2));
-                                        
-                                        // [수정] 실시간 고정공증(dynFixed) 반영
-                                        const currentTotalAtk = Math.floor(Math.floor(fitBaseAtk * (1 + (passiveStats["기초공증"] || 0) / 100)) * (1 + (passiveStats["공증"] || 0) / 100) + (passiveStats["고정공증"] || 0) + dynFixed);
-                                        
-                                        let baseD = (currentTotalAtk * (finalCoef / 100)) * (1 + ((passiveStats["뎀증"] || 0) + dynD) / 100);
-                                        baseD = baseD * (1 + (((isUlt ? (passiveStats["필살기뎀증"] || 0) + dynU : (passiveStats["평타뎀증"] || 0) + dynP)) / 100)) * (1 + ((passiveStats["뎀증디버프"] || 0) + dynDebuff) / 100) * (1 + ((passiveStats["속성디버프"] || 0) + dynAttr) / 100);
-                                        let mult = 1.0; if (myAttrIdx !== undefined) { const wins = { 0: 2, 1: 0, 2: 1, 3: 4, 4: 3 }; const loses = { 0: 1, 1: 2, 2: 0, 3: 4, 4: 3 }; if (wins[myAttrIdx] === enemyAttrIdx) mult = 1.5; else if (loses[myAttrIdx] === enemyAttrIdx) { if (myAttrIdx <= 2 && enemyAttrIdx <= 2) mult = 0.75; if ((myAttrIdx === 3 && enemyAttrIdx === 4) || (myAttrIdx === 4 && enemyAttrIdx === 3)) mult = 1.5; } }
-                                        let hitDmg = Math.floor(baseD * mult); if ((entry.isMultiTarget ?? (isStamped ? entry.stampIsMultiTarget : skill.isMultiTarget)) && !entry.isSingleTarget) hitDmg *= targetCount;
-                                        mainDmg += (hitDmg || 0);
-                                    });
-                                    logs.push(`${t}턴: [${isUlt ? '필살기' : '보통공격'}] ${skill.name} +${mainDmg.toLocaleString()}`);
-                                }
-                                tDmg = mainDmg;
-                                if (dynamicBonus && dynamicBonus.extraHits) {
-                                    dynamicBonus.extraHits.forEach(extra => {
-                                        const currentTotalAtk = Math.floor(Math.floor(fitBaseAtk * (1 + (passiveStats["기초공증"] || 0) / 100)) * (1 + (passiveStats["공증"] || 0) / 100) + (passiveStats["고정공증"] || 0) + dynFixed);
-                                        const extraBaseD = (currentTotalAtk * ((extra.coef || 0) / 100)) * (1 + ((passiveStats["뎀증"] || 0) + dynD) / 100) * (1 + (((passiveStats["트리거뎀증"] || 0) + dynT) / 100)) * (1 + ((passiveStats["뎀증디버프"] || 0) + dynDebuff) / 100) * (1 + ((passiveStats["속성디버프"] || 0) + dynAttr) / 100);
-                                        let mult = 1.0; if (myAttrIdx !== undefined) { const wins = { 0: 2, 1: 0, 2: 1, 3: 4, 4: 3 }; const loses = { 0: 1, 1: 2, 2: 0, 3: 4, 4: 3 }; if (wins[myAttrIdx] === enemyAttrIdx) mult = 1.5; else if (loses[myAttrIdx] === enemyAttrIdx) { if (myAttrIdx <= 2 && enemyAttrIdx <= 2) mult = 0.75; if ((myAttrIdx === 3 && enemyAttrIdx === 4) || (myAttrIdx === 4 && enemyAttrIdx === 3)) mult = 1.5; } }
-                                        let extraFinalDmg = Math.floor(extraBaseD * mult); if (extra.isMulti) extraFinalDmg *= targetCount;
+                let dynamicBonus = { extraHits: [] }; if (sData.onCalculateDamage) dynamicBonus = sData.onCalculateDamage({ t, turns, isUlt, charData: data, stats, simState, customValues, targetCount, passiveStats }) || { extraHits: [] };
+                const dynD = (typeof dynamicBonus === 'object') ? (dynamicBonus["뎀증"] || 0) : 0; const dynU = (typeof dynamicBonus === 'object') ? (dynamicBonus["필살기뎀증"] || 0) : 0; const dynP = (typeof dynamicBonus === 'object') ? (dynamicBonus["평타뎀증"] || 0) : 0; const dynT = (typeof dynamicBonus === 'object') ? (dynamicBonus["트리거뎀증"] || 0) : 0; const dynDebuff = (typeof dynamicBonus === 'object') ? (dynamicBonus["뎀증디버프"] || 0) : 0; const dynAttr = (typeof dynamicBonus === 'object') ? (dynamicBonus["속성디버프"] || 0) : 0; const dynFixed = (typeof dynamicBonus === 'object') ? (dynamicBonus["고정공증"] || 0) : 0; const dynAtk = (typeof dynamicBonus === 'object') ? (dynamicBonus["공증"] || 0) : 0; const dynBaseAtk = (typeof dynamicBonus === 'object') ? (dynamicBonus["기초공증"] || 0) : 0;
+                let mainDmg = 0;
+                if (skill.damageDeal && !dynamicBonus.skipMainDamage) {
+                    skill.damageDeal.forEach(entry => {
+                        const coef = (isStamped && entry.val.stampMax !== undefined) ? entry.val.stampMax : entry.val.max;
+                        if (coef === undefined || coef === null) return;
+                        const finalCoef = parseFloat((coef * getSkillMultiplier(sLv, skill.startRate || 0.6)).toFixed(skill.decimalPlaces || 2));
+                        const currentBaseAtk = Math.floor(fitBaseAtk * (1 + ((passiveStats["기초공증"] || 0) + dynBaseAtk) / 100));
+                        const currentTotalAtk = Math.floor(currentBaseAtk * (1 + ((passiveStats["공증"] || 0) + dynAtk) / 100) + (passiveStats["고정공증"] || 0) + dynFixed);
+                        let baseD = (currentTotalAtk * (finalCoef / 100));
+                        if (((passiveStats["뎀증"] || 0) + dynD) !== 0) baseD *= (1 + ((passiveStats["뎀증"] || 0) + dynD) / 100);
+                        let tB = isUlt ? ((passiveStats["필살기뎀증"] || 0) + dynU) : ((passiveStats["평타뎀증"] || 0) + dynP);
+                        if (tB !== 0) baseD *= (1 + tB / 100);
+                        if (((passiveStats["뎀증디버프"] || 0) + dynDebuff) !== 0) baseD *= (1 + ((passiveStats["뎀증디버프"] || 0) + dynDebuff) / 100);
+                        if (((passiveStats["속성디버프"] || 0) + dynAttr) !== 0) baseD *= (1 + ((passiveStats["속성디버프"] || 0) + dynAttr) / 100);
+                        let mult = 1.0; if (myAttrIdx !== undefined && enemyAttrIdx !== undefined) { const wins = { 0: 2, 1: 0, 2: 1, 3: 4, 4: 3 }; const loses = { 0: 1, 1: 2, 2: 0, 3: 4, 4: 3 }; if (wins[myAttrIdx] === enemyAttrIdx) mult = 1.5; else if (loses[myAttrIdx] === enemyAttrIdx) { if (myAttrIdx <= 2 && enemyAttrIdx <= 2) mult = 0.75; if ((myAttrIdx === 3 && enemyAttrIdx === 4) || (myAttrIdx === 4 && enemyAttrIdx === 3)) mult = 1.5; } }
+                        let hitDmg = Math.floor(baseD * mult); if ((entry.isMultiTarget ?? (isStamped ? entry.stampIsMultiTarget : skill.isMultiTarget)) && !entry.isSingleTarget) hitDmg *= targetCount;
+                        mainDmg += (hitDmg || 0);
+                    });
+                    logs.push(`${t}턴: [${isUlt ? '필살기' : '보통공격'}] ${skill.name} +${mainDmg.toLocaleString()}`);
+                }
+                tDmg = mainDmg;
+                if (dynamicBonus && dynamicBonus.extraHits) {
+                    dynamicBonus.extraHits.forEach(extra => {
+                        const currentBaseAtk = Math.floor(fitBaseAtk * (1 + ((passiveStats["기초공증"] || 0) + dynBaseAtk) / 100));
+                        const currentTotalAtk = Math.floor(currentBaseAtk * (1 + ((passiveStats["공증"] || 0) + dynAtk) / 100) + (passiveStats["고정공증"] || 0) + dynFixed);
+                        let typeBonus = 0; if (extra.type === "보통공격") typeBonus = (passiveStats["평타뎀증"] || 0) + dynP; else if (extra.type === "필살공격") typeBonus = (passiveStats["필살기뎀증"] || 0) + dynU; else typeBonus = (passiveStats["트리거뎀증"] || 0) + dynT;
+                        let extraBaseD = (currentTotalAtk * ((extra.coef || 0) / 100));
+                        if (((passiveStats["뎀증"] || 0) + dynD) !== 0) extraBaseD *= (1 + ((passiveStats["뎀증"] || 0) + dynD) / 100);
+                        if (typeBonus !== 0) extraBaseD *= (1 + typeBonus / 100);
+                        if (((passiveStats["뎀증디버프"] || 0) + dynDebuff) !== 0) extraBaseD *= (1 + ((passiveStats["뎀증디버프"] || 0) + dynDebuff) / 100);
+                        if (((passiveStats["속성디버프"] || 0) + dynAttr) !== 0) extraBaseD *= (1 + ((passiveStats["속성디버프"] || 0) + dynAttr) / 100);
+                        let mult = 1.0; if (myAttrIdx !== undefined && enemyAttrIdx !== undefined) { const wins = { 0: 2, 1: 0, 2: 1, 3: 4, 4: 3 }; const loses = { 0: 1, 1: 2, 2: 0, 3: 4, 4: 3 }; if (wins[myAttrIdx] === enemyAttrIdx) mult = 1.5; else if (loses[myAttrIdx] === enemyAttrIdx) { if (myAttrIdx <= 2 && enemyAttrIdx <= 2) mult = 0.75; if ((myAttrIdx === 3 && enemyAttrIdx === 4) || (myAttrIdx === 4 && enemyAttrIdx === 3)) mult = 1.5; } }
+                        let extraFinalDmg = Math.floor(extraBaseD * mult); if (extra.isMulti) extraFinalDmg *= targetCount;
                         let autoType = extra.type || '추가타';
-                        let skillName = extra.name || '추가타';
-                        
-                        if (extra.skillId) {
-                            // 현재 캐릭터(data)의 스킬 목록에서 검색
-                            const skillObj = data.skills.find(s => s.id === extra.skillId);
-                            if (skillObj) {
-                                skillName = skillObj.name; 
-                                const sIdx = data.skills.indexOf(skillObj);
-                                const getLabel = (idx) => { if (idx === 0) return "보통공격"; if (idx === 1) return "필살기"; if (idx >= 2 && idx <= 6) return `패시브${idx - 1}`; return "도장"; };
-                                autoType = getLabel(sIdx);
-                                if (skillObj.syncLevelWith) {
-                                    const tIdx = data.skills.findIndex(s => s.id === skillObj.syncLevelWith);
-                                    if (tIdx !== -1) autoType = getLabel(tIdx);
-                                }
-                            }
-                        }
-
-                        tDmg += (extraFinalDmg || 0);
-                        logs.push(`${t}턴: [${autoType}] ${skillName} +${(extraFinalDmg || 0).toLocaleString()}`);
+                        if (extra.skillId) { const skillObj = data.skills.find(s => s.id === extra.skillId); if (skillObj) { const sIdx = data.skills.indexOf(skillObj); const getLabel = (idx) => { if (idx === 0) return "보통공격"; if (idx === 1) return "필살기"; if (idx >= 2 && idx <= 6) return `패시브${idx - 1}`; return "도장"; }; autoType = getLabel(sIdx); if (skillObj.syncLevelWith) { const tIdx = data.skills.findIndex(s => s.id === skillObj.syncLevelWith); if (tIdx !== -1) autoType = getLabel(tIdx); } } }
+                        tDmg += (extraFinalDmg || 0); logs.push(`${t}턴: [${autoType}] ${extra.name} +${(extraFinalDmg || 0).toLocaleString()}`);
                     });
                 }
             }
@@ -382,39 +314,14 @@ function runSimulation(charId) {
         }
         iterationResults.push({ total, logs, perTurnDmg });
     }
-    const totals = iterationResults.map(d => d.total);
-    const avg = Math.floor(totals.reduce((a, b) => a + b, 0) / iterations);
-    const min = Math.min(...totals), max = Math.max(...totals), closest = iterationResults.reduce((prev, curr) => Math.abs(curr.total - avg) < Math.abs(prev.total - avg) ? curr : prev);
-    const range = max - min;
-    
-    // [수정] 300회일 때도 가독성을 위해 구간(bins) 개수를 최대 100개로 제한
-    const binCount = Math.min(iterations, 100);
-    const bins = new Array(binCount).fill(0);
-    let targetBinIdx = -1; 
-    
-    iterationResults.forEach((res, idx) => { 
-        let bIdx = (range === 0) ? Math.floor(binCount / 2) : Math.floor(((res.total - min) / range) * binCount); 
-        if (bIdx >= binCount) bIdx = binCount - 1; 
-        bins[bIdx]++; 
-        if (res === closest && targetBinIdx === -1) targetBinIdx = bIdx; 
-    });
-    const maxFreq = Math.max(...bins); let yStep = (maxFreq <= 9) ? 1 : (maxFreq < 30 ? 2 : (maxFreq < 100 ? 5 : 20));
-    const yMax = (maxFreq % yStep === 0) ? (maxFreq === 0 ? yStep : maxFreq) : (Math.floor(maxFreq / yStep) + 1) * yStep;
-    const yLabels = []; for (let v = 0; v <= yMax; v += yStep) yLabels.push(v); yLabels.reverse();
+    const totals = iterationResults.map(d => d.total), avg = Math.floor(totals.reduce((a, b) => a + b, 0) / iterations), min = Math.min(...totals), max = Math.max(...totals), closest = iterationResults.reduce((prev, curr) => Math.abs(curr.total - avg) < Math.abs(prev.total - avg) ? curr : prev), range = max - min, binCount = Math.min(iterations, 100), bins = new Array(binCount).fill(0);
+    let targetBinIdx = -1; iterationResults.forEach((res, idx) => { let bIdx = (range === 0) ? Math.floor(binCount / 2) : Math.floor(((res.total - min) / range) * binCount); if (bIdx >= binCount) bIdx = binCount - 1; bins[bIdx]++; if (res === closest && targetBinIdx === -1) targetBinIdx = bIdx; });
+    const maxFreq = Math.max(...bins); let yStep = (maxFreq <= 9) ? 1 : (maxFreq < 30 ? 2 : (maxFreq < 100 ? 5 : 20)), yMax = (maxFreq % yStep === 0) ? (maxFreq === 0 ? yStep : maxFreq) : (Math.floor(maxFreq / yStep) + 1) * yStep, yLabels = []; for (let v = 0; v <= yMax; v += yStep) yLabels.push(v); yLabels.reverse();
     const axisData = { y: yLabels, x: [] }; for (let i = 0; i <= 10; i++) { const v = min + (range / 10) * i; const label = v >= 10000 ? (v/1000).toFixed(0)+'K' : Math.floor(v).toLocaleString(); axisData.x.push({ pos: i * 10, label: label }); }
     const resultToSave = { min: min.toLocaleString(), max: max.toLocaleString(), avg: avg.toLocaleString(), logHtml: closest.logs.map(l => `<div>${l}</div>`).join(''), graphData: bins.map((c, i) => ({ h: (c / yMax) * 100, isAvg: i === targetBinIdx, count: c })), axisData, yMax, turnData: closest.perTurnDmg, closestTotal: closest.total, closestLogs: closest.logs };
     localStorage.setItem(`sim_last_result_${charId}`, JSON.stringify(resultToSave));
-    document.getElementById('sim-min-dmg').innerText = resultToSave.min;
-    document.getElementById('sim-avg-dmg').innerText = resultToSave.avg;
-    document.getElementById('sim-max-dmg').innerText = resultToSave.max;
-    document.getElementById('sim-log').innerHTML = resultToSave.logHtml;
-    document.getElementById('simulation-result-area').style.display = 'block';
-    document.getElementById('sim-empty-msg').style.display = 'none';
-    const isLineMode = document.getElementById('sim-line-graph').style.display === 'block';
-    if (isLineMode) { renderDamageLineChart(charId); } else {
-        const distGraph = document.getElementById('sim-dist-graph');
-        distGraph.innerHTML = resultToSave.graphData.map((b, i) => `<div class="bar-grow-item" style="flex:1; height:${b.h}%; background:${b.isAvg ? '#6f42c1' : '#e0e0e0'}; border-radius:0px; position:relative; z-index:2;"></div>`).join('');
-        renderAxisLabels(axisData, yMax, 'dist');
-    }
+    document.getElementById('sim-min-dmg').innerText = resultToSave.min; document.getElementById('sim-avg-dmg').innerText = resultToSave.avg; document.getElementById('sim-max-dmg').innerText = resultToSave.max; document.getElementById('sim-log').innerHTML = resultToSave.logHtml;
+    document.getElementById('simulation-result-area').style.display = 'block'; document.getElementById('sim-empty-msg').style.display = 'none';
+    const isLineMode = document.getElementById('sim-line-graph').style.display === 'block'; if (isLineMode) { renderDamageLineChart(charId); } else { const distGraph = document.getElementById('sim-dist-graph'); distGraph.innerHTML = resultToSave.graphData.map((b, i) => `<div class="bar-grow-item" style="flex:1; height:${b.h}%; background:${b.isAvg ? '#6f42c1' : '#e0e0e0'}; border-radius:0px; position:relative; z-index:2;"></div>`).join(''); renderAxisLabels(axisData, yMax, 'dist'); }
     renderHeroTabButton(charId, closest.total, closest.logs, stats);
 }

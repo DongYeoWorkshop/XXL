@@ -135,8 +135,8 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
             let isControllable = !isDisabledByBreakthrough;
 
             // 1. 도장 체크 (도장이 '반드시' 필요한 스킬인 경우에만 제한)
-            // isUltExtra(도장 패시브)나 stampBuffEffects(도장 전용 버프)가 있는 경우에만 도장 여부에 따라 잠금
-            const strictlyRequiresStamp = !!(skill.isUltExtra || skill.stampBuffEffects);
+            // 기본 버프(buffEffects)가 없고 도장 효과만 있는 경우에만 도장 여부에 따라 잠금
+            const strictlyRequiresStamp = !!(skill.isUltExtra || (skill.stampBuffEffects && !skill.buffEffects));
             if (isControllable && strictlyRequiresStamp) {
                 const isOwnerUltStamped = (buffCharId === currentId) 
                     ? (document.getElementById(`stamp-check-${currentId}`)?.checked || false)
@@ -294,20 +294,30 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
             if (skill.hasToggle) {
                 const toggleType = skill.toggleType || 'isAppliedStamped';
                 
-                const toggle = createToggle(buff[toggleType], !isControllable, (checked) => {
-                    if (buffCharId === 'beernox' && checked) {
-                        const partnerId = (skillId === 'beernox_skill1' ? 'beernox_skill2' : skillId === 'beernox_skill2' ? 'beernox_skill1' : null);
-                        if (partnerId) {
-                            const pBuff = appliedBuffs['beernox'].find(b => b.skillId === partnerId);
-                            if (pBuff) pBuff[toggleType] = false;
+                // [수정] 던컨 탭에서 던컨의 "필살기" 버프인 경우에만 토글 버튼 숨김
+                const isDuncanUltSelf = (currentId === 'duncan' && buffCharId === 'duncan' && skillId === 'duncan_skill2');
+
+                if (!isDuncanUltSelf) {
+                    const toggle = createToggle(buff[toggleType], !isControllable, (checked) => {
+                        if (buffCharId === 'beernox' && checked) {
+                            const partnerId = (skillId === 'beernox_skill1' ? 'beernox_skill2' : skillId === 'beernox_skill2' ? 'beernox_skill1' : null);
+                            if (partnerId) {
+                                const pBuff = appliedBuffs['beernox'].find(b => b.skillId === partnerId);
+                                if (pBuff) pBuff[toggleType] = false;
+                            }
                         }
+                        buff[toggleType] = checked;
+                        updateStatsCallback();
+                        saveCurrentStatsCallback();
+                    });
+                    buffItem.appendChild(toggle);
+                    if (!buff[toggleType] || !isControllable) buffItem.classList.add('buff-off-state');
+                } else {
+                    // [수정] 던컨 필살기 토글은 숨기되, logic.js에서 관리되는 현재 상태를 그대로 반영
+                    if (!buff[toggleType] || !isControllable) {
+                        buffItem.classList.add('buff-off-state');
                     }
-                    buff[toggleType] = checked;
-                    updateStatsCallback();
-                    saveCurrentStatsCallback();
-                });
-                buffItem.appendChild(toggle);
-                if (!buff[toggleType] || !isControllable) buffItem.classList.add('buff-off-state');
+                }
             } else if (skill.hasCounter) {
                 const countVal = buff.count !== undefined ? buff.count : 0;
                 const min = skill.counterRange?.min || 0;

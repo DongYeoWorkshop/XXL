@@ -200,6 +200,11 @@ export function handleImageClick(img) {
         
         const data = charData[id], saved = state.savedStats[id] || {};
         
+        // [추가] 캐릭터 선택 시 기본 타겟 속성을 본인 속성으로 맞춤 (무상성 기준)
+        if (data.info && data.info.속성 !== undefined) {
+            state.currentDisplayedAttribute = constants.attributeList[data.info.속성];
+        }
+
         // UI 갱신 로직...
         if (dom.titleArea) {
             const isFav = saved.isFavorite || false;

@@ -56,7 +56,7 @@ function getBuffOwnerBaseAtk(buffCharId, ownerSaved, charData, currentId, curren
 export function addAppliedBuff(charId, skillId, isDefault, isAppliedStamped, appliedBuffs) {
     if (!appliedBuffs[charId]) appliedBuffs[charId] = [];
     if (!appliedBuffs[charId].some(b => b.skillId === skillId)) {
-        appliedBuffs[charId].push({ skillId, isDefault, isAppliedStamped, count: 1 });
+        appliedBuffs[charId].push({ skillId, isDefault, isAppliedStamped, isApplied: true, count: 1 });
     }
 }
 
@@ -71,11 +71,15 @@ export function removeAppliedBuff(charId, skillId, appliedBuffs) {
  * 버프 설명문에 실제 가산 수치를 주입하는 범용 함수
  */
 export function formatBuffDescription(skill, buffCharId, currentId, savedStats, charData, currentSkillLevels, appliedBuffs, skillLevel, currentBaseAtk = 0) {
-    // [수정] 설명문에는 항상 도장 적용된 수치(잠재력)를 표시하도록 변경
-    // 실제 적용 여부는 UI의 투명도(buff-off-state)로 구분함
+    // [수정] 설명문에는 실제 캐릭터의 도장 상태를 반영하여 수치 표시
+    // 실제 적용 여부(토글)는 UI의 투명도(buff-off-state)로 구분함
     let descriptionText = "";
-    const isStampedPotential = (skill.stampBuffEffects || skill.toggleType === "isAppliedStamped" || skill.hasStampEffect);
     
+    // [추가] 도장 여부에 따른 수치 결정
+    const isOwnerUltStamped = (buffCharId === currentId) 
+        ? (document.getElementById(`stamp-check-${currentId}`)?.checked || false)
+        : (savedStats[buffCharId]?.stamp || false);
+
     // [추가] 수치 변형을 위한 스킬 데이터 복제
     let skillToFormat = JSON.parse(JSON.stringify(skill));
     
@@ -152,8 +156,8 @@ export function formatBuffDescription(skill, buffCharId, currentId, savedStats, 
         }
     }
     
-    listDesc = getDynamicDesc(skillForList, skillLevel, isStampedPotential, skillForList.buffDesc);
-    fullDesc = getDynamicDesc(skillForTooltip, skillLevel, isStampedPotential, skillForTooltip.desc);
+    listDesc = getDynamicDesc(skillForList, skillLevel, isOwnerUltStamped, skillForList.buffDesc);
+    fullDesc = getDynamicDesc(skillForTooltip, skillLevel, isOwnerUltStamped, skillForTooltip.desc);
 
     if (skillToFormat.ratioEffects && skillToFormat.ratioEffects["고정공증"] && skillToFormat.ratioEffects["고정공증"].from === "기초공격력") {
         const ratioData = skillToFormat.ratioEffects["고정공증"];

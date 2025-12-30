@@ -66,8 +66,8 @@ export function calculateCharacterStats(charId, charData, skillLevels, isUltStam
                 : (allSavedStats?.[appliedCharId]?.stamp || false);
             
             // [수정] 도장 필수 여부 체크
-            // hasStampEffect는 수치만 바꿀 뿐이므로 버프 적용 자체를 막지 않음
-            const strictlyRequiresStamp = !!(buffSkill.stampBuffEffects || buffSkill.isUltExtra);
+            // 기본 버프(buffEffects)가 없고 도장 효과(stampBuffEffects)만 있는 경우에만 메인 도장 여부 체크
+            const strictlyRequiresStamp = !!(buffSkill.isUltExtra || (buffSkill.stampBuffEffects && !buffSkill.buffEffects));
             if (strictlyRequiresStamp && !isOwnerUltStamped) return;
 
             let isToggleActive = true;

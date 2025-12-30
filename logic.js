@@ -116,6 +116,21 @@ export function updateStats(level = parseInt(dom.sliderInput.value), skipBuffRen
         state.currentSkillLevels[i] = parseInt(document.getElementById(`skill-slider-${state.currentId}-${i}`)?.value || 1);
     }
     
+    // [수정] 던컨 찰스 상세창 필살기 선택에 따른 버프 실시간 연동
+    if (state.currentId === 'duncan') {
+        if (!state.appliedBuffs['duncan']) state.appliedBuffs['duncan'] = [];
+        // 스킬 데미지 계산(상세창)에서 필살기(인덱스 1)가 선택되었는지 확인
+        const isUltSelected = (state.selectedSkillIndex === 1);
+        let ultBuff = state.appliedBuffs['duncan'].find(b => b.skillId === 'duncan_skill2');
+        
+        if (isUltSelected) {
+            if (!ultBuff) state.appliedBuffs['duncan'].push({ skillId: 'duncan_skill2', isAppliedStamped: true, count: 1 });
+            else ultBuff.isAppliedStamped = true;
+        } else {
+            if (ultBuff) ultBuff.isAppliedStamped = false;
+        }
+    }
+
     const isUltStamped = document.getElementById(`stamp-check-${state.currentId}`)?.checked || false;
     const liveContext = {
         liveLv: level, liveBr: brVal, liveFit: fitVal,

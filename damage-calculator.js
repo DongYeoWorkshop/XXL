@@ -43,6 +43,15 @@ export function getFormattedDamage(skill, lv, isUltStamped, isForCard = false, a
     if (idx === 1) {
         const charDataObj = charData[state.currentId];
         if (charDataObj) {
+            // [추가] 던컨 찰스 필살기 자체 공증 반영
+            if (state.currentId === 'duncan') {
+                const s2 = charDataObj.skills[1];
+                const s2Lv = (state.currentSkillLevels && state.currentSkillLevels[2]) || 1;
+                // data.js에 정의된 startRate (0.64) 반영
+                const rate = getSkillMultiplier(s2Lv, s2.startRate);
+                currentCalcSubStats["공증"] = (currentCalcSubStats["공증"] || 0) + (30 * rate);
+            }
+
             const boosterSkillIdx = charDataObj.skills.findIndex(s => s.isUltBooster);
             const currentBreakthrough = state.savedStats[state.currentId]?.s1 || 0;
             const isUnlocked = (boosterSkillIdx === 6) ? (currentBreakthrough >= 75) : true; 
