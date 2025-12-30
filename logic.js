@@ -160,12 +160,14 @@ function updateStickyHeader(level) {
 
     const infoSpans = ['sticky-name', 'sticky-attr', 'sticky-lv', 'sticky-br', 'sticky-fit'];
     const headerTitle = document.getElementById('sticky-header-title');
+    const toggleIcon = document.getElementById('header-toggle-icon');
     
     // 특수 탭(null, hero, simulator)인 경우 캐릭터 정보 완전 차단
     if (!state.currentId || state.currentId === 'hero' || state.currentId === 'simulator') {
+        if (toggleIcon) toggleIcon.style.setProperty('display', 'block', 'important');
         if (headerTitle) {
             headerTitle.style.setProperty('display', 'flex', 'important');
-            headerTitle.innerHTML = `<img src="icon/main.png" class="header-title-icon">동여성 공방`;
+            headerTitle.innerHTML = `동여성 공방`;
         }
         infoSpans.forEach(id => { 
             const el = document.getElementById(id); 
@@ -176,6 +178,7 @@ function updateStickyHeader(level) {
         });
     } else {
         // 실제 캐릭터인 경우
+        if (toggleIcon) toggleIcon.style.setProperty('display', 'none', 'important');
         const data = charData[state.currentId];
         if (data) {
             if (headerTitle) headerTitle.style.setProperty('display', 'none', 'important');

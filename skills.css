@@ -292,16 +292,38 @@
 /* =========================================
    Hero Tab
    ========================================= */
+.hero-main-wrapper {
+    background: #fffbf5;
+    border: 1px solid #eee0d0;
+    border-radius: 8px;
+    padding: 5px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.05);
+}
+
+/* PC 버전 그리드 배치 */
+@media screen and (min-width: 1100px) {
+    #hero-graph-container {
+        grid-column: 2;
+        grid-row: 2;
+    }
+    #hero-tables-wrapper {
+        grid-column: 1;
+        grid-row: 2;
+        margin-top: 0;
+    }
+}
+
 .hero-graph-container {
     display: flex; flex-direction: column; align-items: stretch; background: #fffbf5; padding: 0;
-    border: 1px solid #eee0d0; border-radius: 8px; margin-bottom: 10px;
+    border: 1px solid #eee0d0; border-radius: 8px; margin-bottom: 20px;
     box-shadow: 0 4px 15px rgba(255, 165, 0, 0.1); margin-top: 0; width: 100%; grid-column: 1 / -1;
 }
 
 .hero-tab-tag { display: flex; align-items: flex-end; margin-top: -46px; margin-left: -1px; margin-bottom: 0; }
 .hero-tag-content {
-    background: #30363d; color: #c3a6ff; font-size: 0.75em; font-weight: bold;
-    padding: 6px 16px; border-radius: 8px 8px 0 0; border: 1px solid #444; border-bottom: none;
+    background: #262c36; color: #c3a6ff; font-size: 0.75em; font-weight: bold;
+    padding: 6px 16px; border-radius: 8px 8px 0 0; border: 1px solid #333; border-bottom: none;
     z-index: 1; box-shadow: 0 -3px 6px rgba(0,0,0,0.3);
 }
 
@@ -311,7 +333,7 @@
 
 .graph-img-grid {
     display: flex; flex-wrap: nowrap; gap: 20px; align-items: end; overflow-x: auto;
-    padding-bottom: 10px; scrollbar-width: none; cursor: grab; -ms-overflow-style: none;
+    padding-bottom: 10px; scrollbar-width: none; cursor: default; -ms-overflow-style: none;
 }
 .graph-img-grid::-webkit-scrollbar { display: none; }
 
@@ -321,15 +343,196 @@
     border: none; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;
 }
 .snapshot-img {
-    width: 70px; height: 180px; object-fit: cover; border-radius: 6px; border: 2px solid #ddd;
-    cursor: copy; background: black; margin-bottom: 8px;
+    width: 70px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid #ddd;
+    cursor: pointer;
+    background: black;
+    margin-bottom: 8px;
 }
 .snapshot-dmg-label { font-size: 0.85em; font-weight: bold; color: #5e35b1; margin-bottom: 4px; }
 .snapshot-bar-container { width: 50px; height: 100px; background: #eee; border-radius: 4px; position: relative; margin-bottom: 0; display: flex; align-items: flex-end; overflow: hidden; }
 .snapshot-bar { width: 100%; background: linear-gradient(to top, #6f42c1, #8e44ad); transition: height 0.5s ease-out; }
 
-.comparison-tables-container { display: flex; flex-wrap: wrap; gap: 15px; width: 100%; grid-column: 1 / -1; margin-top: 10px; align-items: flex-start; }
-.comparison-slot { width: calc(50% - 8px); flex: 0 0 auto; min-width: 300px; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.comparison-tables-container {
+
+    display: flex;
+
+    flex-direction: column; /* 세로로 턴들을 나열 */
+
+    gap: 0;
+
+    width: 100%;
+
+    grid-column: 1 / -1;
+
+    margin-top: 10px;
+
+}
+
+
+
+/* 턴 하나를 감싸는 로우 */
+
+.unified-turn-block {
+
+    display: flex;
+
+    flex-direction: column;
+
+    width: 100%;
+
+    margin-bottom: 15px;
+
+}
+
+
+
+/* 턴 구분선 (중앙 정렬) */
+
+.unified-turn-header {
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 10px;
+
+    color: #6f42c1;
+
+    font-size: 0.85em;
+
+    font-weight: bold;
+
+}
+
+.unified-turn-line {
+
+    flex-grow: 1;
+
+    border-top: 1px dashed #444;
+
+}
+
+
+
+/* 좌우 데이터 컬럼 컨테이너 */
+
+.unified-turn-content {
+
+    display: flex;
+
+    gap: 15px;
+
+    width: 100%;
+
+}
+
+
+
+.comparison-slot {
+
+
+
+    flex: 1;
+
+
+
+    min-width: 0;
+
+
+
+    background: #fff;
+
+
+
+    border: 1px solid #ddd;
+
+
+
+    border-radius: 8px;
+
+
+
+    padding: 10px;
+
+
+
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+
+
+
+}
+
+
+
+
+
+
+
+/* 좌우 미세 글로우 효과 */
+
+
+
+.comp-slot-left:not([style*="background: transparent"]) {
+
+
+
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.15) !important;
+
+
+
+    border-color: rgba(255, 0, 0, 0.2) !important;
+
+
+
+}
+
+
+
+.comp-slot-right:not([style*="background: transparent"]) {
+
+
+
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.15) !important;
+
+
+
+    border-color: rgba(0, 123, 255, 0.2) !important;
+
+
+
+}
+
+
+
+/* 모바일 대응 (600px 이하) */
+
+@media screen and (max-width: 600px) {
+
+    .unified-turn-content {
+
+        flex-direction: column; /* 모바일은 다시 상하로 */
+
+        gap: 10px;
+
+    }
+
+    .comparison-slot {
+
+        width: 100%;
+
+    }
+
+}
+
+
 
 .comp-header { border-bottom: 2px solid #6f42c1; padding-bottom: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
 .comp-char-info { font-weight: bold; color: #333; display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1; }

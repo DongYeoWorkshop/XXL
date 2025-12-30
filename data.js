@@ -52,7 +52,7 @@ export const charData = {
       { id: "tayangsuyi_skill7", excludeFromBuffSearch: true, decimalPlaces: 2, buffEffects: { "필살기뎀증": { max: 15 } }, buffDesc: "아군이 필살기 사용 시 필살기의 데미지 {0}% 증가 (최대 3중첩)", hasCounter: true, counterRange: { min: 0, max: 3 }, name: "전의의 궐기", icon: "icon/passive5.webp", desc: "자신을 제외한 아군이 필살기를 사용 할 때마다 1턴 간 다양수이의 필살기 데미지 {0}% 증가 (최대 3중첩)", calc: [{ max: 15 }] },
       {
         id: "tayangsuyi_skill8",
-        name: "절대 왕자 파워밤(도장)",
+        name: "절대 왕자 파워밤 ",
         decimalPlaces: 2,
         stampBuffEffects: { "뎀증": { fixed: 20 } }, 
         buffDesc: "[전의] 9중첩일 시 데미지 20% 증가",       
@@ -91,7 +91,7 @@ export const charData = {
       { id: "choiyuhyun_skill7", excludeFromBuffSearch: true, decimalPlaces: 2, hasCounter: true, counterRange: { min: 0, max: 5 }, name: "검추백형", icon: "icon/passive5.webp", desc: "필살기 사용 시 현재 적의 수가 5이상일 경우 적 전체에게 {0}%의 추가 데미지를 주며, 적의 수가 1인 경우 대상에게 {1}%의 추가 데미지를 줌", calc: [{ max: 37.5 }, { max: 75 }] , damageDeal: [{ type: "추가공격", val: { max: 37.5 }, isMultiTarget: true }, { type: "추가공격", val: { max: 75 } }], counterDamageMap: { "1": 1, "5": 0 } },
       {
         id: "choiyuhyun_skill8",
-        name: "사신현정검(도장)",
+        name: "사신현정검 ",
         decimalPlaces: 2, 
         buffEffects: { "뎀증": { max: 20 } },
         hasToggle: true,
@@ -356,7 +356,7 @@ export const charData = {
       },
       {
         id: "anuberus_stamp_passive",
-        name: "니히히~ 우리도 왔다!(도장)",
+        name: "니히히~ 우리도 왔다! ",
         icon: "images/sigilwebp/sigil_anuberus.webp",
         excludeFromBuffSearch: true,
         isUltExtra: true,
@@ -563,7 +563,7 @@ export const charData = {
       },
       {
         id: "beernox_stamp_passive",
-        name: "임박 상품 쟁탈전(도장)",
+        name: "임박 상품 쟁탈전 ",
         decimalPlaces: 2,
         ratioEffects: { "고정공증": { from: "기초공격력", max: 60 } },  
         hasToggle: true,
@@ -839,7 +839,7 @@ export const charData = {
       },
       {
         id: "locke_skill8",
-        name: "광야 포격 돌진(도장)",
+        name: "광야 포격 돌진 ",
         decimalPlaces: 2,
         stampBuffEffects: { "필살기뎀증": { max: 33.75 } }, 
         hasToggle: true,
@@ -940,7 +940,7 @@ export const charData = {
       },
       {
         id: "orem_skill8",
-        name: "현측 방어 전개(도장)",
+        name: "현측 방어 전개 ",
         decimalPlaces: 2, 
         stampBuffEffects: { "추가데미지": { max: 25 } },             
         buffDesc: "[배리어]가 있는 상태에서 공격 시 {0}% 추가 데미지",       
@@ -1278,9 +1278,10 @@ export const charData = {
         counterRange: { min: 0, max: 2 }, 
         buffDesc: "보통공격 피격 시 데미지 {1}% 증가(최대 2중첩)",  
         name: "반격 연환각", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "신리랑이 보통공격으로 피격 시 대상에게 {0}%의 데미지를 주며, 2턴 간 데미지 {1}% 증가(최대 2중첩)", 
         calc: [{ max: 100 },{ max: 25 }],
+        damageDeal: [{ type: "추가공격", val: { max: 100 } }]           
       },
       {
         id: "shinrirang_skill6",
@@ -1307,7 +1308,7 @@ export const charData = {
       },
       {
         id: "shinrirang_skill8",
-        name: "1800도 회전 발차기(도장)",
+        name: "1800도 회전 발차기 ",
         decimalPlaces: 2,
         stampBuffEffects: { "트리거뎀증": { max: 30 } }, 
         hasToggle: true,
@@ -1415,7 +1416,7 @@ export const charData = {
       },
       {
         id: "tamrang_skill8",
-        name: "선향욕기(도장)",
+        name: "선향욕기 ",
         decimalPlaces: 2,
         stampBuffEffects: { "뎀증": { fixed: 75 } }, 
         hasToggle: true,
@@ -1526,7 +1527,7 @@ export const charData = {
     base: { "공격력": 494, "HP": 2524 },
  
     info: { "속성": 1, "포지션": "보조" },  
-    defaultBuffSkills: ["jetblack_skill1","jetblack_skill2","jetblack_skill3", "jetblack_skill5", "jetblack_skill6"],
+    defaultBuffSkills: ["jetblack_skill1","jetblack_skill2","jetblack_skill3", "jetblack_skill5", "jetblack_skill6","jetblack_skill8"],
     skills: [
       { 
         id: "jetblack_skill1",
@@ -1608,7 +1609,22 @@ export const charData = {
         desc: "자신의 보통공격에 공격력 {0}%의 추가데미지를 부여", 
         calc: [{ max: 100 }],
         damageDeal: [{ type: "추가공격", val: { max: 100} }]        
-      }
+      },
+      {
+        id: "jetblack_skill8",
+        name: "고요한 호흡", 
+        excludeFromBuffSearch: false, 
+        decimalPlaces: 2, 
+        ignoreBreakthrough: true,
+        syncLevelWith: "jetblack_skill2",
+        stampBuffEffects: { "트리거뎀증": { max: 30 } },
+        buffDesc: "발동 스킬 효과 {0}% 증가", 
+        isUltExtra: true,     
+        hasToggle: true, 
+        toggleType: "isAppliedStamped", 
+        icon: "images/sigilwebp/sigil_famido.webp",
+        calc: [{ max: 30 }]
+      },      
     ]
   },        
   "rutenix": {
@@ -1793,7 +1809,7 @@ export const charData = {
       },
       {
         id: "duncan_skill8",
-        name: "지팡이보다 먹힌다구!(도장)",
+        name: "지팡이보다 먹힌다구! ",
         decimalPlaces: 2, 
         stampBuffEffects: { "뎀증": { max: 150, startRate:0.64 } },           
         hasToggle: true,
@@ -1913,7 +1929,7 @@ export const charData = {
       },
       {
         id: "famido_skill8",
-        name: "절대 에이스의 포효(도장)", 
+        name: "절대 에이스의 포효 ", 
         excludeFromBuffSearch: false, 
         decimalPlaces: 2, 
         ignoreBreakthrough: true,

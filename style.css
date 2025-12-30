@@ -91,6 +91,22 @@ body {
   vertical-align: middle;
 }
 
+.header-main-icon-btn {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  cursor: default;
+  z-index: 10;
+  transition: transform 0.2s;
+}
+
+.header-main-icon-btn:active {
+  transform: translateY(-50%) scale(0.9);
+}
+
 .sticky-content {
   display: grid;
   grid-template-columns: 45px 1fr 60px 80px 60px;
@@ -561,6 +577,18 @@ body:not(.list-open) #content-display.hero-mode {
 }
 .skill-card.active { border-color: rgba(0, 123, 255, 0.4); box-shadow: 0 0 6px rgba(0, 123, 255, 0.2); }
 .skill-card.disabled { background-color: #222 !important; opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+/* [추가] 스킬 슬라이더 골드 테마 */
+.skill-slider {
+  accent-color: #ffcb05 !important;
+}
+.skill-slider::-webkit-slider-thumb {
+  background: #ffcb05 !important;
+}
+.skill-slider::-moz-range-thumb {
+  background: #ffcb05 !important;
+}
+
 .stamped-ult-card {
   background-repeat: no-repeat;
   background-position: right 5px bottom 5px;
@@ -575,7 +603,7 @@ body:not(.list-open) #content-display.hero-mode {
   width: 45px; height: 45px; background-color: #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #ccc;
 }
 .skill-icon img { width: 100%; height: 100%; object-fit: cover; }
-.skill-damage-text { font-size: 0.85em; color: #ffff00; margin-top: 4px; min-height: 1.2em; }
+.skill-damage-text { font-size: 0.85em; color: yellow; margin-top: 4px; min-height: 1.2em; }
 .skill-slider-container { display: flex; align-items: center; justify-content: space-between; font-size: 0.9em; color: #ccc; }
 .skill-slider-container input { width: 60%; cursor: pointer; }
 .skill-embedded-description { width: 100%; padding: 15px; text-align: left; background-color: transparent !important; }
@@ -956,8 +984,8 @@ body:not(.list-open) #content-display.hero-mode {
     position: relative;
   }
 
-  /* Hero 및 시뮬레이터 모드에서만 1열로 확장 */
-  #content-display.hero-mode {
+  /* 시뮬레이터 모드에서만 1열로 확장 (Hero 탭은 2열 유지) */
+  #content-display.hero-mode:has(#simulator-page[style*="display: block"]) {
     grid-template-columns: 1fr !important;
     display: block !important;
   }

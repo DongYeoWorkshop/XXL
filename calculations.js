@@ -239,7 +239,8 @@ export function calculateCharacterStats(charId, charData, skillLevels, isUltStam
                             const ownerBr = isOwnerCurrent ? liveBr : parseInt(ownerSaved.s1 || 0);
                             const ownerFit = isOwnerCurrent ? liveFit : parseInt(ownerSaved.s2 || 0);
                             
-                            const pureBaseAtk = buffOwnerData.base["공격력"] * Math.pow(buffOwnerData.growth["공격력"], (ownerLv - 1));
+                            const growthVal = (buffOwnerData.growth && buffOwnerData.growth["공격력"]) ? buffOwnerData.growth["공격력"] : 1.05;
+                            const pureBaseAtk = buffOwnerData.base["공격력"] * Math.pow(growthVal, (ownerLv - 1));
                             
                             // logic.js와 동일하게 복리로 적용
                             const bonus1Rate = ownerBr * 0.02;

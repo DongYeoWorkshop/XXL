@@ -75,6 +75,20 @@ export function onExtraSliderChange() {
 }
 
 function setupHeaderListeners() {
+    // [추가] 헤더 아이콘 클릭 시 Hero/시뮬레이터 전환
+    const toggleIcon = document.getElementById('header-toggle-icon');
+    if (toggleIcon) {
+        toggleIcon.onclick = () => {
+            if (state.currentId === 'hero') {
+                const simBtn = document.getElementById('nav-simulator-btn');
+                if (simBtn) handleImageClick(simBtn);
+            } else {
+                const heroBtn = document.querySelector('.main-image[data-id="hero"]');
+                if (heroBtn) handleImageClick(heroBtn);
+            }
+        };
+    }
+
     const headerTitle = document.getElementById('sticky-header-title');
     if (headerTitle) {
         headerTitle.onclick = () => {
@@ -111,7 +125,9 @@ function setupHeaderListeners() {
 
 function forceMainHeader() {
     const headerTitle = document.getElementById('sticky-header-title');
-    if (headerTitle) { headerTitle.style.setProperty('display', 'flex', 'important'); headerTitle.innerHTML = `<img src="icon/main.png" class="header-title-icon">동여성 공방`; }
+    const toggleIcon = document.getElementById('header-toggle-icon');
+    if (toggleIcon) { toggleIcon.style.setProperty('display', 'block', 'important'); }
+    if (headerTitle) { headerTitle.style.setProperty('display', 'flex', 'important'); headerTitle.innerHTML = `동여성 공방`; }
     ['sticky-name', 'sticky-attr', 'sticky-lv', 'sticky-br', 'sticky-fit'].forEach(id => { const el = document.getElementById(id); if (el) { el.style.setProperty('display', 'none', 'important'); el.innerText = ''; } });
 }
 
@@ -264,8 +280,8 @@ export function setupDragScroll(slider, storageKey = null) {
     let isDown = false, startX, scrollLeft;
     if (storageKey) { const saved = localStorage.getItem(storageKey); if (saved) slider.scrollLeft = parseInt(saved); }
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) { slider.addEventListener('scroll', () => { if (storageKey) localStorage.setItem(storageKey, slider.scrollLeft); }); return; }
-    slider.onmousedown = e => { isDown = true; slider.style.cursor = 'grabbing'; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; };
-    slider.onmouseup = () => { isDown = false; slider.style.cursor = 'grab'; };
-    slider.onmouseleave = () => { isDown = false; slider.style.cursor = 'grab'; };
+    slider.onmousedown = e => { isDown = true; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; };
+    slider.onmouseup = () => { isDown = false; };
+    slider.onmouseleave = () => { isDown = false; };
     slider.onmousemove = e => { if (!isDown) return; const x = e.pageX - slider.offsetLeft; slider.scrollLeft = scrollLeft - (x - startX) * 0.8; if (storageKey) localStorage.setItem(storageKey, slider.scrollLeft); };
 }
