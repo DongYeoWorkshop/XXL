@@ -1,0 +1,120 @@
+/* =========================================
+   Skills & Buffs Areas
+   ========================================= */
+#buff-application-area, #new-section-area {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: var(--bg-light);
+  border-radius: 8px;
+  text-align: left;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 15px rgba(255, 165, 0, 0.1);
+  color: var(--text-dark);
+}
+#buff-application-area { margin-top: 50px; }
+#new-section-area { padding: 10px 15px; }
+
+#buff-application-area h3 {
+  color: var(--accent-color);
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* Buff Search */
+#buff-char-search {
+  background-color: #fff;
+  color: var(--text-dark);
+  border: 1px solid #ddd !important;
+}
+#buff-search-results, #buff-skill-selection-area {
+  background-color: #fff !important;
+  border: 1px solid #ddd !important;
+  color: var(--text-dark);
+}
+
+.applied-buff-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  color: var(--text-dark);
+}
+.applied-buff-item.buff-off-state { opacity: 0.5; background-color: #f9f9f9; }
+
+/* Skill Detail View */
+.skill-detail-display {
+  padding: 5px 10px;
+  color: var(--text-dark);
+  border-bottom: 1px solid #8b4513 !important;
+}
+.skill-detail-header { display: flex; align-items: center; gap: 10px; }
+.skill-detail-icon {
+  width: 45px; height: 45px; border-radius: 6px; border: 1px solid #000; flex-shrink: 0; background-color: black;
+}
+.skill-detail-name { margin: 0; font-size: 1.1em; color: #000; }
+.skill-detail-level { font-size: 0.75em; color: #aaa; font-weight: normal; }
+.skill-detail-damage { margin: 2px 0 0; font-weight: bold; color: #fff; }
+
+.detail-icon-list { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 5px; margin-bottom: 5px; }
+.detail-icon-list-item {
+  width: 40px; height: 40px; border-radius: 5px; border: 2px solid #000; cursor: pointer; background-color: black; transition: all 0.2s;
+}
+.detail-icon-list-item.selected {
+  border-color: var(--primary-color); box-shadow: 0 0 8px rgba(0, 123, 255, 0.6); transform: scale(1.1);
+}
+
+/* Skill Grid */
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #444;
+  text-align: left;
+}
+.skill-card {
+  background: #000;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 1px 3px rgba(255,255,255,0.1);
+  cursor: default; /* 클릭 기능 제거를 암시하기 위해 커서 변경 */
+  position: relative;
+}
+.skill-card.active { border-color: #444; box-shadow: 0 1px 3px rgba(255,255,255,0.1); }
+.skill-card.disabled { background-color: #222 !important; opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+/* [추가] 스킬 슬라이더 골드 테마 */
+.skill-slider {
+  accent-color: #ffcb05 !important;
+}
+.skill-slider::-webkit-slider-thumb { background: #ffcb05 !important; }
+.skill-slider::-moz-range-thumb { background: #ffcb05 !important; }
+
+.stamped-ult-card {
+  background-repeat: no-repeat;
+  background-position: right 5px bottom 5px;
+  background-size: 35% !important;
+  border-color: #ff4d4d !important;
+  box-shadow: 0 0 10px rgba(255, 77, 77, 0.4) !important;
+  transition: none !important;
+}
+
+.skill-header { display: grid; grid-template-columns: 45px 1fr auto; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.skill-icon {
+  width: 45px; height: 45px; background-color: #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #ccc;
+}
+.skill-icon img { width: 100%; height: 100%; object-fit: cover; }
+.skill-damage-text { font-size: 0.85em; color: yellow; margin-top: 4px; min-height: 1.2em; }
+.skill-slider-container { display: flex; align-items: center; justify-content: space-between; font-size: 0.9em; color: #ccc; }
+.skill-slider-container input { width: 60%; cursor: pointer; }
+.skill-embedded-description { width: 100%; padding: 15px; text-align: left; background-color: transparent !important; }
+.embedded-skill-desc { margin: 0; font-size: 0.8em; line-height: 1.4; color: #ddd; }

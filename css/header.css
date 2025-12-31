@@ -1,0 +1,126 @@
+/* css/header.css - Simplified Version */
+#sticky-wrapper {
+  position: fixed !important;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  background-color: var(--bg-header);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.sticky-header {
+  background-color: var(--bg-header);
+  border-bottom: 1px solid #30363d; /* 하단 구분선 추가 */
+  padding: 0 10px;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+}
+
+.sticky-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 650px; /* 본문 너비와 일치 */
+  margin: 0 auto;   /* 중앙 정렬 */
+  height: 100%;
+  gap: 5px;
+}
+
+#sticky-header-title {
+  font-family: 'Chungdo', sans-serif;
+  color: #fff !important;
+  font-size: 1.3em;
+  font-weight: normal;
+  white-space: nowrap;
+  margin-right: 15px;
+  letter-spacing: 0.05em;
+}
+
+#sticky-attr { width: 32px; flex-shrink: 0; }
+
+#sticky-name {
+  font-family: 'Chungdo', sans-serif;
+  font-weight: normal;
+  font-size: 1.1em;
+  width: 100px; /* 이름 칸 너비 고정 */
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 길면 말줄임표 */
+  flex-shrink: 0;
+}
+
+#sticky-lv { width: 45px; flex-shrink: 0; }
+#sticky-br { width: 75px; flex-shrink: 0; }
+#sticky-fit { width: 50px; flex-shrink: 0; }
+
+.sticky-content span {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 가로 중앙 정렬 추가 */
+  text-align: center;      /* 텍스트 자체 중앙 정렬 */
+  white-space: nowrap;
+  font-size: 0.85em;
+  height: 24px;
+  padding: 0 4px;
+  border: none !important;
+}.sticky-attr-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.header-main-icon-btn {
+  width: 24px !important;
+  height: 24px !important;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.header-main-icon-btn:active {
+  transform: scale(0.9);
+}
+
+.header-btn {
+
+  background: transparent !important;
+
+  border: none !important;
+
+  color: #fff !important;
+
+  padding: 0 10px;
+
+  cursor: pointer;
+
+  font-size: 1.5em;
+
+  font-weight: bold;
+
+  white-space: nowrap;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  transition: all 0.2s;
+
+  transform: scaleX(1.4);
+
+  order: 10; /* 가장 오른쪽으로 */
+
+  margin-left: auto; /* 남은 공간을 밀어서 끝으로 이동 */
+
+}
+
+
+
+
+
+
+
+.header-btn:hover {
+
+  opacity: 0.7;
+
+}

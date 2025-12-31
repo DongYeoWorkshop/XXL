@@ -1,0 +1,115 @@
+/* css/responsive.css - Simplified Mobile Layout */
+
+/* =========================================
+   Mobile Overrides (Max-width: 600px)
+   ========================================= */
+@media screen and (max-width: 600px) {
+  #sticky-wrapper {
+    height: auto !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+  
+  .sticky-header {
+    height: 36px !important;
+    min-height: 0 !important;
+    padding: 0 5px !important;
+    border-bottom: 1px solid #30363d !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .sticky-content {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 3px !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* 텍스트 크기 일괄 축소 */
+  #sticky-header-title { 
+    font-size: 0.85em !important; 
+    margin-right: 2px !important; 
+    white-space: nowrap;
+  }
+
+  .sticky-content span { 
+    font-size: 0.7em !important; 
+    height: 20px !important; 
+    padding: 0 2px !important; 
+    flex-shrink: 0 !important;
+  }
+  
+  #sticky-attr { width: 24px !important; border: none !important; }
+  .sticky-attr-icon { width: 16px; height: 16px; }
+  
+  #sticky-name { 
+    flex: 1 1 auto !important; 
+    min-width: 0 !important;
+    max-width: 70px !important;
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    border-right: 1px solid var(--border-color);
+  }
+
+  /* 목록 버튼 우측 고정 */
+  .header-btn {
+    position: static !important;
+    order: 10 !important;
+    margin-left: auto !important;
+    padding: 0 10px !important;
+    font-size: 1.4em !important;
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    flex-shrink: 0 !important;
+    transform: scaleX(1.4) !important; /* 가로로 넓게 늘림 */
+  }
+
+  /* 컨텐츠 마진 최적화: 헤더 높이(45px)에 맞춰 밀착 */
+  body:not(.list-open) #content-display { 
+    margin-top: 45px !important; 
+    padding-top: 10px !important;
+  }
+  body:not(.list-open) #content-display.hero-mode { 
+    margin-top: 45px !important; 
+  }
+
+  /* 기타 모바일 UI 축소 */
+  #calc-and-stats-row { flex-direction: row !important; gap: 8px; }
+  #calc-area, #stats-wrapper { flex: 1; min-width: 0; }
+  .slider-label { font-size: 0.75em; }
+  .slider-box { height: 22px; padding: 0 5px; }
+  #display-stats li span:last-child { font-size: 1.1em; }
+  .skill-grid { grid-template-columns: 1fr; }
+  .comparison-slot { width: 100% !important; min-width: 0 !important; }
+}
+
+/* =========================================
+   Desktop Overrides
+   ========================================= */
+@media screen and (min-width: 601px) {
+  .slider-label { padding-left: 30px; }
+  #sub-stats-list { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+@media screen and (min-width: 1100px) {
+  .sticky-content {
+    max-width: 1200px !important; /* 본문 확장 너비와 일치 */
+  }
+  #content-display {
+    max-width: 1200px;
+    display: grid !important;
+    grid-template-columns: 1fr 420px;
+    gap: 0 30px;
+    align-items: start;
+  }
+  #content-display.hero-mode:has(#simulator-page[style*="display: block"]) {
+    grid-template-columns: 1fr !important; display: block !important;
+  }
+  .char-header-row { grid-column: 1 / -1; text-align: center; margin-bottom: 25px; }
+}
