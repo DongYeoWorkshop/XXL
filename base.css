@@ -1,0 +1,46 @@
+:root {
+  /* Colors */
+  --bg-dark: #0d1117;
+  --bg-header: #010409;
+  --bg-panel: #262c36;
+  --bg-light: #fffbf5;
+  --border-color: #333;
+  --border-light: #eee0d0;
+  --text-main: #eee;
+  --text-dark: #333;
+  --accent-color: #ffa500; /* Orange */
+  --primary-color: #007bff; /* Blue */
+  --danger-color: #dc3545;
+  
+  /* Sizes */
+  --header-height: 45px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  user-select: none;
+}
+
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  margin: 0 !important;
+  padding: 0;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}

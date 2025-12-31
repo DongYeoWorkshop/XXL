@@ -132,7 +132,7 @@ export function renderHeroTab(dom, updateStatsCallback) {
     }
     graphContainer.appendChild(contentPadding);
 
-    // 2. 하단 딜표 래퍼
+    // 2. 하단 딜표 래퍼 (표가 나오는 흰 칸)
     const tablesWrapper = document.createElement('div');
     tablesWrapper.id = 'hero-tables-wrapper';
     tablesWrapper.className = 'hero-main-wrapper';
@@ -156,12 +156,34 @@ function renderUnifiedContent(container) {
     const snap1 = state.comparisonSnapshots.find(s => s.id === s1Id);
     const snap2 = state.comparisonSnapshots.find(s => s.id === s2Id);
 
-    if (!snap1 && !snap2) return;
+    // 데이터가 하나도 없을 때 (슬롯 숨김 및 안내 문구만 표시)
+    if (!snap1 && !snap2) {
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.style.minHeight = '200px'; // 세로 중앙을 위한 높이 확보
 
-    // 최상단 캐릭터 프로필
+        const msgDiv = document.createElement('div');
+        msgDiv.style.cssText = `
+            text-align: center;
+            color: #999;
+            font-weight: bold;
+            font-size: 1.1em;
+        `;
+        msgDiv.innerText = "비교기록을 선택해주세요.";
+        container.appendChild(msgDiv);
+        return;
+    }
+
+    // 데이터가 있을 때는 다시 기본 레이아웃으로 (flex 해제 필요 시 처리)
+    container.style.display = 'block'; 
+    container.style.minHeight = '';
+
+    // 최상단 캐릭터 프로필 요약 (데이터가 있을 때만 생성)
     const headerRow = document.createElement('div');
     headerRow.className = 'unified-turn-content';
-    headerRow.style.marginBottom = '-10px';
+    headerRow.style.marginBottom = '-20px'; // 간격 더 줄임
     
     headerRow.appendChild(createProfileHeader(snap1, true));
     headerRow.appendChild(createProfileHeader(snap2, false));
@@ -196,14 +218,16 @@ function renderUnifiedContent(container) {
 
 function createProfileHeader(snapshot, isLeft) {
     const slot = document.createElement('div');
-    slot.className = 'comparison-slot ' + (isLeft ? 'comp-slot-left' : 'comp-slot-right');
+    // 레이아웃 유지를 위해 comparison-slot 클래스는 쓰되, 배경과 글로우는 제거
+    slot.className = 'comparison-slot'; 
     slot.style.background = 'transparent';
     slot.style.border = 'none';
     slot.style.boxShadow = 'none';
     slot.style.padding = '5px 10px';
+    slot.style.minHeight = '60px'; // 60px로 복구
+    slot.style.visibility = 'visible';
 
     if (!snapshot) {
-        slot.style.visibility = 'hidden';
         return slot;
     }
 
@@ -213,15 +237,15 @@ function createProfileHeader(snapshot, isLeft) {
     const spec = `Lv.${lv} / ${brText} / 적합:${s2}`;
 
     slot.innerHTML = `
-        <div class="comp-header" style="border-bottom:none; margin-bottom:0;">
+        <div class="comp-header" style="border-bottom:none; margin-bottom:0; background:transparent; box-shadow:none;">
             <div class="comp-char-info">
                 <img src="images/${snapshot.charId}.webp" class="comp-char-img">
                 <div class="comp-text-wrapper">
-                    <span class="comp-name" style="font-size:0.9em;">${charTitle}</span>
-                    <span class="comp-spec" style="font-size:0.65em;">${spec}</span>
+                    <span class="comp-name" style="font-size:0.9em; color:#333; font-weight:bold;">${charTitle}</span>
+                    <span class="comp-spec" style="font-size:0.65em; color:#666;">${spec}</span>
                 </div>
             </div>
-            <div class="comp-total-dmg">${snapshot.totalDamage.toLocaleString()}</div>
+            <div class="comp-total-dmg" style="color:#333; font-weight:bold;">${snapshot.totalDamage.toLocaleString()}</div>
         </div>
     `;
     return slot;

@@ -9,6 +9,8 @@ import { getDynamicDesc } from './formatter.js';
 import { updateSkillDetailDisplay, renderGlobalTargetControl, renderSkillIconList, renderCustomControls } from './detail-view.js';
 import { renderDamageRecords } from './records.js';
 
+import { backgroundConfigs } from './background-configs.js';
+
 let dom = {};
 let logic = {};
 
@@ -159,10 +161,18 @@ export function handleImageClick(img) {
     img.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     
     state.currentId = id;
+    document.body.setAttribute('data-current-char', id); // 바디에 캐릭터 ID 기록
     const contentDisplay = document.getElementById('content-display');
+    if (contentDisplay) {
+        contentDisplay.setAttribute('data-char-id', id);
+    }
     hideAllSections();
 
     if (id === 'hero') {
+        const existingFavBtn = contentDisplay?.querySelector('.char-fav-btn');
+        if (existingFavBtn) existingFavBtn.remove();
+        
+        if (contentDisplay) contentDisplay.style.backgroundImage = ''; // 배경 제거
         contentDisplay.className = 'hero-mode'; 
         forceMainHeader();
         import('./hero-tab.js').then(mod => {
@@ -173,6 +183,10 @@ export function handleImageClick(img) {
             if (saved) window.scrollTo(0, parseInt(saved));
         });
     } else if (id === 'simulator') {
+        const existingFavBtn = contentDisplay?.querySelector('.char-fav-btn');
+        if (existingFavBtn) existingFavBtn.remove();
+
+        if (contentDisplay) contentDisplay.style.backgroundImage = ''; // 배경 제거
         contentDisplay.className = 'hero-mode';
         document.querySelector('.main-content-column').style.setProperty('display', 'block', 'important');
         document.getElementById('simulator-page').style.setProperty('display', 'block', 'important');
@@ -200,6 +214,44 @@ export function handleImageClick(img) {
         
         const data = charData[id], saved = state.savedStats[id] || {};
         
+        // [추가] 배경 이미지 적용 헬퍼 함수
+        const applyBackground = (charId, favStatus) => {
+            if (!contentDisplay) return;
+            if (favStatus) {
+                const config = backgroundConfigs[charId] || backgroundConfigs["default"];
+                // CSS(css/폴더) 기준에서 본 경로로 수정
+                const imgUrl = `url('../images/background/${charId}.PNG')`;
+                
+                // 이미지 존재 여부 확인 후 CSS 변수로 전달
+                const tempImg = new Image();
+                tempImg.onload = () => { 
+                    contentDisplay.style.setProperty('--bg-url', imgUrl);
+                    
+                    // 모바일 설정 (600px 이하)
+                    contentDisplay.style.setProperty('--bg-x-mob', config.mobile.xPos);
+                    contentDisplay.style.setProperty('--bg-y-mob', config.mobile.yPos);
+                    contentDisplay.style.setProperty('--bg-size-mob', config.mobile.size);
+                    
+                    // 태블릿 설정 (601px ~ 1099px)
+                    contentDisplay.style.setProperty('--bg-x-tab', config.tablet.xPos);
+                    contentDisplay.style.setProperty('--bg-y-tab', config.tablet.yPos);
+                    contentDisplay.style.setProperty('--bg-size-tab', config.tablet.size);
+                    
+                    // PC 설정 (1100px 이상)
+                    contentDisplay.style.setProperty('--bg-x-pc', config.pc.xPos);
+                    contentDisplay.style.setProperty('--bg-y-pc', config.pc.yPos);
+                    contentDisplay.style.setProperty('--bg-size-pc', config.pc.size);
+                };
+                tempImg.onerror = () => { 
+                    contentDisplay.style.setProperty('--bg-url', 'none'); 
+                };
+                // 존재 여부 체크는 루트 기준 경로 유지
+                tempImg.src = `images/background/${charId}.PNG`;
+            } else {
+                contentDisplay.style.setProperty('--bg-url', 'none');
+            }
+        };
+
         // [추가] 캐릭터 선택 시 기본 타겟 속성을 본인 속성으로 맞춤 (무상성 기준)
         if (data.info && data.info.속성 !== undefined) {
             state.currentDisplayedAttribute = constants.attributeList[data.info.속성];
@@ -208,11 +260,51 @@ export function handleImageClick(img) {
         // UI 갱신 로직...
         if (dom.titleArea) {
             const isFav = saved.isFavorite || false;
-            dom.titleArea.innerHTML = `<span>${data.title}</span><button class="char-fav-btn ${isFav ? 'active' : ''}">${isFav ? '★' : '☆'}</button>`;
-            dom.titleArea.querySelector('.char-fav-btn').onclick = (e) => {
-                e.stopPropagation(); const nowFav = !e.target.classList.contains('active'); e.target.classList.toggle('active', nowFav); e.target.innerText = nowFav ? '★' : '☆';
-                if (!state.savedStats[id]) state.savedStats[id] = {}; state.savedStats[id].isFavorite = nowFav; logic.saveCurrentStats();
+            const isSimDisabled = constants.disabledSimChars.includes(id);
+            
+            // 시뮬레이터 바로가기 버튼 (왼쪽 상단)
+            const simBtnHtml = `<button class="sim-shortcut-btn" ${isSimDisabled ? 'disabled' : ''} title="${isSimDisabled ? '시뮬레이터 미지원' : '이 캐릭터의 시뮬레이터로 이동'}">🚀</button>`;
+            
+            // 제목은 이름만 표시 (가운데 정렬 유지)
+            dom.titleArea.innerHTML = `${simBtnHtml} <span>${data.title}</span>`;
+            
+            // 초기 배경 적용
+            applyBackground(id, isFav);
+
+            // 즐겨찾기 버튼은 별도로 생성하여 맨 뒤(오른쪽 끝)에 배치되도록 함
+            let favBtn = contentDisplay.querySelector('.char-fav-btn');
+            if (!favBtn) {
+                favBtn = document.createElement('button');
+                favBtn.className = 'char-fav-btn';
+                contentDisplay.appendChild(favBtn);
+            }
+            favBtn.className = `char-fav-btn ${isFav ? 'active' : ''}`;
+            favBtn.innerText = isFav ? '★' : '☆';
+
+            const currentIdForFav = id;
+            favBtn.onclick = (e) => {
+                e.stopPropagation();
+                const nowFav = !favBtn.classList.contains('active');
+                favBtn.classList.toggle('active', nowFav);
+                favBtn.innerText = nowFav ? '★' : '☆';
+                if (!state.savedStats[currentIdForFav]) state.savedStats[currentIdForFav] = {};
+                state.savedStats[currentIdForFav].isFavorite = nowFav;
+                
+                // [추가] 별 누르는 즉시 배경 토글
+                applyBackground(currentIdForFav, nowFav);
+                
+                logic.saveCurrentStats();
             };
+
+            const simBtn = dom.titleArea.querySelector('.sim-shortcut-btn');
+            if (simBtn && !isSimDisabled) {
+                simBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    localStorage.setItem('sim_last_char_id', id);
+                    const simNavBtn = document.getElementById('nav-simulator-btn');
+                    if (simNavBtn) handleImageClick(simNavBtn);
+                };
+            }
         }
 
         const infoDisplay = document.getElementById('info-display');

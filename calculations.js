@@ -391,3 +391,40 @@ export function calculateDamage(damageType, baseAttack, stats, coefficient, isSt
     }
     return Math.floor(finalDamage);
 }
+
+/**
+ * [추가] 레벨, 돌파, 적합도에 따른 기초 스탯 계산
+ */
+export function calculateBaseStats(charBase, level, breakthrough, fitness, growthRate = 1.05) {
+    const stats = {};
+    const bonus1Rate = breakthrough * 0.02; // 돌파 보너스 (2%)
+    const bonus2Rate = fitness * 0.04;      // 적합도 보너스 (4%)
+
+    for (const key in charBase) {
+        let val = charBase[key] * Math.pow(growthRate, (level - 1));
+        // 복리로 계산 후 내림 처리
+        stats[key] = Math.floor(val * (1 + bonus1Rate) * (1 + bonus2Rate));
+    }
+    return stats;
+}
+
+/**
+ * [추가] 기초 스탯에 버프를 적용하여 최종 스탯(Atk, HP) 산출
+ */
+export function assembleFinalStats(baseStats, subStats) {
+    // 1. 공격력 계산
+    const 기초공격력 = Math.floor(baseStats["공격력"] * (1 + (subStats["기초공증"] || 0) / 100));
+    const 최종공격력 = 기초공격력 * (1 + (subStats["공증"] || 0) / 100) + (subStats["고정공증"] || 0);
+
+    // 2. HP 계산
+    // 규칙: 기초 HP 증가에는 '기초공증' 수치도 합산되어 영향을 줌
+    const 기초HP = baseStats["HP"] ? Math.floor(baseStats["HP"] * (1 + ((subStats["기초HP증가"] || 0) + (subStats["기초공증"] || 0)) / 100)) : 0;
+    const 최종HP = 기초HP > 0 ? Math.floor(기초HP * (1 + (subStats["HP증가"] || 0) / 100)) : 0;
+
+    return {
+        기초공격력,
+        최종공격력: Math.floor(최종공격력),
+        기초HP,
+        최종HP: Math.floor(최종HP)
+    };
+}

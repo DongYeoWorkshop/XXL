@@ -1,0 +1,55 @@
+/* =========================================
+   Simulator Layout
+   ========================================= */
+.sim-main-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Simulator Character Grid (Small Circular Icons) */
+.sim-char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+  gap: 12px;
+  justify-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+.sim-char-pick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.sim-char-pick-item img {
+  width: 55px !important;
+  height: 55px !important;
+  border-radius: 50% !important;
+  object-fit: cover;
+  object-position: top;
+  border: 2px solid #ddd;
+  background: #000;
+  transition: all 0.2s;
+}
+
+.sim-char-pick-item:hover img {
+  border-color: #6f42c1;
+  transform: scale(1.1);
+}
+
+.sim-char-name {
+  font-size: 0.75em;
+  margin-top: 6px;
+  color: #666;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+}

@@ -22,13 +22,12 @@ export function renderSkills(charId, charData, savedStats, currentSkillLevels, c
         if (skill.isUltExtra) return;
 
         const skillDiv = document.createElement('div');
-        skillDiv.className = 'skill-card';
+        skillDiv.className = 'skill-card active'; // 항상 active 클래스 포함
         skillDiv.dataset.skillIndex = idx;
 
-        // [수정] 모든 스킬 카드를 기본적으로 활성화(열림) 상태로 설정
-        const isAlwaysOpen = (idx === 0 || idx === 1);
-        if (isAlwaysOpen) skillDiv.classList.add('always-open');
-        skillDiv.classList.add('active'); // 무조건 active 클래스 추가
+        // 모든 스킬을 데이터 상으로도 항상 활성 상태로 간주
+        if (!saved.activeSkills) saved.activeSkills = [];
+        if (!saved.activeSkills.includes(idx)) saved.activeSkills.push(idx);
 
         const skillLevel = currentSkillLevels[idx + 1] || 1;
         const skillKey = `s${idx + 1}`;
@@ -61,7 +60,7 @@ export function renderSkills(charId, charData, savedStats, currentSkillLevels, c
             <div class="skill-slider-container">
                 <input type="range" id="skill-slider-${charId}-${idx + 1}" min="1" max="10" value="${savedLv}" class="skill-slider" data-skill-index="${idx}">
             </div>
-            <div class="skill-embedded-description">
+            <div class="skill-embedded-description" style="display: block;"> <!-- 상세 설명 항상 노출 -->
                 <p class="embedded-skill-desc" style="font-size:0.85em; color:#eee; margin-top:10px;"></p>
                 <!-- [추가] 커스텀 입력 요소 (전의 스택 등) -->
                 <div class="skill-custom-controls" style="margin-top: 10px;">
@@ -182,25 +181,7 @@ export function renderSkills(charId, charData, savedStats, currentSkillLevels, c
         });
         slider.addEventListener('click', (e) => e.stopPropagation());
 
-        // 카드 클릭 토글 (보통/필살기 제외)
-        if (!isAlwaysOpen) {
-            skillDiv.addEventListener('click', () => {
-                const desc = skillDiv.querySelector('.skill-embedded-description');
-                const isActive = skillDiv.classList.toggle('active');
-                desc.style.display = isActive ? 'block' : 'none';
-                
-                // 액티브 스킬 인덱스 저장
-                if (!saved.activeSkills) saved.activeSkills = [];
-                if (isActive) {
-                    if (!saved.activeSkills.includes(idx)) saved.activeSkills.push(idx);
-                } else {
-                    saved.activeSkills = saved.activeSkills.filter(i => i !== idx);
-                }
-                
-                updateStatsCallback();
-                saveCurrentStatsCallback();
-            });
-        }
+        // 카드 클릭 토글 로직 완전 제거
 
         container.appendChild(skillDiv);
     });

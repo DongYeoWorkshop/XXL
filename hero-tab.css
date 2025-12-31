@@ -1,0 +1,122 @@
+/* =========================================
+   Hero Tab & Comparison Styles
+   ========================================= */
+.hero-graph-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #fffbf5;
+  padding: 0;
+  border: 1px solid #eee0d0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 15px rgba(255, 165, 0, 0.1);
+  margin-top: 0;
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
+.hero-tab-tag {
+  display: flex;
+  align-items: flex-end;
+  margin-top: -46px;
+  margin-left: -1px;
+  margin-bottom: 0;
+}
+
+.hero-tag-content {
+  background: #30363d;
+  color: #ffa500;
+  font-size: 0.75em;
+  font-weight: bold;
+  padding: 6px 16px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid #444;
+  border-bottom: none;
+  z-index: 1;
+  box-shadow: 0 -3px 6px rgba(0,0,0,0.3);
+}
+
+.graph-img-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 20px;
+  align-items: end;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+  cursor: grab;
+}
+
+.snapshot-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.snapshot-img {
+  width: 70px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #ddd;
+  cursor: copy;
+  background: black;
+  margin-bottom: 8px;
+}
+
+.snapshot-del-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.snapshot-bar-container {
+  width: 50px;
+  height: 100px;
+  background: #eee;
+  border-radius: 4px;
+  position: relative;
+  margin-bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.snapshot-bar {
+  width: 100%;
+  background: linear-gradient(to top, #ffa500, #ff8c00);
+  transition: height 0.5s ease-out;
+}
+
+.snapshot-dmg-label {
+  font-size: 0.85em;
+  font-weight: bold;
+  color: #d35400;
+  margin-bottom: 4px;
+}
+
+.comparison-tables-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  width: 100%;
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  align-items: flex-start;
+}
