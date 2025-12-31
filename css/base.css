@@ -44,7 +44,7 @@ html, body {
 body {
   font-family: sans-serif;
   text-align: center;
-  background-color: var(--bg-dark);
+  background-color: var(--bg-dark); /* 가장 아래 레이어 */
   color: var(--text-main);
   margin: 0 !important;
   padding: 0;

@@ -4,7 +4,7 @@
 #content-display {
   margin-top: 270px !important;
   padding: 15px 10px;
-  background-color: var(--bg-panel);
+  background-color: rgba(38, 44, 54, 0.7); 
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.3);
   max-width: 650px;
@@ -13,13 +13,38 @@
   transition: margin-top 0.4s ease;
   color: var(--text-main);
   position: relative;
+  overflow: visible; 
 }
 
+/* 새로운 고정 배경 레이어 */
+#internal-char-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1;
+  clip-path: inset(0); /* 박스 밖으로 나가는 고정 배경을 자름 */
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+#internal-char-bg::before {
+  content: "";
+  position: fixed; /* 화면에 절대 고정 */
+  top: 0; left: 0; 
+  width: 100vw; 
+  height: 100lvh; /* 주소창 변화에도 변하지 않는 최대 높이로 고정 */
+  
+  /* 중복 오버레이 제거: 캐릭터 이미지만 원본으로 표시 */
+  background-image: var(--bg-url, none);
+  background-repeat: no-repeat;
+  
+  /* 위치 및 크기 설정 (기본: 모바일) */
+  background-size: cover, var(--bg-size-mob, cover);
+  background-position: 0 0, var(--bg-x-mob, center) calc(var(--bg-y-mob, 0px) + var(--bg-y-offset, 0px));
+  transition: background-position 0.4s ease;
+}
 #content-display.hero-mode {
   margin-top: 310px !important;
 }
-
-/* Redundant mobile overrides removed to prevent conflicts */
 
 #display-title {
   font-size: 1.5em;
@@ -33,22 +58,27 @@
 }
 
 .char-fav-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
+  position: absolute !important;
+  top: 15px !important;
+  right: 15px !important;
+  background: none !important;
+  border: none !important;
   cursor: pointer;
-  font-size: 1.3em;
+  font-size: 1.5em;
   padding: 5px;
-  color: #555;
-  transition: all 0.2s;
+  color: #444; /* 비활성 시 어두운 색 */
+  transition: all 0.3s ease;
   line-height: 1;
   display: flex;
   align-items: center;
+  z-index: 10;
 }
-.char-fav-btn.active { color: #ffcb05; filter: drop-shadow(0 0 3px rgba(255, 203, 5, 0.5)); }
 
+.char-fav-btn.active { 
+  color: #ffcb05 !important; 
+  filter: drop-shadow(0 0 8px rgba(255, 203, 5, 0.9)) !important;
+  transform: scale(1.1);
+}
 
 /* 랜딩 페이지 전용 스타일 */
 .landing-title {
@@ -65,8 +95,14 @@
 */
 body:not(.list-open) #content-display {
   margin-top: 60px !important;
+  --bg-y-offset: 40px;
+}
+
+body.list-open #content-display {
+  --bg-y-offset: 250px;
 }
 
 body:not(.list-open) #content-display.hero-mode {
   margin-top: 100px !important;
+  --bg-y-offset: 80px;
 }

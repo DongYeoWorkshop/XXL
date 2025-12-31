@@ -89,7 +89,7 @@
   cursor: default; /* 클릭 기능 제거를 암시하기 위해 커서 변경 */
   position: relative;
 }
-.skill-card.active { border-color: #444; box-shadow: 0 1px 3px rgba(255,255,255,0.1); }
+.skill-card.active { border-color: #444; box-shadow: 0 1px 3px rgba(255,255,255,0.1); opacity: 0.75; }
 .skill-card.disabled { background-color: #222 !important; opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
 /* [추가] 스킬 슬라이더 골드 테마 */

@@ -25,7 +25,7 @@
     flex-direction: row !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 3px !important;
+    gap: 2px !important; /* 간격 최소화 */
     width: 100% !important;
     padding: 0 !important;
   }
@@ -40,28 +40,33 @@
   .sticky-content span { 
     font-size: 0.7em !important; 
     height: 20px !important; 
-    padding: 0 2px !important; 
+    padding: 0 1px !important; /* 패딩 축소 */
     flex-shrink: 0 !important;
   }
   
-  #sticky-attr { width: 24px !important; border: none !important; }
+  #sticky-attr { width: 22px !important; border: none !important; }
   .sticky-attr-icon { width: 16px; height: 16px; }
   
   #sticky-name { 
-    flex: 1 1 auto !important; 
+    flex: 0 1 auto !important; 
     min-width: 0 !important;
-    max-width: 70px !important;
+    max-width: 75px !important; /* 이름 칸 살짝 확장 */
+    font-size: 0.85em !important; /* 이름 크기 증가 */
     overflow: hidden; 
     text-overflow: ellipsis; 
     border-right: 1px solid var(--border-color);
   }
 
-  /* 목록 버튼 우측 고정 */
+  #sticky-lv { width: 38px !important; margin-left: auto !important; } /* 레벨 너비 축소 */
+  #sticky-br { width: 62px !important; } /* 돌파 너비 축소 */
+  #sticky-fit { width: 42px !important; } /* 적합도 너비 축소 */
+
+  /* 목록 버튼 우측 고정 (밀어내기는 Lv에서 담당하므로 제거) */
   .header-btn {
     position: static !important;
     order: 10 !important;
-    margin-left: auto !important;
-    padding: 0 10px !important;
+    margin-left: 15px !important; /* 적합도와 목록 버튼 사이 간격 확보 */
+    padding: 0 5px !important;
     font-size: 1.4em !important;
     background: transparent !important;
     border: none !important;
@@ -87,6 +92,9 @@
   #display-stats li span:last-child { font-size: 1.1em; }
   .skill-grid { grid-template-columns: 1fr; }
   .comparison-slot { width: 100% !important; min-width: 0 !important; }
+
+  /* 리포트 플로팅 버튼 숨김 */
+  #report-open-btn { display: none !important; }
 }
 
 /* =========================================
@@ -95,6 +103,14 @@
 @media screen and (min-width: 601px) {
   .slider-label { padding-left: 30px; }
   #sub-stats-list { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+/* 태블릿 (중간 단계) 배경 최적화 */
+@media screen and (min-width: 601px) and (max-width: 1099px) {
+  #internal-char-bg::before {
+    background-position: var(--bg-x-tab, center) calc(var(--bg-y-tab, 0px) + var(--bg-y-offset, 0px));
+    background-size: var(--bg-size-tab, cover);
+  }
 }
 
 @media screen and (min-width: 1100px) {
@@ -108,6 +124,15 @@
     gap: 0 30px;
     align-items: start;
   }
+  #internal-char-bg::before {
+    /* PC 전용 배경 설정 적용 (변수 우선) */
+    background-position: var(--bg-x-pc, 80%) calc(var(--bg-y-pc, 0px) + var(--bg-y-offset, 0px));
+    background-size: var(--bg-size-pc, cover);
+  }
+  /* PC 배경 가로 위치 최적화 */
+  #content-display { --bg-x-pos: 80%; }
+  .main-content-column { grid-column: 1; grid-row: 2; }
+  .side-content-column { grid-column: 2; grid-row: 2; }
   #content-display.hero-mode:has(#simulator-page[style*="display: block"]) {
     grid-template-columns: 1fr !important; display: block !important;
   }
