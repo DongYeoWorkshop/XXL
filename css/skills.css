@@ -71,8 +71,8 @@
 
 /* Skill Grid */
 .skill-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
   gap: 10px;
   margin-top: 20px;
   padding-top: 20px;

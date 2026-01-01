@@ -28,18 +28,26 @@
 
 #internal-char-bg::before {
   content: "";
-  position: fixed; /* 화면에 절대 고정 */
-  top: 0; left: 0; 
-  width: 100vw; 
-  height: 100lvh; /* 주소창 변화에도 변하지 않는 최대 높이로 고정 */
+  position: fixed; 
+  top: 0; 
+  left: 50%; /* 박스 중앙 정렬과 동기화 */
+  transform: translateX(-50%); /* 중앙 정렬 */
+  width: 100%; 
+  max-width: 650px; /* 본문 박스 너비와 일치 */
+  height: 100lvh; 
   
-  /* 중복 오버레이 제거: 캐릭터 이미지만 원본으로 표시 */
-  background-image: var(--bg-url, none);
+  /* 1. 어두운 오버레이 레이어 2. 캐릭터 이미지 레이어 */
+  background-image: linear-gradient(rgba(13, 17, 23, 0.40), rgba(13, 17, 23, 0.40)), 
+                    var(--bg-url, none);
   background-repeat: no-repeat;
   
-  /* 위치 및 크기 설정 (기본: 모바일) */
+  /* 박스 크기에 맞게 배경 사이즈 조정 */
   background-size: cover, var(--bg-size-mob, cover);
-  background-position: 0 0, var(--bg-x-mob, center) calc(var(--bg-y-mob, 0px) + var(--bg-y-offset, 0px));
+  /* 이제 'right'는 브라우저 끝이 아니라 '박스의 오른쪽 끝'을 의미함 */
+  background-position: 0 0, 
+                       var(--bg-align-mob, right) var(--bg-x-mob, 0px) 
+                       bottom calc(var(--bg-y-mob, 0px) - var(--bg-y-offset, 0px));
+  /* 상하 이동 애니메이션 복구: 0.4초 동안 부드럽게 이동 */
   transition: background-position 0.4s ease;
 }
 #content-display.hero-mode {

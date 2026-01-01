@@ -37,25 +37,38 @@
   letter-spacing: 0.05em;
 }
 
-#sticky-attr { width: 32px; flex-shrink: 0; }
-
 #sticky-name {
-  font-family: 'Chungdo', sans-serif;
-  font-weight: normal;
+  font-family: sans-serif;
+  font-weight: bold;
   font-size: 1.1em;
-  width: 100px; /* 이름 칸 너비 고정 */
+  width: 120px; /* 너비를 확실히 고정하여 중앙 정렬 공간 확보 */
+  margin-left: 50px; /* 제목과의 간격 */
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   overflow: hidden;
-  text-overflow: ellipsis; /* 길면 말줄임표 */
+  text-overflow: ellipsis;
   flex-shrink: 0;
 }
 
-#sticky-lv { 
-  width: 45px; 
+#sticky-attr { 
+  width: 32px; 
   flex-shrink: 0; 
-  margin-left: auto; /* 레벨부터 오른쪽 끝으로 밀어냄 */
+  margin-left: 10px; /* 이름 칸과의 간격 추가 */
+}
+
+#sticky-lv {
+  width: 45px;
+  flex-shrink: 0;
   order: 8;
 }
+
+/* 캐릭터 정보가 활성화될 때만 Lv에서 밀어내기 시작 */
+#sticky-lv:not([style*="display: none"]) {
+  margin-left: auto !important;
+}
+
 #sticky-br { width: 75px; flex-shrink: 0; order: 8; }
 #sticky-fit { width: 50px; flex-shrink: 0; order: 8; }
 
@@ -90,7 +103,7 @@
   border: none !important;
   color: #fff !important;
   padding: 0 10px;
-  margin-left: 20px; /* 적합도 정보와 목록 버튼 사이 여백 확보 */
+  margin-left: auto; /* 기본값: 오른쪽 끝으로 밀어냄 */
   cursor: pointer;
   font-size: 1.5em;
   font-weight: bold;
@@ -103,6 +116,10 @@
   order: 10; /* 가장 오른쪽 유지 */
 }
 
+/* 캐릭터 정보가 있을 때는 버튼의 자동 마진을 취소하고 고정 간격 적용 */
+#sticky-lv:not([style*="display: none"]) ~ .header-btn {
+  margin-left: 20px !important;
+}
 
 
 

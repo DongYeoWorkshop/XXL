@@ -57,22 +57,14 @@
     border-right: 1px solid var(--border-color);
   }
 
-  #sticky-lv { width: 38px !important; margin-left: auto !important; } /* 레벨 너비 축소 */
-  #sticky-br { width: 62px !important; } /* 돌파 너비 축소 */
-  #sticky-fit { width: 42px !important; } /* 적합도 너비 축소 */
+  #sticky-fit { width: 42px; }
 
-  /* 목록 버튼 우측 고정 (밀어내기는 Lv에서 담당하므로 제거) */
+  /* 목록 버튼 우측 고정 */
   .header-btn {
     position: static !important;
     order: 10 !important;
-    margin-left: 15px !important; /* 적합도와 목록 버튼 사이 간격 확보 */
     padding: 0 5px !important;
     font-size: 1.4em !important;
-    background: transparent !important;
-    border: none !important;
-    color: #fff !important;
-    flex-shrink: 0 !important;
-    transform: scaleX(1.4) !important; /* 가로로 넓게 늘림 */
   }
 
   /* 컨텐츠 마진 최적화: 헤더 높이(45px)에 맞춰 밀착 */
@@ -90,7 +82,7 @@
   .slider-label { font-size: 0.75em; }
   .slider-box { height: 22px; padding: 0 5px; }
   #display-stats li span:last-child { font-size: 1.1em; }
-  .skill-grid { grid-template-columns: 1fr; }
+  .skill-grid { grid-template-columns: 1fr !important; }
   .comparison-slot { width: 100% !important; min-width: 0 !important; }
 
   /* 리포트 플로팅 버튼 숨김 */
@@ -108,8 +100,8 @@
 /* 태블릿 (중간 단계) 배경 최적화 */
 @media screen and (min-width: 601px) and (max-width: 1099px) {
   #internal-char-bg::before {
-    background-position: var(--bg-x-tab, center) calc(var(--bg-y-tab, 0px) + var(--bg-y-offset, 0px));
-    background-size: var(--bg-size-tab, cover);
+    background-position: 0 0, var(--bg-align-tab, right) var(--bg-x-tab, 0px) bottom calc(var(--bg-y-tab, 0px) - var(--bg-y-offset, 0px));
+    background-size: cover, var(--bg-size-tab, cover);
   }
 }
 
@@ -125,9 +117,10 @@
     align-items: start;
   }
   #internal-char-bg::before {
-    /* PC 전용 배경 설정 적용 (변수 우선) */
-    background-position: var(--bg-x-pc, 80%) calc(var(--bg-y-pc, 0px) + var(--bg-y-offset, 0px));
-    background-size: var(--bg-size-pc, cover);
+    max-width: 1200px; /* PC 박스 너비와 일치 */
+    /* PC 전용 배경 설정 적용 (하단 우선 + 오른쪽 정렬) */
+    background-position: 0 0, bottom calc(var(--bg-y-pc, 0px) - var(--bg-y-offset, 0px)) var(--bg-align-pc, right) var(--bg-x-pc, 0px);
+    background-size: cover, var(--bg-size-pc, cover);
   }
   /* PC 배경 가로 위치 최적화 */
   #content-display { --bg-x-pos: 80%; }
