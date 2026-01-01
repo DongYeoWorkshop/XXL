@@ -128,7 +128,7 @@ export function getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, sa
                         </div>
                     </div>
                     <div style="background:#fff; border:1px solid #eee; border-radius:12px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-                        <h4 style="margin:0 0 15px 0; color:#333;">분석 로그</h4>
+                        <h4 style="margin:0 0 15px 0; color:#333;">분석 로그 <span id="sim-total-dmg-header" style="font-size:0.8em; color:#6f42c1; margin-left:10px; font-weight:bold;"></span></h4>
                         <div id="sim-log" style="max-height:400px; overflow-y:auto; font-family:'Cascadia Code', 'Courier New', monospace; font-size:0.85em; line-height:1.6; color:#4af626; padding:15px; background:#1a1a1a; border-radius:8px; border:1px solid #333; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></div>
                         <div id="sim-result-actions"></div>
                     </div>

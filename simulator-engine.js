@@ -33,7 +33,12 @@ export function formatBuffState(state, charDataObj) {
                 displayDur = `${maxTurn}턴 / ${count}중첩`;
             }
         }
-        else if (key.includes('battleSpirit')) { const info = getSkillInfo(3); name = "전의"; icon = info.icon; }
+        else if (key.includes('battleSpirit')) { 
+            const info = getSkillInfo(3); 
+            name = "전의"; 
+            icon = info.icon; 
+            displayDur = `${val}중첩`;
+        }
         else if (key === 'scar_active' || key === 'mark_of_engraving') { const info = getSkillInfo(1); name = "각흔"; icon = info.icon; }
         else if (key.includes('sleep_status')) { const info = getSkillInfo(1); name = "수면"; icon = info.icon; if (typeof val === 'object' && val.duration !== undefined) displayDur = `${val.duration}턴`; }
         else if (key === 'atk_stacks') { 
@@ -72,13 +77,19 @@ export function runSimulationCore(context) {
         const lvS = parseInt(stats.skills?.[`s${targetIdx+1}`] || 1);
         const rate = getSkillMultiplier(lvS, skill.startRate || 0.6);
         let e = null;
-        const effects = isStamp ? skill.stampBuffEffects : skill.buffEffects;
-        if (effects && effects[effectKey] !== undefined) e = effects[effectKey];
-        else if (skill.damageDeal) {
-            const d = skill.damageDeal.find(dmg => dmg.type === effectKey);
-            if (d) e = d.val;
-        }
-        if (e === null && isStamp && skill.buffEffects && skill.buffEffects[effectKey] !== undefined) e = skill.buffEffects[effectKey];
+                const effects = isStamp ? skill.stampBuffEffects : skill.buffEffects;
+                if (effects && effects[effectKey] !== undefined) e = effects[effectKey];
+                else if (skill.damageDeal) {
+                    const d = skill.damageDeal.find(dmg => dmg.type === effectKey);
+                    if (d) e = d.val;
+                }
+                
+                // [추가] 만약 여전히 e가 null이고 key가 'max'라면 calc[0]을 참조
+                if (e === null && effectKey === 'max' && skill.calc && skill.calc[0]) {
+                    e = skill.calc[0];
+                }
+        
+                if (e === null && isStamp && skill.buffEffects && skill.buffEffects[effectKey] !== undefined) e = skill.buffEffects[effectKey];
         if (e === null) return 0;
         const val = (typeof e === 'object') ? ((charData.info.속성 === e.targetAttribute ? e.attributeMax : e.max) || e.fixed || 0) : e;
         return val * (typeof e === 'object' && e.max ? rate : 1);
@@ -93,9 +104,9 @@ export function runSimulationCore(context) {
         let cd = { ult: ultCD };
         const logs = [], perTurnDmg = [], stateLogs = [], detailedLogs = [];
 
-        const makeCtx = (tVal, isUltVal, dLogsArray, isHitVal) => ({
+        const makeCtx = (tVal, isUltVal, dLogsArray, isHitVal, isDefendVal) => ({
             t: tVal, turns, charId, charData, stats, simState, 
-            isUlt: isUltVal, targetCount, isHit: isHitVal,
+            isUlt: isUltVal, targetCount, isHit: isHitVal, isDefend: isDefendVal,
             customValues: context.customValues,
             debugLogs: dLogsArray, 
             getVal: (idx, key, stamp) => getSkillValue(idx, key, stamp || (isUltVal && stats.stamp)),
@@ -118,7 +129,8 @@ export function runSimulationCore(context) {
                 let m = []; if (chance) m.push(`${chance}%`); if (dur) m.push(`${dur}턴`);
                 const mS = m.length ? ` (${m.join(' / ')})` : "";
                 const tag = label ? `[${label}] ` : "";
-                const msg = `ICON:${sIcon}|${tag}${sName} ${finalRes}${mS}`;
+                const actionPart = finalRes ? ` ${finalRes}` : "";
+                const msg = `ICON:${sIcon}|${tag}${sName}${actionPart}${mS}`;
                 if (!skipPush) dLogsArray.push(msg); 
                 return msg; 
             }
@@ -130,7 +142,7 @@ export function runSimulationCore(context) {
             const actionType = manualPattern[t-1] || (cd.ult === 0 ? 'ult' : 'normal');
             const isUlt = actionType === 'ult', isDefend = actionType === 'defend';
             const skill = isUlt ? charData.skills[1] : charData.skills[0];
-            const dynCtx = makeCtx(t, isUlt, turnDebugLogs, isHit);
+            const dynCtx = makeCtx(t, isUlt, turnDebugLogs, isHit, isDefend);
             
             let currentTDmg = 0;
 
@@ -170,9 +182,22 @@ export function runSimulationCore(context) {
                         msgs.forEach(m => { if (m) detailedLogs.push({ t, type: 'debug', msg: m }); });
                     } 
                     // 데미지 이벤트
-                    else if (typeof result === 'number' || (typeof result === 'object' && (result.max || result.fixed))) {
+                    else if (typeof result === 'number' || (typeof result === 'object' && (result.max || result.fixed || result.val))) {
                         const latest = getLatestSubStats();
-                        const coefValue = (typeof result === 'object') ? (result.max || result.fixed || 0) : result;
+                        let coefValue = 0;
+                        let displayChance = "";
+
+                        if (typeof result === 'object') {
+                            if (result.val !== undefined) {
+                                coefValue = result.val;
+                                if (result.chance) displayChance = ` (${result.chance}%)`;
+                            } else {
+                                coefValue = result.max || result.fixed || 0;
+                            }
+                        } else {
+                            coefValue = result;
+                        }
+
                         const dUnit = calculateDamage(e.type || "추가공격", latest.atk, latest.subStats, coefValue, false, charData.info.속성, enemyAttrIdx);
                         const finalD = e.isMulti ? dUnit * targetCount : dUnit;
                         const c = e.isMulti ? coefValue * targetCount : coefValue;
@@ -190,7 +215,7 @@ export function runSimulationCore(context) {
                         logs.push(`${t}턴: [${label}] ${e.name || s?.name || "추가타"} +${finalD.toLocaleString()}`);
                         detailedLogs.push({ 
                             t, type: 'action', 
-                            msg: `ICON:${s?.icon || 'icon/main.png'}|[${label}] ${e.name || s?.name}: +${finalD.toLocaleString()}`, 
+                            msg: `ICON:${s?.icon || 'icon/main.png'}|[${label}] ${e.name || s?.name}: +${finalD.toLocaleString()}${displayChance}`, 
                             statMsg: statParts.join(' / ') 
                         });
                     }
@@ -208,15 +233,22 @@ export function runSimulationCore(context) {
             flow.forEach(step => {
                 if (step === 'onTurn') {
                     handleHook('onTurn');
+                    // [추가] onTurn 로그 즉시 플러시 (공격 로그보다 위로)
+                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                    turnDebugLogs.length = 0;
                     stateLogs.push(formatBuffState(simState, charData));
                 } else if (step === 'setup') {
                     handleHook('onCalculateDamage');
+                    // [추가] setup 로그 즉시 플러시
+                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                    turnDebugLogs.length = 0;
                 } else if (step === 'action') {
                     if (isDefend) {
                         logs.push(`${t}턴: [방어] - +0`);
                         detailedLogs.push({ t, type: 'action', msg: 'ICON:icon/simul.png|[방어]' });
                         handleHook('onAttack'); // 방어 중에도 공격 관련 훅은 실행
                     } else {
+                        // [수정] 메인 액션 직전에 최신 스탯을 다시 한 번 갱신 (전의 9중첩 실시간 반영 등)
                         const mainStats = getLatestSubStats();
                         let mDmgSum = 0, mCoef = 0;
                         skill.damageDeal?.forEach(e => {
@@ -251,6 +283,7 @@ export function runSimulationCore(context) {
                     turnDebugLogs.length = 0;
                 } else if (step === 'hit') {
                     if (isHit) {
+                        detailedLogs.push({ t, type: 'action', msg: `ICON:icon/simul.png|피격 발생 (${hitProb}%)` });
                         handleHook('onEnemyHit');
                     }
                     turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));

@@ -279,7 +279,15 @@ function runSimulation(charId) {
         // [추가] 피격 확률 읽기 (기본값 30)
         const hitProb = sData.useHitProb ? parseInt(localStorage.getItem('sim_last_hit_prob') || "30") : 0;
 
-        const customValues = {}; if (sData.customControls) sData.customControls.forEach(c => { const v = localStorage.getItem(`sim_custom_${charId}_${c.id}`); customValues[c.id] = c.type === 'toggle' ? (v === 'true') : (parseInt(v) || c.initial || 0); });
+        const customValues = {}; 
+        if (sData.customControls) sData.customControls.forEach(c => { 
+            const v = localStorage.getItem(`sim_custom_${charId}_${c.id}`); 
+            if (c.type === 'toggle') {
+                customValues[c.id] = (v !== null) ? (v === 'true') : (c.initial === true);
+            } else {
+                customValues[c.id] = (v !== null) ? parseInt(v) : (c.initial || 0);
+            }
+        });
 
         const result = runSimulationCore({ charId, charData: data, sData, stats, turns, iterations, targetCount, manualPattern: JSON.parse(localStorage.getItem(`sim_pattern_${charId}`)) || [], enemyAttrIdx, customValues, defaultGrowthRate: constants.defaultGrowth, hitProb });
         
@@ -302,6 +310,10 @@ function runSimulation(charId) {
         document.getElementById('sim-avg-dmg').innerText = result.avg; 
         document.getElementById('sim-max-dmg').innerText = result.max; 
         document.getElementById('sim-log').innerHTML = result.logHtml;
+        
+        // [추가] 분석 로그 제목 옆에 총 데미지 표시
+        const totalHeader = document.getElementById('sim-total-dmg-header');
+        if (totalHeader) totalHeader.innerText = `: ${result.closestTotal.toLocaleString()}`;
         
         document.getElementById('sim-empty-msg').style.display = 'none';
         renderActionButtons(charId, result, stats);

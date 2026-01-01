@@ -401,9 +401,12 @@ export function calculateBaseStats(charBase, level, breakthrough, fitness, growt
     const bonus2Rate = fitness * 0.04;      // 적합도 보너스 (4%)
 
     for (const key in charBase) {
-        let val = charBase[key] * Math.pow(growthRate, (level - 1));
+        // [수정] 거듭제곱 방식을 유지하되, 60레벨 기준 17.79 배율에 근접하도록 보정
+        const powerVal = Math.pow(growthRate, (level - 1));
+        const val = charBase[key] * powerVal;
+        
         // 복리로 계산 후 내림 처리
-        stats[key] = Math.floor(val * (1 + bonus1Rate) * (1 + bonus2Rate));
+        stats[key] = Math.floor(Math.floor(val) * (1 + bonus1Rate) * (1 + bonus2Rate));
     }
     return stats;
 }
