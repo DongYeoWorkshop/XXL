@@ -47,24 +47,30 @@ export function getFormattedDamage(skill, lv, isUltStamped, isForCard = false, a
             if (state.currentId === 'duncan') {
                 const s2 = charDataObj.skills[1];
                 const s2Lv = (state.currentSkillLevels && state.currentSkillLevels[2]) || 1;
-                // data.js에 정의된 startRate (0.64) 반영
-                const rate = getSkillMultiplier(s2Lv, s2.startRate);
+                const rate = getSkillMultiplier(s2Lv, s2.startRate || 0.6);
                 currentCalcSubStats["공증"] = (currentCalcSubStats["공증"] || 0) + (30 * rate);
             }
 
             const boosterSkillIdx = charDataObj.skills.findIndex(s => s.isUltBooster);
-            const currentBreakthrough = state.savedStats[state.currentId]?.s1 || 0;
-            const isUnlocked = (boosterSkillIdx === 6) ? (currentBreakthrough >= 75) : true; 
-
-            if (boosterSkillIdx !== -1 && isUnlocked) {
+            if (boosterSkillIdx !== -1) {
                 const boosterSkill = charDataObj.skills[boosterSkillIdx];
-                const boosterLv = (state.currentSkillLevels && state.currentSkillLevels[boosterSkillIdx + 1]) || 1;
-                if (boosterSkill.calc && boosterSkill.calc.length > 0) {
-                    const maxVal = boosterSkill.calc[0].max;
-                    if (maxVal) {
-                        const rate = getSkillMultiplier(boosterLv, boosterSkill.startRate);
-                        const boostVal = maxVal * rate;
-                        currentCalcSubStats["뎀증"] = (currentCalcSubStats["뎀증"] || 0) + boostVal;
+                // [수정] 이미 기본 버프로 적용되어 있다면 중복 가산 방지
+                const isAlreadyApplied = charDataObj.defaultBuffSkills?.includes(boosterSkill.id);
+                
+                if (!isAlreadyApplied) {
+                    const currentBreakthrough = state.savedStats[state.currentId]?.s1 || 0;
+                    const isUnlocked = (boosterSkillIdx === 6) ? (currentBreakthrough >= 75) : true; 
+
+                    if (isUnlocked) {
+                        const boosterLv = (state.currentSkillLevels && state.currentSkillLevels[boosterSkillIdx + 1]) || 1;
+                        if (boosterSkill.calc && boosterSkill.calc.length > 0) {
+                            const maxVal = boosterSkill.calc[0].max;
+                            if (maxVal) {
+                                const rate = getSkillMultiplier(boosterLv, boosterSkill.startRate || 0.6);
+                                const boostVal = maxVal * rate;
+                                currentCalcSubStats["뎀증"] = (currentCalcSubStats["뎀증"] || 0) + boostVal;
+                            }
+                        }
                     }
                 }
             }

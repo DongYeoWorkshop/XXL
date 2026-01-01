@@ -2,6 +2,7 @@
 import { calculateDamage, calculateBaseStats, assembleFinalStats } from './calculations.js';
 import { getSkillMultiplier } from './formatter.js';
 import { commonControls } from './simulator-common.js';
+import { getStatusInfo, formatStatusMessage, formatStatusAction } from './simulator-status.js';
 
 /**
  * 버프 상태 표시용 포매터
@@ -32,6 +33,7 @@ export function formatBuffState(state, charDataObj, sData) {
         const customName = sData?.stateDisplay?.[key];
         const skillMatch = key.match(/^skill(\d+)/);
         
+        // 1. 스킬 기반 버프 처리
         if (skillMatch) {
             const skillNum = parseInt(skillMatch[1]);
             const info = getSkillInfo(skillNum - 1);
@@ -48,15 +50,19 @@ export function formatBuffState(state, charDataObj, sData) {
                 displayDur = "ON";
             }
         } 
+        // 2. 등록된 특수 상태이상(각흔, 전의 등) 처리
         else {
-            if (customName) {
+            const statusInfo = getStatusInfo(key);
+            if (statusInfo) {
+                name = statusInfo.name;
+                icon = statusInfo.icon;
+                const unit = statusInfo.unit || "턴";
+                displayDur = typeof val === 'number' ? `${val}${unit}` : "ON";
+            } else if (customName) {
                 name = customName;
                 displayDur = typeof val === 'number' ? (key.includes('stack') ? `${val}중첩` : `${val}턴`) : "ON";
             } else {
-                if (key === 'scar_active' || key === 'mark_of_engraving') { name = "[각흔]"; icon = charDataObj.skills[1]?.icon; displayDur = "ON"; }
-                else if (key.includes('sleep_status')) { name = "[수면]"; icon = charDataObj.skills[1]?.icon; displayDur = val.duration ? `${val.duration}턴` : "ON"; }
-                else if (key.includes('battleSpirit')) { name = "[전의]"; icon = charDataObj.skills[3]?.icon; displayDur = `${val}중첩`; }
-                else continue;
+                continue;
             }
         }
         entries.push({ name, duration: displayDur, icon });
@@ -109,57 +115,83 @@ export function runSimulationCore(context) {
         let cd = { ult: ultCD };
         const logs = [], perTurnDmg = [], stateLogs = [], detailedLogs = [];
 
-        const makeCtx = (tVal, isUltVal, dLogsArray, isHitVal, isDefendVal) => {
+        const makeCtx = (tVal, isUltVal, logsArray, dLogsArray, isHitVal, isDefendVal) => {
             const isAllyUlt = sData && typeof sData.isAllyUltTurn === 'function' 
                 ? sData.isAllyUltTurn(tVal) 
                 : commonControls.ally_ult_count.isTurn(tVal);
 
-            return {
+            const ctx = {
                 t: tVal, turns, charId, charData, stats, simState, 
                 isUlt: isUltVal, targetCount, isHit: isHitVal, isDefend: isDefendVal,
                 isAllyUltTurn: isAllyUlt,
                 customValues: context.customValues,
                 debugLogs: dLogsArray, 
-                // [추가] 타이머 설정 헬퍼 (피격 시 자동 +1 보정)
+                // [수정] 고정된 인자 대신 현재 객체의 isHit 상태를 참조
                 setTimer: (key, dur) => {
-                    simState[key] = isHitVal ? dur + 1 : dur;
+                    simState[key] = ctx.isHit ? dur + 1 : dur;
                 },
-                // [추가] 중첩 타이머 추가 헬퍼 (배열용)
+                // [수정] 고정된 인자 대신 현재 객체의 isHit 상태를 참조
                 addTimer: (key, dur, data = {}) => {
                     if (!simState[key]) simState[key] = [];
-                    const finalDur = isHitVal ? dur + 1 : dur;
-                    if (typeof data === 'object') {
+                    const finalDur = ctx.isHit ? dur + 1 : dur;
+                    // 데이터가 실제로 있을 때만 객체로 저장, 없으면 숫자만 저장
+                    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
                         simState[key].push({ ...data, dur: finalDur });
                     } else {
                         simState[key].push(finalDur);
                     }
                 },
+                formatAction: (key, action) => formatStatusAction(key, action),
                 getVal: (idx, key, stamp) => getSkillValue(idx, key, stamp || (isUltVal && stats.stamp)),
                 log: (idx, res, chance, dur, skipPush = false) => {
                     let sName = "스킬", sIcon = "icon/main.png", label = "";
+                    
                     if (typeof idx === 'number') {
                         const s = charData.skills[idx];
                         sName = s?.name || "알 수 없음";
                         sIcon = s?.icon || "icon/main.png";
                         label = idx === 1 ? "필살기" : idx >= 7 ? "도장" : `패시브${idx-1}`;
                     } else if (typeof idx === 'string') {
-                        sName = idx; 
-                        if (sName === "피격") { sIcon = "icon/simul.png"; label = ""; } 
-                        else if (sName === "아군공격") { sIcon = "icon/compe.png"; label = ""; }
+                        // [수정] 등록된 상태 정보가 있으면 가져오기
+                        const statusInfo = getStatusInfo(idx);
+                        if (statusInfo) {
+                            sName = statusInfo.name;
+                            sIcon = statusInfo.icon;
+                            label = ""; // 상태이상은 별도의 패시브 라벨 미표시
+                        } else {
+                            sName = idx; 
+                            if (sName === "피격") { sIcon = "icon/simul.png"; label = ""; } 
+                            else if (sName === "아군공격") { sIcon = "icon/compe.png"; label = ""; }
+                        }
                     }
+
+                    // [수정] 행동 키워드 한글 변환 확장
                     let finalRes = res;
-                    if (res === "Buff") finalRes = "버프 발동";
-                    else if (res === "Trigger") finalRes = "발동";
-                    else if (res === "Attack") finalRes = "공격";
+                    const actionMap = {
+                        "Buff": "버프 발동",
+                        "Trigger": "발동",
+                        "Attack": "공격",
+                        "apply": "부여",
+                        "consume": "소모",
+                        "all_consume": "모두 소모",
+                        "gain": "수급",
+                        "activate": "발동"
+                    };
+                    if (actionMap[res]) finalRes = actionMap[res];
+
                     let m = []; if (chance) m.push(`${chance}%`); if (dur) m.push(`${dur}턴`);
                     const mS = m.length ? ` (${m.join(' / ')})` : "";
                     const tag = label ? `[${label}] ` : "";
                     const actionPart = finalRes ? ` ${finalRes}` : "";
                     const msg = `ICON:${sIcon}|${tag}${sName}${actionPart}${mS}`;
-                    if (!skipPush) dLogsArray.push(msg); 
+                    
+                    if (!skipPush) {
+                        dLogsArray.push(msg);
+                    }
                     return msg; 
                 }
             };
+            return ctx;
         };
 
         for (let t = 1; t <= turns; t++) {
@@ -167,18 +199,12 @@ export function runSimulationCore(context) {
             const actionType = manualPattern[t-1] || (cd.ult === 0 ? 'ult' : 'normal');
             const isUlt = actionType === 'ult', isDefend = actionType === 'defend';
             const skill = isUlt ? charData.skills[1] : charData.skills[0];
-            const dynCtx = makeCtx(t, isUlt, turnDebugLogs, false, isDefend);
+            // [수정] logs 배열을 makeCtx에 전달
+            const dynCtx = makeCtx(t, isUlt, logs, turnDebugLogs, false, isDefend);
             
-            const hProb = context.customValues.hit_prob || 0;
-            const nProb = context.customValues.normal_hit_prob || 0;
             let isHit = false;
             let hitTypeMsg = "";
-            if (nProb > 0) {
-                if (!dynCtx.isAllyUltTurn && Math.random() * 100 < nProb) { isHit = true; hitTypeMsg = `보통공격 피격 발생 (${nProb}%)`; }
-            } else if (hProb > 0) {
-                if (Math.random() * 100 < hProb) { isHit = true; hitTypeMsg = `피격 발생 (${hProb}%)`; }
-            }
-            dynCtx.isHit = isHit;
+            let isTaunted = false;
             
             let currentTDmg = 0;
 
@@ -219,15 +245,15 @@ export function runSimulationCore(context) {
                         // 로그 이벤트 (문자열)
                         if (typeof res === 'string') {
                             detailedLogs.push({ t, type: 'debug', msg: res });
+                            // [수정] 메인 로그(logs)에는 더 이상 문자열(버프 발동 등)을 넣지 않음
                         } 
                         // 데미지 이벤트 (숫자 또는 객체)
                         else if (typeof res === 'number' || (typeof res === 'object' && (res.max || res.fixed || res.val || res.coef))) {
                             const latest = getLatestSubStats();
                             let coefValue = 0;
                             let displayChance = "";
-                            let stackSuffix = "";
                             let customName = e.name;
-                            let targetSkillId = res.skillId || e.skillId; // 개별 스텝에서 skillId 지정 가능
+                            let targetSkillId = res.skillId || e.skillId;
 
                             let plainStack = "";
                             let richStack = "";
@@ -247,7 +273,6 @@ export function runSimulationCore(context) {
                             const finalD = e.isMulti ? dUnit * targetCount : dUnit;
                             const c = e.isMulti ? coefValue * targetCount : coefValue;
                             
-                            // 아이콘 및 레이블 결정
                             const s = charData.skills.find(sk => sk.id === targetSkillId);
                             let label = "추가타";
                             if (s) { 
@@ -263,7 +288,12 @@ export function runSimulationCore(context) {
 
                             const baseName = customName || s?.name || "추가타";
                             currentTDmg += finalD;
-                            logs.push(`${t}턴: [${label}] ${baseName}${plainStack}: +${finalD.toLocaleString()}`);
+                            
+                            // [수정] 데미지가 0보다 큰 경우에만 메인 로그에 기록
+                            if (finalD > 0) {
+                                logs.push(`${t}턴: [${label}] ${baseName}${plainStack}: +${finalD.toLocaleString()}`);
+                            }
+                            
                             detailedLogs.push({
                                 t, type: 'action',
                                 msg: `ICON:${s?.icon || 'icon/main.png'}|[${label}] ${baseName}${richStack}: +${finalD.toLocaleString()}${displayChance}`,
@@ -287,6 +317,24 @@ export function runSimulationCore(context) {
 
             flow.forEach(step => {
                 if (step === 'onTurn') {
+                    // [추가] 자동 타이머 관리 로직
+                    for (const key in simState) {
+                        if (key.endsWith('_timer')) {
+                            // 1. 숫자형 타이머 처리
+                            if (typeof simState[key] === 'number' && simState[key] > 0) {
+                                simState[key]--;
+                            }
+                            // 2. 배열형 타이머 처리 (중첩 버프 등)
+                            else if (Array.isArray(simState[key])) {
+                                simState[key] = simState[key].map(v => {
+                                    if (typeof v === 'number') return v - 1;
+                                    if (typeof v === 'object' && v.dur !== undefined) return { ...v, dur: v.dur - 1 };
+                                    return v;
+                                }).filter(v => (typeof v === 'number' ? v > 0 : (v && v.dur > 0)));
+                            }
+                        }
+                    }
+
                     handleHook('onTurn');
                     turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
                     turnDebugLogs.length = 0;
@@ -303,12 +351,17 @@ export function runSimulationCore(context) {
                     } else {
                         const mainStats = getLatestSubStats();
                         let mDmgSum = 0, mCoef = 0;
+                        const targetType = isUlt ? "필살공격" : "보통공격";
+
                         skill.damageDeal?.forEach(e => {
+                            // [수정] 현재 액션 타입과 일치하는 데미지만 메인 로그에 합산
+                            if (e.type !== targetType && e.type !== "기초공격") return;
+
                             const c = (isUlt && stats.stamp && e.val.stampMax) ? e.val.stampMax : e.val.max;
                             const fC = c * getSkillMultiplier(parseInt(isUlt ? (stats.skills?.s2 || 1) : (stats.skills?.s1 || 1)), skill.startRate || 0.6);
                             const isM = skill.isMultiTarget || e.isMultiTarget;
                             mCoef += isM ? fC * targetCount : fC;
-                            mDmgSum += calculateDamage(isUlt?"필살공격":"보통공격", mainStats.atk, mainStats.subStats, fC, isUlt && stats.stamp, charData.info.속성, enemyAttrIdx) * (isM ? targetCount : 1);
+                            mDmgSum += calculateDamage(targetType, mainStats.atk, mainStats.subStats, fC, isUlt && stats.stamp, charData.info.속성, enemyAttrIdx) * (isM ? targetCount : 1);
                         });
                         const statParts = [`Coef:${mCoef.toFixed(1)}%`, `Atk:${mainStats.atk.toLocaleString()}`];
                         if (mainStats.subStats["뎀증"] !== 0) statParts.push(`Dmg:${mainStats.subStats["뎀증"].toFixed(1)}%`);
@@ -317,7 +370,12 @@ export function runSimulationCore(context) {
                         const specDmgKey = isUlt ? "필살기뎀증" : "평타뎀증";
                         const specDmgLabel = isUlt ? "U-Dmg" : "N-Dmg";
                         if (mainStats.subStats[specDmgKey] !== 0) statParts.push(`${specDmgLabel}:${mainStats.subStats[specDmgKey].toFixed(1)}%`);
-                        logs.push(`${t}턴: [${isUlt?'필살기':'보통공격'}] ${skill.name} +${mDmgSum.toLocaleString()}`);
+                        
+                        // [수정] 데미지가 0보다 큰 경우에만 메인 로그에 기록
+                        if (mDmgSum > 0) {
+                            logs.push(`${t}턴: [${isUlt?'필살기':'보통공격'}] ${skill.name}: +${mDmgSum.toLocaleString()}`);
+                        }
+                        
                         detailedLogs.push({ t, type: 'action', msg: `ICON:${skill.icon}|[${isUlt?'필살기':'보통공격'}] ${skill.name}: +${mDmgSum.toLocaleString()}`, statMsg: statParts.join(' / ') });
                         currentTDmg = mDmgSum;
                         handleHook('onAttack');
@@ -325,9 +383,41 @@ export function runSimulationCore(context) {
                     turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
                     turnDebugLogs.length = 0;
                 } else if (step === 'hit') {
+                    // [수정] 조롱/고정 피격 메커니즘으로 확장
+                    const tauntRes = sData.isTaunted && sData.isTaunted(dynCtx);
+                    const tauntLabel = (typeof tauntRes === 'object' ? tauntRes.label : (typeof tauntRes === 'string' ? tauntRes : "조롱 상태"));
+                    const tauntProb = (typeof tauntRes === 'object' && tauntRes.prob !== undefined ? tauntRes.prob : 100);
+                    isTaunted = !!tauntRes;
+
+                    const hProb = context.customValues.hit_prob || 0;
+                    const nProb = context.customValues.normal_hit_prob || 0;
+                    
+                    isHit = false;
+                    hitTypeMsg = "";
+
+                    if (isTaunted) {
+                        // 조롱 메커니즘: 확률이 100%가 아닐 수도 있으므로 판정 수행
+                        if (tauntProb >= 100 || Math.random() * 100 < tauntProb) {
+                            isHit = true;
+                            // [수정] 중앙 집중화된 메시지 포매터 사용
+                            hitTypeMsg = formatStatusMessage(tauntLabel, tauntProb);
+                        }
+                    } else if (nProb > 0) {
+                        if (!dynCtx.isAllyUltTurn && Math.random() * 100 < nProb) { isHit = true; hitTypeMsg = `보통공격 피격 발생 (${nProb}%)`; }
+                    } else if (hProb > 0) {
+                        if (Math.random() * 100 < hProb) { isHit = true; hitTypeMsg = `피격 발생 (${hProb}%)`; }
+                    }
+                    dynCtx.isHit = isHit;
+
                     if (isHit) {
-                        detailedLogs.push({ t, type: 'action', msg: `ICON:icon/simul.png|${hitTypeMsg}` });
-                        handleHook('onEnemyHit');
+                        const actualHitCount = isTaunted ? targetCount : 1;
+                        // [수정] 메인 로그(logs)에서는 피격 안내를 제거하여 딜량 집중
+                        for (let h = 0; h < actualHitCount; h++) {
+                            const hitMsg = hitTypeMsg;
+                            
+                            detailedLogs.push({ t, type: 'action', msg: `ICON:icon/simul.png|${hitMsg}` });
+                            handleHook('onEnemyHit');
+                        }
                     }
                     turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
                     turnDebugLogs.length = 0;
