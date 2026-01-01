@@ -22,6 +22,15 @@ export const commonControls = {
         initial: 30,
         description: "캐릭터가 적에게 공격받을 확률입니다."
     },
+    "normal_hit_prob": {
+        id: "normal_hit_prob",
+        type: "input",
+        label: "보통공격 피격 확률(%)",
+        min: 0,
+        max: 100,
+        initial: 30,
+        description: "캐릭터가 적의 보통공격에 피격될 확률입니다."
+    },
     "ally_ult_count": {
         id: "ally_ult_count",
         type: "counter",
@@ -41,6 +50,13 @@ export const commonControls = {
         max: 4,
         initial: 2,
         description: "파티 내 전사 및 방해 포지션 아군의 수입니다."
+    },
+    "is_paralysis_immune": {
+        id: "is_paralysis_immune",
+        type: "toggle",
+        label: "대상 마비 면역 여부",
+        initial: true,
+        description: "공격 대상이 마비 효과에 면역인지 여부입니다."
     }
 };
 

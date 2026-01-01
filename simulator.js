@@ -321,10 +321,7 @@ function runSimulation(charId) {
             }
         });
 
-        // [수정] 피격 확률은 이제 공통 컨트롤(hit_prob)에서 가져옴
-        const hitProb = customValues.hit_prob || 0;
-
-        const result = runSimulationCore({ charId, charData: data, sData, stats, turns, iterations, targetCount, manualPattern: JSON.parse(localStorage.getItem(`sim_pattern_${charId}`)) || [], enemyAttrIdx, customValues, defaultGrowthRate: constants.defaultGrowth, hitProb });
+        const result = runSimulationCore({ charId, charData: data, sData, stats, turns, iterations, targetCount, manualPattern: JSON.parse(localStorage.getItem(`sim_pattern_${charId}`)) || [], enemyAttrIdx, customValues, defaultGrowthRate: constants.defaultGrowth });
         
         localStorage.setItem(`sim_last_result_${charId}`, JSON.stringify(result));
         
@@ -374,7 +371,9 @@ function renderActionButtons(charId, result, stats) {
         const recs = []; let lastT = 0;
         result.closestLogs.forEach(log => {
             const m = log.match(/^(\d+)턴:/); if (m && parseInt(m[1]) > lastT) { recs.push({ isTurnSeparator: true, turnNumber: (lastT = parseInt(m[1])) }); }
-            const typeM = log.match(/\[(.*?)\]/), nameM = log.match(/\]\s+(.*?)(?::|\s\+)/), dmgM = log.match(/\+([\d,]+)/);
+            const typeM = log.match(/\[(.*?)\]/), 
+                  nameM = log.match(/\]\s+(.*?):\s*\+/), 
+                  dmgM = log.match(/\+([\d,]+)/);
             if (dmgM) recs.push({ name: (nameM ? nameM[1].trim() : "스킬").replace(/\[전의:\d+\]/g, ""), damage: dmgM[1], type: (typeM ? typeM[1] : "기타"), count: 1, isTurnSeparator: false });
             else if (log.includes('[방어]')) recs.push({ name: "방어", damage: "0", type: "방어", count: 1, isTurnSeparator: false });
         });

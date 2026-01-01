@@ -344,7 +344,7 @@ export const charData = {
         id: "anuberus_skill7",
         excludeFromBuffSearch: true,
         decimalPlaces: 2,
-              buffEffects: { "필살기뎀증": { max: 15 } }, 
+              buffEffects: { "필살기뎀증": { max: 27 } }, 
         buffDesc: "필살기 데미지 {0}% 증가 (최대 2중첩)", // 버프창 설명 추가
         hasCounter: true, // 카운터 버튼 필요
         counterRange: { min: 0, max: 2 }, // 최대 3중첩
