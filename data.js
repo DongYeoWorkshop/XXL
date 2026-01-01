@@ -216,7 +216,6 @@ export const charData = {
   },
   "baade": {
     title: "바드",
-    desc: "바드에 대한 설명입니다.",
     base: { "공격력": 546, "HP": 2288 },
  
     info: { "속성": 0, "포지션": "전사" },
@@ -259,7 +258,7 @@ export const charData = {
         icon: "icon/passive5.webp", 
         desc: "[각흔]을 보유한 적을 보통공격으로 타격 시 2턴 간 바드의 필살기 데미지 {0}% 증가", 
         calc: [{ max: 45 }] },
-            { id: "baade_stamp_passive", name: "각흔 추가타", icon: "images/sigilwebp/sigil_baade.webp", excludeFromBuffSearch: true, isUltExtra: true, damageDeal: [{ type: "추가공격", val: { max: 174.75 } }] }
+            { id: "baade_stamp_passive", name: "쇄강 파공격", icon: "images/sigilwebp/sigil_baade.webp", excludeFromBuffSearch: true, isUltExtra: true, damageDeal: [{ type: "추가공격", val: { max: 174.75 } }] }
           ]
         },
   "anuberus": {
@@ -356,7 +355,7 @@ export const charData = {
       },
       {
         id: "anuberus_stamp_passive",
-        name: "니히히~ 우리도 왔다! ",
+        name: "니히히~ 우리도 왔다!",
         icon: "images/sigilwebp/sigil_anuberus.webp",
         excludeFromBuffSearch: true,
         isUltExtra: true,
@@ -1075,11 +1074,11 @@ export const charData = {
         excludeFromBuffSearch: false,
         decimalPlaces: 2,
         buffEffects: { "공증": { max: 12, attributeMax: 18, targetAttribute: 1 } }, 
-        buffDesc: "공격력 {0}% 증가",
+        buffDesc: "공격력 {0}% (물속성 시 {2}%) 증가",
         name: "물속성 공격 강화Ⅳ", 
         icon: "icon/passive2.webp", 
         desc: "아군 전체의 공격력을 {0}% 증가시키며, 영향을 받은 아군이 물속성일 경우 추가로 {1}% 증가", 
-        calc: [{ max: 12 }, { max: 6 }] 
+        calc: [{ max: 12 }, { max: 6 }, { max: 18 }] 
       },
       {
         id: "tyrantino_skill4",
@@ -1359,12 +1358,12 @@ export const charData = {
         id: "tamrang_skill3",
         excludeFromBuffSearch: false,
         decimalPlaces: 2,
-        buffEffects: { "공증": { max: 12, attributeMax: 18, targetAttribute: 4 } },
-        buffDesc: "공격력 {0}% 증가",
+        buffEffects: { "공증": { max: 12, attributeMax: 18, targetAttribute: 0 } },
+        buffDesc: "공격력 {0}% (불속성 시 {2}%) 증가",
         name: "불속성 공격 강화Ⅳ", 
         icon: "icon/passive2.webp", 
         desc: "아군 전체의 공격력을 {0}% 증가시키며, 영향을 받은 아군이 불속성일 경우 추가로 {1}% 증가", 
-        calc: [{ max: 12 }, { max: 6 }] 
+        calc: [{ max: 12 }, { max: 6 }, { max: 18 }] 
       },
       {
         id: "tamrang_skill4",
@@ -1418,10 +1417,10 @@ export const charData = {
         id: "tamrang_skill8",
         name: "선향욕기 ",
         decimalPlaces: 2,
-        stampBuffEffects: { "뎀증": { fixed: 75 } }, 
+        stampBuffEffects: { "뎀증디버프": { fixed: 75 } }, 
         hasToggle: true,
         toggleType: "isAppliedStamped",        
-        buffDesc: "데미지 {0}% 증가(1회용)",       
+        buffDesc: "받는 데미지 {0}% 증가 디버프 부여(1회용)",       
         icon: "images/sigilwebp/sigil_tamrang.webp",
         excludeFromBuffSearch: false,
         isUltExtra: true,

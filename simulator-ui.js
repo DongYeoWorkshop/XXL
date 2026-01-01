@@ -23,7 +23,7 @@ export function getCharacterSelectorHtml(validChars, disabledIds, charData) {
 /**
  * 시뮬레이터 메인 레이아웃 HTML 생성
  */
-export function getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, savedTurns, savedIters) {
+export function getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, savedTurns, savedIters, useHitProb = false) {
     return `
         <div style="margin-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
             <button id="sim-back-to-list" style="background:#f0f0f0;border:1px solid #ddd;color:#666;cursor:pointer;font-size:0.8em;font-weight:bold;padding:5px 12px;border-radius:4px;">← 캐릭터 목록</button>
@@ -52,6 +52,17 @@ export function getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, sa
                     </div>
                 </div>
                 <div id="sim-custom-controls" style="display:none;background:#fff;border:1px solid #ddd;border-radius:12px;padding:15px;margin-bottom:15px;"><div id="sim-custom-list" style="display:flex;flex-wrap:wrap;gap:10px;"></div></div>
+                
+                ${useHitProb ? `
+                <div style="background:#fff; border:1px solid #ddd; border-radius:12px; padding:15px; margin-bottom:15px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8f9fa; padding:8px 5px; border-radius:8px; border:1px solid #eee; flex: 0 0 calc(33.33% - 10px); min-width:80px; box-sizing:border-box;">
+                            <span style="font-size:0.65em; color:#888; font-weight:bold; margin-bottom:4px; text-align:center; width:100%;">턴당 피격 확률 (%)</span>
+                            <input type="number" id="sim-hit-prob" min="0" max="100" value="${localStorage.getItem('sim_last_hit_prob') || '30'}" style="width:60px; padding:4px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none;">
+                        </div>
+                    </div>
+                </div>` : ''}
+
                 <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:15px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
                         <div style="display:flex; align-items: center; gap:8px;">
@@ -64,6 +75,7 @@ export function getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, sa
                         <input type="range" id="sim-turns" min="1" max="30" value="${savedTurns}" step="1" list="sim-turns-ticks" style="width:100%; cursor:pointer; accent-color: #6f42c1;">
                         <datalist id="sim-turns-ticks"><option value="1"></option><option value="5"></option><option value="10"></option><option value="15"></option><option value="20"></option><option value="25"></option><option value="30"></option></datalist>
                     </div>
+
                     <div id="sim-action-editor" style="display:none;background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:15px;max-height:280px;overflow-y:auto;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
                             <span style="font-weight:bold;color:#6f42c1;font-size:0.8em;">⚙️ 행동 직접 지정</span>
@@ -117,7 +129,7 @@ export function getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, sa
                     </div>
                     <div style="background:#fff; border:1px solid #eee; border-radius:12px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
                         <h4 style="margin:0 0 15px 0; color:#333;">분석 로그</h4>
-                        <div id="sim-log" style="max-height:250px; overflow-y:auto; font-family:'Cascadia Code', 'Courier New', monospace; font-size:0.85em; line-height:1.6; color:#4af626; padding:15px; background:#1a1a1a; border-radius:8px; border:1px solid #333; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></div>
+                        <div id="sim-log" style="max-height:400px; overflow-y:auto; font-family:'Cascadia Code', 'Courier New', monospace; font-size:0.85em; line-height:1.6; color:#4af626; padding:15px; background:#1a1a1a; border-radius:8px; border:1px solid #333; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></div>
                         <div id="sim-result-actions"></div>
                     </div>
                 </div>
@@ -144,37 +156,69 @@ export function showDetailedLogModal(resultToSave) {
         const turnDetails = (resultToSave.closestDetailedLogs || []).filter(d => d.t === t);
         const buffs = resultToSave.closestStateLogs ? resultToSave.closestStateLogs[t-1] : [];
         const buffListHtml = buffs.length > 0 ? buffs.map(b => `
-            <div style="display:flex; align-items:center; gap:4px; background:#fff; border:1px solid #ddd; padding:2px 6px; border-radius:4px;">
-                <img src="${b.icon}" style="width:14px; height:14px; object-fit:contain;">
-                <span>${b.name}: ${b.duration}</span>
-            </div>`).join('') : '없음';
+            <div style="display:flex; align-items:center; gap:3px; background:#fff; border:1px solid #ddd; padding:1px 5px; border-radius:4px; font-size: 0.9em;">
+                <img src="${b.icon}" style="width:12px; height:12px; object-fit:contain;">
+                <span>${b.name} / ${b.duration}</span>
+            </div>`).join('') : '<span style="color:#ccc;">-</span>';
 
         combinedLogsHtml += `
-            <div style="padding: 15px; border-bottom: 1px solid #eee; ${t % 2 === 0 ? 'background: #fcfcfc;' : ''}">
-                <div style="font-weight: bold; color: #6f42c1; margin-bottom: 10px; font-size: 1.1em;">[ ${t}턴 상세 분석 ]</div>
-                <div style="margin-bottom: 10px;">
-                    <div style="display:flex; flex-wrap:wrap; gap:5px; font-size: 0.8em; color: #444;">${buffListHtml}</div>
+            <div style="padding: 12px 15px; border-bottom: 1px solid #eee; ${t % 2 === 0 ? 'background: #fcfcfc;' : ''}">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                    <div style="font-weight: bold; color: #6f42c1; font-size: 1.1em; min-width: 40px;">${t}턴</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px; font-size: 0.75em; color: #666;">${buffListHtml}</div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 5px;">
+                <div style="display: flex; flex-direction: column; gap: 4px; padding-left: 5px; border-left: 2px solid #f0f0f0;">
                     ${turnDetails.map(d => {
-                        let color = '#333', bgColor = 'transparent', prefix = '•';
-                        if (d.type === 'debug') { color = '#d63384'; prefix = '🎲'; bgColor = '#fff0f6'; }
-                        else if (d.type === 'hit') { color = '#28a745'; prefix = '⚔️'; }
-                        else if (d.type === 'extra') { color = '#fd7e14'; prefix = '✨'; }
+                        if (!d.msg) return ''; // 빈 메시지면 아무것도 렌더링 안 함
+                        let color = '#333', bgColor = 'transparent';
+                        let msg = d.msg;
+                        let iconHtml = '';
+
+                        // ICON: 접두사가 있는 경우 이미지로 변환
+                        if (msg.startsWith('ICON:')) {
+                            const parts = msg.split('|');
+                            const iconPath = parts[0].replace('ICON:', '');
+                            msg = parts[1];
+                            iconHtml = `<img src="${iconPath}" style="width:16px; height:16px; border-radius:3px; margin-right:6px; object-fit:cover; border:1px solid #ddd; background:black;">`;
+                        } else {
+                            // 기본 이모티콘 유지
+                            let prefix = '•';
+                            if (d.type === 'hit') { color = '#28a745'; prefix = '⚔️'; }
+                            else if (d.type === 'extra') { color = '#fd7e14'; prefix = '✨'; }
+                            
+                            // 방어일 경우 불필요한 도트 제거
+                            if (msg === '[방어]') prefix = '';
+                            
+                            iconHtml = prefix ? `<span style="margin-right: 5px;">${prefix}</span>` : '';
+                        }
+
                         const statsInfo = d.statMsg ? `<span style="font-size: 0.9em; color: #666; margin-left: auto; padding-left: 15px; font-family: 'Cascadia Code', monospace; font-weight: bold;">${d.statMsg}</span>` : '';
-                        if (d.type === 'action') return `<div style="font-size: 0.85em; color: #666; background: #f8f9fa; padding: 5px 10px; border-radius: 4px; border-left: 3px solid #ccc; margin: 5px 0;">${d.msg}</div>`;
-                        return `<div style="display: flex; align-items: center; font-size: 0.85em; color: ${color}; background: ${bgColor}; padding: 3px 8px; border-radius: 4px; line-height: 1.4;"><span style="margin-right: 5px;">${prefix}</span><span>${d.msg}</span>${statsInfo}</div>`;
+                        
+                        if (d.type === 'action' || msg.includes('피격 발생')) {
+                            let actionColor = '#666', actionBorder = '#ccc';
+                            const lowerMsg = msg.toLowerCase();
+                            
+                            if (lowerMsg.includes('보통')) { actionColor = '#2e7d32'; actionBorder = '#a5d6a7'; }
+                            else if (lowerMsg.includes('필살')) { actionColor = '#c62828'; actionBorder = '#ef9a9a'; }
+                            else if (lowerMsg.includes('방어')) { actionColor = '#1565c0'; actionBorder = '#90caf9'; }
+                            else if (lowerMsg.includes('피격 발생')) { actionColor = '#6f42c1'; actionBorder = '#c3a6ff'; } // 보라색 추가
+                            
+                            return `<div style="display: flex; align-items: center; font-size: 0.85em; color: ${actionColor}; padding: 4px 12px; border-left: 4px solid ${actionBorder}; margin: 6px 0; font-weight: bold; background: transparent;">
+                                ${iconHtml}<span style="flex-shrink: 0;">${msg}</span>${statsInfo}
+                            </div>`;
+                        }
+                        return `<div style="display: flex; align-items: center; font-size: 0.85em; color: ${color}; padding: 3px 8px; border-radius: 4px; line-height: 1.4;">${iconHtml}<span>${msg}</span>${statsInfo}</div>`;
                     }).join('')}
                 </div>
             </div>`;
     }
 
-    const helpText = "Atk: 최종공격력 / Dmg: 공통뎀증 / N-Dmg: 평타뎀증 / U-Dmg: 필살뎀증 / T-Dmg: 발동뎀증 / Vul: 받뎀증 / A-Vul: 속성받뎀증";
+    const helpText = "Coef: 총 계수 / Atk: 최종공격력 / Dmg: 공통뎀증 / N-Dmg: 평타뎀증 / U-Dmg: 필살뎀증 / T-Dmg: 발동뎀증 / Vul: 받뎀증 / A-Vul: 속성받뎀증";
     content.innerHTML = `
         <div style="padding: 15px; background: #6f42c1; color: #fff; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
             <span>시뮬레이션 상세 데이터 분석</span>
             <div style="display:flex; align-items:center; gap:12px;">
-                <div style="width:20px; height:20px; border-radius:50%; border:1px solid #fff; display:flex; align-items:center; justify-content:center; cursor:help; font-size:12px;" title="${helpText}">i</div>
+                <div id="modal-info-icon" style="width:20px; height:20px; border-radius:50%; border:1px solid #fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">i</div>
                 <button id="modal-close" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
             </div>
         </div>
@@ -187,4 +231,16 @@ export function showDetailedLogModal(resultToSave) {
     document.body.appendChild(modal);
     modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
     content.querySelector('#modal-close').onclick = () => modal.remove();
+    
+    // [추가] 모달 내부 정보 아이콘 클릭 이벤트
+    const infoIcon = content.querySelector('#modal-info-icon');
+    if (infoIcon) {
+        infoIcon.onclick = (e) => {
+            e.stopPropagation();
+            import('./ui.js').then(ui => {
+                const control = ui.showSimpleTooltip(infoIcon, helpText);
+                setTimeout(() => control.remove(), 3000);
+            });
+        };
+    }
 }

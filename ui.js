@@ -179,7 +179,9 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
                 }
             }
 
-            const descs = formatBuffDescription(skill, buffCharId, currentId, savedStats, charData, currentSkillLevels, appliedBuffs, skillLevel, currentBaseAtk);
+            // [수정] 대상 속성 정보 추출하여 지능형 요약 설명 생성
+            const targetAttrIdx = charData[currentId]?.info?.속성;
+            const descs = formatBuffDescription(skill, buffCharId, currentId, savedStats, charData, currentSkillLevels, appliedBuffs, skillLevel, currentBaseAtk, targetAttrIdx);
             const descriptionText = descs.listDesc;
             let fullDescriptionText = descs.fullDesc;
 
@@ -190,7 +192,9 @@ export function renderAppliedBuffsDisplay(appliedBuffs, charData, currentId, cur
                 if (linkedSkill) {
                     tooltipSkill = linkedSkill;
                     const isStamp = !!(skill.isUltExtra || skill.hasStampEffect || skill.stampBuffEffects);
-                    fullDescriptionText = getDynamicDescFn(linkedSkill, skillLevel, isStamp);
+                    // [수정] 대상 속성 정보 전달
+                    const targetAttr = charData[currentId]?.info?.속성;
+                    fullDescriptionText = getDynamicDescFn(linkedSkill, skillLevel, isStamp, null, targetAttr);
                 }
             }
 

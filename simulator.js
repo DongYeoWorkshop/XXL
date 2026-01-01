@@ -16,21 +16,61 @@ function updateActionEditor(charId) {
     listContainer.innerHTML = '';
     const CD = (() => { const m = data.skills[1].desc?.match(/\(쿨타임\s*:\s*(\d+)턴\)/); return m ? parseInt(m[1]) : 3; })();
     
-    const getColor = (v) => v === 'ult' ? 'background:#ffebee;color:#c62828;border-color:#ef9a9a;' : (v === 'defend' ? 'background:#e3f2fd;color:#1565c0;border-color:#90caf9;' : 'background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;');
+    const actions = [
+        { id: 'normal', label: '보통', activeStyle: 'background:#e8f5e9; color:#2e7d32; border-color:#a5d6a7;' },
+        { id: 'ult', label: '필살', activeStyle: 'background:#ffebee; color:#c62828; border-color:#ef9a9a;' },
+        { id: 'defend', label: '방어', activeStyle: 'background:#e3f2fd; color:#1565c0; border-color:#90caf9;' }
+    ];
 
     for (let t = 1; t <= turns; t++) {
-        const def = pattern[t-1] || (t > 1 && (t - 1) % CD === 0 ? 'ult' : 'normal');
-        const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px;border-bottom:1px solid #eee;';
-        row.innerHTML = `<span style="font-size:0.75em;font-weight:bold;min-width:30px;color:#888;">${t}턴</span>
-            <select class="sim-action-select" style="flex:1; font-size:0.8em; padding:4px; border-radius:4px; border:1px solid #ddd; font-weight:bold; ${getColor(def)}">
-                <option value="normal" ${def==='normal'?'selected':''}>보통공격</option>
-                <option value="ult" ${def==='ult'?'selected':''}>필살기</option>
-                <option value="defend" ${def==='defend'?'selected':''}>방어</option>
-            </select>`;
+        const currentAction = pattern[t-1] || (t > 1 && (t - 1) % CD === 0 ? 'ult' : 'normal');
+        const row = document.createElement('div'); 
+        row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eee;';
+        
+        let html = `<span style="font-size:0.75em; font-weight:bold; min-width:30px; color:#888;">${t}턴</span>`;
+        html += `<div style="display:flex; flex:1; gap:4px;">`;
+        
+        actions.forEach(act => {
+            const isActive = currentAction === act.id;
+            const style = isActive ? act.activeStyle : 'background:#f5f5f5; color:#bbb; border-color:#ddd;';
+            html += `<button class="sim-action-btn" data-turn="${t-1}" data-value="${act.id}" style="flex:1; font-size:0.75em; padding:6px 0; border-radius:6px; border:1px solid; font-weight:bold; cursor:pointer; transition:all 0.1s; ${style}">${act.label}</button>`;
+        });
+        
+        html += `</div>`;
+        row.innerHTML = html;
         listContainer.appendChild(row);
     }
-    listContainer.querySelectorAll('.sim-action-select').forEach(sel => { 
-        sel.onchange = (e) => { e.target.style.cssText = `flex:1; font-size:0.8em; padding:4px; border-radius:4px; border:1px solid #ddd; font-weight:bold; ${getColor(e.target.value)}`; const p = Array.from(listContainer.querySelectorAll('.sim-action-select')).map(s => s.value); localStorage.setItem(`sim_pattern_${charId}`, JSON.stringify(p)); }; 
+
+    // 클릭 이벤트 리스너
+    listContainer.querySelectorAll('.sim-action-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const turnIdx = parseInt(btn.dataset.turn);
+            const newValue = btn.dataset.value;
+            
+            // 패턴 업데이트 및 저장
+            const currentPattern = Array.from({ length: turns }, (_, i) => {
+                const activeBtn = listContainer.querySelector(`.sim-action-btn[data-turn="${i}"][style*="background: rgb"]`) || 
+                                 listContainer.querySelector(`.sim-action-btn[data-turn="${i}"][style*="background:#"]`);
+                // 버튼 스타일로 체크하는 것보다 현재 클릭한 버튼을 반영한 새 배열을 만드는게 안전
+                let p = JSON.parse(localStorage.getItem(`sim_pattern_${charId}`)) || [];
+                // 만약 빈 배열이면 기본값들로 채워줘야함
+                if (p.length === 0) {
+                    for(let k=0; k<turns; k++) p[k] = (k > 0 && k % CD === 0) ? 'ult' : 'normal';
+                }
+                p[turnIdx] = newValue;
+                return p;
+            })[0]; // 로직상 첫번째 실행에서 완성됨
+
+            localStorage.setItem(`sim_pattern_${charId}`, JSON.stringify(currentPattern));
+            
+            // UI 즉시 갱신 (해당 턴의 버튼들만 다시 그리기)
+            const siblingBtns = btn.parentElement.querySelectorAll('.sim-action-btn');
+            siblingBtns.forEach(sBtn => {
+                const act = actions.find(a => a.id === sBtn.dataset.value);
+                const isActive = sBtn === btn;
+                sBtn.style.cssText = `flex:1; font-size:0.75em; padding:6px 0; border-radius:6px; border:1px solid; font-weight:bold; cursor:pointer; transition:all 0.1s; ${isActive ? act.activeStyle : 'background:#f5f5f5; color:#bbb; border-color:#ddd;'}`;
+            });
+        };
     });
 }
 
@@ -41,9 +81,11 @@ function renderAxisLabels(axisData, yMax, type = 'dist') {
     const yAxis = document.getElementById('sim-y-axis'), xAxis = document.getElementById('sim-x-axis'), grid = document.getElementById('sim-grid-lines');
     if (yAxis && yMax) {
         yAxis.innerHTML = type === 'dist' ? axisData.y.map(val => { const label = val >= 10000 ? (val/1000).toFixed(0)+'K' : val.toLocaleString(); const bp = (val / yMax) * 100; return `<div style="position:absolute;bottom:${bp}%;right:8px;transform:translateY(50%);white-space:nowrap;">${label}</div>`; }).join('') : '';
-        if (grid) grid.innerHTML = axisData.y.map(val => val === 0 ? '' : `<div style="position:absolute;bottom:${(val/yMax)*100}%;width:100%;border-top:1px dashed #f0f0f0;"></div>`).join('');
+        if (grid) grid.innerHTML = axisData.y.map(val => val === 0 ? '' : `<div style="position:absolute;bottom:${(val/yMax)*100}%;width:100%;border-top:1px dashed #e0e0e0;"></div>`).join('');
     }
-    if (xAxis) xAxis.innerHTML = axisData.x.map(val => `<div style="position:absolute;left:${val.pos}%;top:0;width:0;overflow:visible;"><div style="width:1px;height:6px;background:#ddd;position:absolute;top:0;left:0;"><div style="position:absolute;bottom:6px;left:0;width:1px;height:220px;border-left:1px dashed #f0f0f0;pointer-events:none;"></div></div><div style="transform:rotate(-60deg);transform-origin:right top;font-size:0.55em;color:#999;white-space:nowrap;margin-top:10px;text-align:right;width:100px;position:absolute;right:0;">${val.label}</div></div>`).join('');
+    if (xAxis) {
+        xAxis.innerHTML = axisData.x.map(val => `<div style="position:absolute;left:${val.pos}%;top:0;width:0;overflow:visible;"><div style="width:1px;height:6px;background:#ddd;position:absolute;top:0;left:0;"><div style="position:absolute;bottom:6px;left:0;width:1px;height:220px;border-left:1px dashed #f0f0f0;pointer-events:none;"></div></div><div style="transform:rotate(-60deg);transform-origin:right top;font-size:0.55em;color:#999;white-space:nowrap;margin-top:10px;text-align:right;width:100px;position:absolute;right:0;">${val.label}</div></div>`).join('');
+    }
 }
 
 function renderDamageLineChart(charId) {
@@ -51,11 +93,39 @@ function renderDamageLineChart(charId) {
     if (!container || !res) return;
     const turnData = res.turnData, maxCum = Math.max(...turnData.map(d => d.cumulative)), maxTrn = Math.max(...turnData.map(d => d.dmg)), turnCount = turnData.length;
     let html = `<svg width="100%" height="100%" viewBox="0 0 400 220" preserveAspectRatio="none" style="overflow:visible;"><defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6f42c1" stop-opacity="0.3"/><stop offset="100%" stop-color="#6f42c1" stop-opacity="0"/></linearGradient></defs>`;
-    turnData.forEach((d, i) => { const x = (i / (turnCount - 1)) * 400; const h = maxTrn ? (d.dmg / maxTrn) * 110 : 0; html += `<rect class="svg-bar-grow" x="${x-2}" y="${220-h}" width="4" height="${h}" fill="#e0e0e0" rx="1" />`; });
-    let areaPath = `M 0,220 `; turnData.forEach((d, i) => { const x = (i / (turnCount - 1)) * 400; const y = 220 - (d.cumulative / maxCum) * 220; areaPath += `L ${x},${y} `; }); areaPath += `L 400,220 Z`; html += `<path class="svg-bar-grow" d="${areaPath}" fill="url(#areaGrad)" />`;
-    let pts = ""; turnData.forEach((d, i) => { const x = (i / (turnCount - 1)) * 400; const y = 220 - (d.cumulative / maxCum) * 220; pts += (i === 0 ? "M " : "L ") + `${x},${y} `; }); html += `<path class="svg-bar-grow" d="${pts}" fill="none" stroke="#6f42c1" stroke-width="3" stroke-opacity="0.5" />`;
+    
+    turnData.forEach((d, i) => { 
+        const x = turnCount > 1 ? (i / (turnCount - 1)) * 400 : 0; 
+        const h = maxTrn > 0 ? (d.dmg / maxTrn) * 110 : 0; 
+        html += `<rect class="svg-bar-grow" x="${x-2}" y="${220-h}" width="4" height="${h}" fill="#e0e0e0" rx="1" />`; 
+    });
+    
+    let areaPath = `M 0,220 `; 
+    turnData.forEach((d, i) => { 
+        const x = turnCount > 1 ? (i / (turnCount - 1)) * 400 : 0; 
+        const y = maxCum > 0 ? 220 - (d.cumulative / maxCum) * 220 : 220; 
+        areaPath += `L ${x},${y} `; 
+    }); 
+    areaPath += `L ${turnCount > 1 ? 400 : 0},220 Z`; 
+    html += `<path class="svg-bar-grow" d="${areaPath}" fill="url(#areaGrad)" />`;
+    
+    let pts = ""; 
+    turnData.forEach((d, i) => { 
+        const x = turnCount > 1 ? (i / (turnCount - 1)) * 400 : 0; 
+        const y = maxCum > 0 ? 220 - (d.cumulative / maxCum) * 220 : 220; 
+        pts += (i === 0 ? "M " : "L ") + `${x},${y} `; 
+    }); 
+    html += `<path class="svg-bar-grow" d="${pts}" fill="none" stroke="#6f42c1" stroke-width="3" stroke-opacity="0.5" />`;
+    
     container.innerHTML = html + `</svg>`;
-    const turnLabels = []; for (let i = 0; i < turnCount; i++) { const turnNum = i + 1; if (i === 0 || (turnCount >= 30 ? turnNum % 5 === 0 : (turnCount >= 16 ? turnNum % 2 === 0 : true))) turnLabels.push({ pos: (i / (turnCount - 1)) * 100, label: turnNum + '턴' }); }
+    const turnLabels = []; 
+    for (let i = 0; i < turnCount; i++) { 
+        const turnNum = i + 1; 
+        if (i === 0 || (turnCount >= 30 ? turnNum % 5 === 0 : (turnCount >= 16 ? turnNum % 2 === 0 : true))) {
+            const pos = turnCount > 1 ? (i / (turnCount - 1)) * 100 : 0;
+            turnLabels.push({ pos, label: turnNum + '턴' }); 
+        }
+    }
     renderAxisLabels({ y: [maxCum, Math.floor(maxCum / 2), 0], x: turnLabels }, maxCum, 'line');
 }
 
@@ -69,7 +139,8 @@ export function initSimulator() {
 
 function renderCharacterSelector() {
     localStorage.removeItem('sim_last_char_id');
-    const container = document.getElementById('simulator-content'), validChars = Object.keys(charData).filter(id => charData[id].base && id !== 'hero');
+    const container = document.getElementById('simulator-content'), 
+          validChars = Object.keys(charData).filter(id => charData[id].base && id !== 'hero' && id !== 'test_dummy');
     const disabledIds = constants.disabledSimChars;
     container.innerHTML = getCharacterSelectorHtml(validChars, disabledIds, charData);
     container.querySelectorAll('.sim-char-pick-item').forEach(item => { if (item.style.pointerEvents !== 'none') item.onclick = () => { localStorage.setItem('sim_last_char_id', item.dataset.id); renderSimulatorUI(item.dataset.id); }; });
@@ -98,14 +169,15 @@ function renderSimulatorUI(charId) {
     const brVal = parseInt(stats.s1||0), brText = (brVal < 5) ? `0성 ${brVal}단계` : (brVal < 15) ? `1성 ${brVal-5}단계` : (brVal < 30) ? `2성 ${brVal-15}단계` : (brVal < 50) ? `3성 ${brVal-30}단계` : (brVal < 75) ? `4성 ${brVal-50}단계` : "5성";
     const hasMulti = data.skills.some(s => s.isMultiTarget || (s.damageDeal && s.damageDeal.some(d => d.isMultiTarget || d.stampIsMultiTarget)));
     const savedTurns = localStorage.getItem('sim_last_turns') || "10", savedIters = localStorage.getItem('sim_last_iters') || "100";
+    const useHitProb = sData.useHitProb || false;
 
-    container.innerHTML = getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, savedTurns, savedIters);
+    container.innerHTML = getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, savedTurns, savedIters, useHitProb);
 
     renderSimAttributePicker(charId);
     container.querySelector('.sim-char-profile-img').onclick = () => document.querySelector(`.main-image[data-id="${charId}"]`)?.click();
     const infoIcon = document.getElementById('sim-info-icon');
     if (infoIcon) { 
-        const tooltipText = sData.tooltipDesc || "외부 요인은 방어를 사용하지 않고 3턴마다 필살기를 사용합니다.";
+        const tooltipText = sData.tooltipDesc || "아군은 3턴의 필살기를 가지며 방어를 사용하지 않는다고 가정합니다.";
         infoIcon.onclick = (e) => { e.stopPropagation(); import('./ui.js').then(ui => { const control = ui.showSimpleTooltip(infoIcon, tooltipText); setTimeout(() => control.remove(), 3000); }); };
     }
 
@@ -124,32 +196,125 @@ function renderSimulatorUI(charId) {
         });
     }
 
-    const savedRes = localStorage.getItem(`sim_last_result_${charId}`); if (savedRes) { try { const res = JSON.parse(savedRes); document.getElementById('simulation-result-area').style.display='block'; document.getElementById('sim-empty-msg').style.display='none'; document.getElementById('sim-min-dmg').innerText=res.min; document.getElementById('sim-avg-dmg').innerText=res.avg; document.getElementById('sim-max-dmg').innerText=res.max; document.getElementById('sim-log').innerHTML=res.logHtml; renderAxisLabels(res.axisData, res.yMax, 'dist'); renderActionButtons(charId, res, stats); } catch(e) {} }
+    const savedRes = localStorage.getItem(`sim_last_result_${charId}`); 
+    if (savedRes) { 
+        try { 
+            const res = JSON.parse(savedRes); 
+            document.getElementById('simulation-result-area').style.display='block'; 
+            document.getElementById('sim-empty-msg').style.display='none'; 
+            document.getElementById('sim-min-dmg').innerText=res.min; 
+            document.getElementById('sim-avg-dmg').innerText=res.avg; 
+            document.getElementById('sim-max-dmg').innerText=res.max; 
+            document.getElementById('sim-log').innerHTML=res.logHtml; 
+            
+            // [추가] 그래프 막대 복구
+            const distGraph = document.getElementById('sim-dist-graph');
+            if (distGraph && res.graphData) {
+                distGraph.innerHTML = res.graphData.map(b => `<div class="bar-grow-item" style="flex:1; height:${b.h}%; background:${b.isAvg ? '#6f42c1' : '#e0e0e0'};"></div>`).join('');
+            }
+            // [추가] 축 라벨 복구
+            renderAxisLabels(res.axisData, res.yMax, 'dist'); 
+            renderActionButtons(charId, res, stats); 
+        } catch(e) { console.error('결과 복구 실패:', e); } 
+    }
     document.getElementById('sim-turns').oninput = (e) => { document.getElementById('sim-turns-val').innerText = e.target.value; localStorage.setItem('sim_last_turns', e.target.value); updateActionEditor(charId); };
     document.getElementById('sim-iterations').onchange = (e) => localStorage.setItem('sim_last_iters', e.target.value);
+    
+    const hitProbInput = document.getElementById('sim-hit-prob');
+    if (hitProbInput) hitProbInput.onchange = (e) => localStorage.setItem('sim_last_hit_prob', e.target.value);
+
     document.getElementById('sim-back-to-list').onclick = () => renderCharacterSelector();
     if (hasMulti) document.getElementById('sim-target-btn').onclick = (e) => { let c = (parseInt(e.target.innerText)%5)+1; e.target.innerText=c; localStorage.setItem(`sim_last_target_${charId}`,c); };
     document.getElementById('sim-edit-actions-btn').onclick = () => { const ed = document.getElementById('sim-action-editor'); ed.style.display = ed.style.display==='block' ? 'none' : 'block'; if(ed.style.display==='block') updateActionEditor(charId); };
     document.getElementById('sim-reset-pattern-btn').onclick = () => { if (confirm('패턴을 초기화하시겠습니까?')) { localStorage.removeItem(`sim_pattern_${charId}`); updateActionEditor(charId); } };
     document.getElementById('run-simulation-btn').onclick = () => runSimulation(charId);
+
+    // [추가] 분포도 / 딜 그래프 전환 버튼 이벤트 연결
+    const btnDist = document.getElementById('btn-show-dist');
+    const btnDmg = document.getElementById('btn-show-dmg');
+    const distGraph = document.getElementById('sim-dist-graph');
+    const lineGraph = document.getElementById('sim-line-graph');
+
+    if (btnDist && btnDmg) {
+        btnDist.onclick = () => {
+            btnDist.style.background = '#6f42c1'; btnDist.style.color = 'white';
+            btnDmg.style.background = '#f0f0f0'; btnDmg.style.color = '#666';
+            if (distGraph) distGraph.style.display = 'flex';
+            if (lineGraph) lineGraph.style.display = 'none';
+            
+            // [추가] 분포도로 돌아갈 때 저장된 최신 결과로 축 라벨 갱신
+            const lastRes = JSON.parse(localStorage.getItem(`sim_last_result_${charId}`));
+            if (lastRes && lastRes.axisData) {
+                renderAxisLabels(lastRes.axisData, lastRes.yMax, 'dist');
+            }
+        };
+        btnDmg.onclick = () => {
+            btnDmg.style.background = '#6f42c1'; btnDmg.style.color = 'white';
+            btnDist.style.background = '#f0f0f0'; btnDist.style.color = '#666';
+            if (distGraph) distGraph.style.display = 'none';
+            if (lineGraph) { 
+                lineGraph.style.display = 'block'; 
+                renderDamageLineChart(charId); 
+            }
+        };
+    }
 }
 
 function runSimulation(charId) {
-    const data = charData[charId], sData = simCharData[charId] || {}, stats = state.savedStats[charId] || {};
-    const turns = parseInt(document.getElementById('sim-turns').value), iterations = parseInt(document.getElementById('sim-iterations').value);
-    const targetCount = parseInt(document.getElementById('sim-target-btn')?.innerText || "1");
-    const enemyAttrIdx = parseInt(localStorage.getItem(`sim_last_enemy_attr_${charId}`) || String(data.info?.속성 ?? 0));
-    
-    const customValues = {}; if (sData.customControls) sData.customControls.forEach(c => { const v = localStorage.getItem(`sim_custom_${charId}_${c.id}`); customValues[c.id] = c.type === 'toggle' ? (v === 'true') : (parseInt(v) || c.initial || 0); });
+    const runBtn = document.getElementById('run-simulation-btn');
+    if (!runBtn) return;
 
-    const result = runSimulationCore({ charId, charData: data, sData, stats, turns, iterations, targetCount, manualPattern: JSON.parse(localStorage.getItem(`sim_pattern_${charId}`)) || [], enemyAttrIdx, customValues, defaultGrowthRate: constants.defaultGrowth });
-    
-    localStorage.setItem(`sim_last_result_${charId}`, JSON.stringify(result));
-    document.getElementById('sim-min-dmg').innerText = result.min; document.getElementById('sim-avg-dmg').innerText = result.avg; document.getElementById('sim-max-dmg').innerText = result.max; document.getElementById('sim-log').innerHTML = result.logHtml;
-    document.getElementById('simulation-result-area').style.display = 'block'; document.getElementById('sim-empty-msg').style.display = 'none';
-    renderActionButtons(charId, result, stats);
-    const distGraph = document.getElementById('sim-dist-graph'); distGraph.innerHTML = result.graphData.map(b => `<div class="bar-grow-item" style="flex:1; height:${b.h}%; background:${b.isAvg ? '#6f42c1' : '#e0e0e0'};"></div>`).join('');
-    renderAxisLabels(result.axisData || { y: [100, 50, 0], x: [] }, 100, 'dist');
+    // [추가] 로딩 상태 표시
+    const originalText = runBtn.innerHTML;
+    runBtn.disabled = true;
+    runBtn.innerHTML = '<span class="spinner"></span> 분석 중...';
+
+    // 브라우저가 스피너를 렌더링할 시간을 준 뒤 계산 시작
+    setTimeout(() => {
+        const data = charData[charId], sData = simCharData[charId] || {}, stats = state.savedStats[charId] || {};
+        const turns = parseInt(document.getElementById('sim-turns').value), iterations = parseInt(document.getElementById('sim-iterations').value);
+        const targetCount = parseInt(document.getElementById('sim-target-btn')?.innerText || "1");
+        const enemyAttrIdx = parseInt(localStorage.getItem(`sim_last_enemy_attr_${charId}`) || String(data.info?.속성 ?? 0));
+        
+        // [추가] 피격 확률 읽기 (기본값 30)
+        const hitProb = sData.useHitProb ? parseInt(localStorage.getItem('sim_last_hit_prob') || "30") : 0;
+
+        const customValues = {}; if (sData.customControls) sData.customControls.forEach(c => { const v = localStorage.getItem(`sim_custom_${charId}_${c.id}`); customValues[c.id] = c.type === 'toggle' ? (v === 'true') : (parseInt(v) || c.initial || 0); });
+
+        const result = runSimulationCore({ charId, charData: data, sData, stats, turns, iterations, targetCount, manualPattern: JSON.parse(localStorage.getItem(`sim_pattern_${charId}`)) || [], enemyAttrIdx, customValues, defaultGrowthRate: constants.defaultGrowth, hitProb });
+        
+        localStorage.setItem(`sim_last_result_${charId}`, JSON.stringify(result));
+        
+        // [추가] 분석 시작 시 기존 그래프 및 버튼 상태를 '분포도' 기준으로 리셋
+        const btnDist = document.getElementById('btn-show-dist');
+        const btnDmg = document.getElementById('btn-show-dmg');
+        if (btnDist && btnDmg) {
+            btnDist.style.background = '#6f42c1'; btnDist.style.color = 'white';
+            btnDmg.style.background = '#f0f0f0'; btnDmg.style.color = '#666';
+        }
+        const distGraph = document.getElementById('sim-dist-graph'); 
+        const lineGraph = document.getElementById('sim-line-graph');
+        if (distGraph) distGraph.style.display = 'flex';
+        if (lineGraph) lineGraph.style.display = 'none';
+
+        document.getElementById('simulation-result-area').style.display = 'block';
+        document.getElementById('sim-min-dmg').innerText = result.min; 
+        document.getElementById('sim-avg-dmg').innerText = result.avg; 
+        document.getElementById('sim-max-dmg').innerText = result.max; 
+        document.getElementById('sim-log').innerHTML = result.logHtml;
+        
+        document.getElementById('sim-empty-msg').style.display = 'none';
+        renderActionButtons(charId, result, stats);
+        
+        distGraph.innerHTML = result.graphData.map(b => `<div class="bar-grow-item" style="flex:1; height:${b.h}%; background:${b.isAvg ? '#6f42c1' : '#e0e0e0'};"></div>`).join('');
+        
+        // 새 분석 결과에 맞는 축 라벨 렌더링
+        renderAxisLabels(result.axisData, result.yMax, 'dist');
+
+        // [추가] 로딩 상태 해제
+        runBtn.disabled = false;
+        runBtn.innerHTML = originalText;
+    }, 10);
 }
 
 function renderActionButtons(charId, result, stats) {

@@ -11,11 +11,25 @@ export function getSkillMultiplier(level, startVal = 0.6) {
 /**
  * 스킬 데이터를 기반으로 동적 설명문을 생성합니다.
  */
-export function getDynamicDesc(skill, level, isStamped, descriptionToFormat = null) {
+export function getDynamicDesc(skill, level, isStamped, descriptionToFormat = null, targetAttrIdx = null) {
     if (!skill.calc || (!skill.desc && !descriptionToFormat)) return descriptionToFormat || skill.desc;
 
     const safeLevel = Math.max(1, Math.min(level, 10));
     let desc = descriptionToFormat || ((isStamped && skill.stampDesc) ? skill.stampDesc : skill.desc);
+
+    // [추가] 속성 기반 수치 선택 로직 (설명문에 하나만 표시하기 위함)
+    const isTargetAttr = (targetAttrIdx !== null && skill.buffEffects?.공증?.targetAttribute === targetAttrIdx);
+    
+    if (desc.includes('{2}')) {
+        if (isTargetAttr) {
+            // 속성 일치 시: {0}과 괄호 시작 부분만 지우고 {2}는 남김
+            desc = desc.replace(/\{0\}%?\s*\(.*?(?=\{2\})/, ''); 
+            desc = desc.replace(/\)\s*/, ' '); // 닫는 괄호를 지우고 공백 한 칸 삽입
+        } else {
+            // 속성 불일치 시: 괄호 부분 전체 제거
+            desc = desc.replace(/\s*\(.*?\{2\}.*?\)/, '');
+        }
+    }
 
     skill.calc.forEach((formula, idx) => {
         let val = 0;

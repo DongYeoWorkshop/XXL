@@ -70,94 +70,30 @@ export function removeAppliedBuff(charId, skillId, appliedBuffs) {
 /**
  * 버프 설명문에 실제 가산 수치를 주입하는 범용 함수
  */
-export function formatBuffDescription(skill, buffCharId, currentId, savedStats, charData, currentSkillLevels, appliedBuffs, skillLevel, currentBaseAtk = 0) {
+export function formatBuffDescription(skill, buffCharId, currentId, savedStats, charData, currentSkillLevels, appliedBuffs, skillLevel, currentBaseAtk = 0, targetAttrIdx = null) {
     // [수정] 설명문에는 실제 캐릭터의 도장 상태를 반영하여 수치 표시
-    // 실제 적용 여부(토글)는 UI의 투명도(buff-off-state)로 구분함
-    let descriptionText = "";
-    
-    // [추가] 도장 여부에 따른 수치 결정
     const isOwnerUltStamped = (buffCharId === currentId) 
         ? (document.getElementById(`stamp-check-${currentId}`)?.checked || false)
         : (savedStats[buffCharId]?.stamp || false);
 
-    // [추가] 수치 변형을 위한 스킬 데이터 복제
     let skillToFormat = JSON.parse(JSON.stringify(skill));
     
-    // [추가] 커스텀 컨트롤 값 연동 처리
+    // 커스텀 컨트롤 값 연동 로직...
     if (skillToFormat.customLink && savedStats[currentId]?.customValues) {
         const customVal = savedStats[currentId].customValues[skillToFormat.customLink.id] ?? (skillToFormat.customLink.initial || 0);
-        
-        if (skillToFormat.customLink.multiply) {
-            // 모든 calc 수치에 커스텀 값(스택) 곱하기
-            if (skillToFormat.calc) {
-                skillToFormat.calc = skillToFormat.calc.map(c => {
-                    const newC = { ...c };
-                    if (newC.fixed !== undefined) newC.fixed *= customVal;
-                    if (newC.max !== undefined) newC.max *= customVal;
-                    if (newC.stampFixed !== undefined) newC.stampFixed *= customVal;
-                    if (newC.stampMax !== undefined) newC.stampMax *= customVal;
-                    return newC;
-                });
-            }
-        } else if (skillToFormat.customLink.condition === 'eq') {
-            // 조건 미충족 시 모든 수치를 0으로 (또는 비활성화 표시)
-            if (customVal !== skillToFormat.customLink.value && skillToFormat.calc) {
-                skillToFormat.calc = skillToFormat.calc.map(c => {
-                    const newC = { ...c };
-                    if (newC.fixed !== undefined) newC.fixed = 0;
-                    if (newC.max !== undefined) newC.max = 0;
-                    if (newC.stampFixed !== undefined) newC.stampFixed = 0;
-                    if (newC.stampMax !== undefined) newC.stampMax = 0;
-                    return newC;
-                });
-            }
+        if (skillToFormat.customLink.multiply && skillToFormat.calc) {
+            skillToFormat.calc = skillToFormat.calc.map(c => {
+                const newC = { ...c };
+                if (newC.fixed !== undefined) newC.fixed *= customVal;
+                if (newC.max !== undefined) newC.max *= customVal;
+                return newC;
+            });
         }
     }
 
-    // [수정] 속성별 차등 수치 반영 (목록용과 툴팁용 분리)
-    let listDesc = "";
-    let fullDesc = "";
-
-    // 1. 목록 표시용 스킬 객체 (합산 수치 적용)
-    let skillForList = JSON.parse(JSON.stringify(skillToFormat));
-    
-    // 2. 툴팁 표시용 스킬 객체 (설명 형식에 따라 조건부 적용)
-    let skillForTooltip = JSON.parse(JSON.stringify(skillToFormat));
-
-    if (skill.buffEffects) {
-        for (const key in skill.buffEffects) {
-            const effect = skill.buffEffects[key];
-            if (typeof effect === 'object' && effect.targetAttribute !== undefined) {
-                const targetChar = charData[currentId];
-                const currentAttr = targetChar?.info?.속성;
-                
-                // 목록용: 조건 충족 시 무조건 합산 수치(attributeMax)로 변경 (예: "공격력 18% 증가")
-                if (currentAttr === effect.targetAttribute && effect.attributeMax !== undefined) {
-                    if (skillForList.calc && skillForList.calc[0]) {
-                        skillForList.calc[0].max = effect.attributeMax;
-                    }
-                    
-                    // 툴팁용: 설명문에 {1}이 없는 경우에만 합산 수치로 변경
-                    // {1}이 있다면 "기본 {0}% + 추가 {1}%" 구조이므로 기본 수치(max)를 유지해야 함
-                    if (!skill.desc.includes("{1}")) {
-                        if (skillForTooltip.calc && skillForTooltip.calc[0]) {
-                            skillForTooltip.calc[0].max = effect.attributeMax;
-                        }
-                    }
-                } else {
-                    // 조건 미충족 시 기본 수치(max) 사용 (이미 기본값이므로 변경 불필요하나 명시적 처리 가능)
-                     if (effect.max !== undefined) {
-                        if (skillForList.calc && skillForList.calc[0]) skillForList.calc[0].max = effect.max;
-                        if (skillForTooltip.calc && skillForTooltip.calc[0]) skillForTooltip.calc[0].max = effect.max;
-                    }
-                }
-                break; 
-            }
-        }
-    }
-    
-    listDesc = getDynamicDesc(skillForList, skillLevel, isOwnerUltStamped, skillForList.buffDesc);
-    fullDesc = getDynamicDesc(skillForTooltip, skillLevel, isOwnerUltStamped, skillForTooltip.desc);
+    // [개선] formatter.js의 지능형 포맷팅 기능을 활용하여 속성별 수치 하나만 노출
+    const listDesc = getDynamicDesc(skillToFormat, skillLevel, isOwnerUltStamped, skillToFormat.buffDesc, targetAttrIdx);
+    const fullDesc = getDynamicDesc(skillToFormat, skillLevel, isOwnerUltStamped, skillToFormat.desc, targetAttrIdx);
 
     if (skillToFormat.ratioEffects && skillToFormat.ratioEffects["고정공증"] && skillToFormat.ratioEffects["고정공증"].from === "기초공격력") {
         const ratioData = skillToFormat.ratioEffects["고정공증"];

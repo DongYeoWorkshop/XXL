@@ -97,7 +97,11 @@ function setupHeaderListeners() {
             state.currentId = null;
             localStorage.removeItem('lastSelectedCharId');
             const contentDisplay = document.getElementById('content-display');
-            if (contentDisplay) { contentDisplay.classList.remove('hero-mode'); contentDisplay.classList.add('landing-mode'); }
+            if (contentDisplay) { 
+                contentDisplay.classList.remove('hero-mode'); 
+                contentDisplay.classList.add('landing-mode'); 
+                contentDisplay.style.backgroundImage = ''; // 배경 제거
+            }
             hideAllSections();
             document.getElementById('landing-page').style.display = 'block';
             document.querySelector('.main-content-column').style.display = 'block';
@@ -169,9 +173,6 @@ export function handleImageClick(img) {
     hideAllSections();
 
     if (id === 'hero') {
-        const existingFavBtn = contentDisplay?.querySelector('.char-fav-btn');
-        if (existingFavBtn) existingFavBtn.remove();
-        
         if (contentDisplay) contentDisplay.style.backgroundImage = ''; // 배경 제거
         contentDisplay.className = 'hero-mode'; 
         forceMainHeader();
@@ -183,9 +184,6 @@ export function handleImageClick(img) {
             if (saved) window.scrollTo(0, parseInt(saved));
         });
     } else if (id === 'simulator') {
-        const existingFavBtn = contentDisplay?.querySelector('.char-fav-btn');
-        if (existingFavBtn) existingFavBtn.remove();
-
         if (contentDisplay) contentDisplay.style.backgroundImage = ''; // 배경 제거
         contentDisplay.className = 'hero-mode';
         document.querySelector('.main-content-column').style.setProperty('display', 'block', 'important');
@@ -217,27 +215,38 @@ export function handleImageClick(img) {
         // [추가] 배경 이미지 적용 헬퍼 함수
         const applyBackground = (charId, favStatus) => {
             if (!contentDisplay) return;
+
             if (favStatus) {
-                const config = backgroundConfigs[charId] || backgroundConfigs["default"];
-                // CSS(css/폴더) 기준에서 본 경로로 수정
+                // 기본값과 캐릭터 설정을 병합 (캐릭터 설정에 없으면 기본값 사용)
+                const def = backgroundConfigs["default"];
+                const spec = backgroundConfigs[charId] || {};
+                
+                const config = {
+                    mobile: { ...def.mobile, ...(spec.mobile || {}) },
+                    tablet: { ...def.tablet, ...(spec.tablet || {}) },
+                    pc:     { ...def.pc,     ...(spec.pc || {})     }
+                };
+
                 const imgUrl = `url('../images/background/${charId}.PNG')`;
                 
-                // 이미지 존재 여부 확인 후 CSS 변수로 전달
                 const tempImg = new Image();
                 tempImg.onload = () => { 
                     contentDisplay.style.setProperty('--bg-url', imgUrl);
                     
-                    // 모바일 설정 (600px 이하)
+                    // 모바일/공통 설정 주입
+                    contentDisplay.style.setProperty('--bg-align-mob', config.mobile.align);
                     contentDisplay.style.setProperty('--bg-x-mob', config.mobile.xPos);
                     contentDisplay.style.setProperty('--bg-y-mob', config.mobile.yPos);
                     contentDisplay.style.setProperty('--bg-size-mob', config.mobile.size);
                     
-                    // 태블릿 설정 (601px ~ 1099px)
+                    // 태블릿 설정 주입
+                    contentDisplay.style.setProperty('--bg-align-tab', config.tablet.align);
                     contentDisplay.style.setProperty('--bg-x-tab', config.tablet.xPos);
                     contentDisplay.style.setProperty('--bg-y-tab', config.tablet.yPos);
                     contentDisplay.style.setProperty('--bg-size-tab', config.tablet.size);
                     
-                    // PC 설정 (1100px 이상)
+                    // PC 설정 주입
+                    contentDisplay.style.setProperty('--bg-align-pc', config.pc.align);
                     contentDisplay.style.setProperty('--bg-x-pc', config.pc.xPos);
                     contentDisplay.style.setProperty('--bg-y-pc', config.pc.yPos);
                     contentDisplay.style.setProperty('--bg-size-pc', config.pc.size);
@@ -245,7 +254,6 @@ export function handleImageClick(img) {
                 tempImg.onerror = () => { 
                     contentDisplay.style.setProperty('--bg-url', 'none'); 
                 };
-                // 존재 여부 체크는 루트 기준 경로 유지
                 tempImg.src = `images/background/${charId}.PNG`;
             } else {
                 contentDisplay.style.setProperty('--bg-url', 'none');

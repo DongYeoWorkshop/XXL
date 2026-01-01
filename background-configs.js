@@ -4,22 +4,22 @@
 export const backgroundConfigs = {
     // 기본값
     "default": {
-        mobile:  { xPos: "center", yPos: "0px", size: "cover" },
-        tablet:  { xPos: "center", yPos: "0px", size: "cover" }, // 601px ~ 1099px
-        pc:      { xPos: "80%",   yPos: "0px", size: "70%" }  // 1100px 이상
+        mobile:  { align: "center", xPos: "0px", yPos: "0px", size: "950px auto" },
+        tablet:  { align: "center", xPos: "0px", yPos: "0px", size: "800px auto" },
+        pc:      { align: "center", xPos: "0px", yPos: "0px", size: "1000px auto" }
     },
 
-    // 리카노 설정 예시
+    // 리카노 설정 (오른쪽 정렬)
     "rikano": {
-        mobile:  { xPos: "60%", yPos: "-40px", size: "cover" },
-        tablet:  { xPos: "center", yPos: "-40px", size: "cover" },
-        pc:      { xPos: "80%",   yPos: "-130px", size: "70%" }
+        mobile:  { align: "right", xPos: "-150px", yPos: "00px" },
+        tablet:  { align: "right", xPos: "-100px", yPos: "50px", size: "900px auto" },
+        pc:      { align: "right", xPos: "-100px", yPos: "0px" }
     },
 
-    // 파미도 설정 예시
+    // 파미도 설정 (오른쪽 정렬)
     "famido": {
-        mobile:  { xPos: "30%", yPos: "0px", size: "cover" },
-        tablet:  { xPos: "-90%",   yPos: "0px", size: "cover" },
-        pc:      { xPos: "120%",   yPos: "-110px", size: "70%" }
+        mobile:  { align: "right", xPos: "-350px", yPos: "100px" },
+        tablet:  { align: "right", xPos: "-300px", yPos: "150px", size: "900px auto" },
+        pc:      { align: "right", xPos: "-250px", yPos: "00px" }
     }
 };
