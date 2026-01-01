@@ -1,6 +1,7 @@
 // simulator-engine.js
 import { calculateDamage, calculateBaseStats, assembleFinalStats } from './calculations.js';
 import { getSkillMultiplier } from './formatter.js';
+import { commonControls } from './simulator-common.js';
 
 /**
  * 버프 상태 표시용 포매터
@@ -104,37 +105,46 @@ export function runSimulationCore(context) {
         let cd = { ult: ultCD };
         const logs = [], perTurnDmg = [], stateLogs = [], detailedLogs = [];
 
-        const makeCtx = (tVal, isUltVal, dLogsArray, isHitVal, isDefendVal) => ({
-            t: tVal, turns, charId, charData, stats, simState, 
-            isUlt: isUltVal, targetCount, isHit: isHitVal, isDefend: isDefendVal,
-            customValues: context.customValues,
-            debugLogs: dLogsArray, 
-            getVal: (idx, key, stamp) => getSkillValue(idx, key, stamp || (isUltVal && stats.stamp)),
-            log: (idx, res, chance, dur, skipPush = false) => {
-                let sName = "스킬", sIcon = "icon/main.png", label = "";
-                if (typeof idx === 'number') {
-                    const s = charData.skills[idx];
-                    sName = s?.name || "알 수 없음";
-                    sIcon = s?.icon || "icon/main.png";
-                    label = idx === 1 ? "필살기" : idx >= 7 ? "도장" : `패시브${idx-1}`;
-                } else if (typeof idx === 'string') {
-                    sName = idx; 
-                    if (sName === "피격") { sIcon = "icon/simul.png"; label = ""; } 
-                    else if (sName === "아군공격") { sIcon = "icon/compe.png"; label = ""; }
+        const makeCtx = (tVal, isUltVal, dLogsArray, isHitVal, isDefendVal) => {
+            // 해당 캐릭터의 sData(simCharData[id])에 커스텀 판정 함수가 있는지 확인
+            // 없으면 공통 설정(ally_ult_count)에 정의된 기본 주기를 사용
+            const isAllyUlt = sData && typeof sData.isAllyUltTurn === 'function' 
+                ? sData.isAllyUltTurn(tVal) 
+                : commonControls.ally_ult_count.isTurn(tVal);
+
+            return {
+                t: tVal, turns, charId, charData, stats, simState, 
+                isUlt: isUltVal, targetCount, isHit: isHitVal, isDefend: isDefendVal,
+                isAllyUltTurn: isAllyUlt,
+                customValues: context.customValues,
+                debugLogs: dLogsArray, 
+                getVal: (idx, key, stamp) => getSkillValue(idx, key, stamp || (isUltVal && stats.stamp)),
+                log: (idx, res, chance, dur, skipPush = false) => {
+                    let sName = "스킬", sIcon = "icon/main.png", label = "";
+                    if (typeof idx === 'number') {
+                        const s = charData.skills[idx];
+                        sName = s?.name || "알 수 없음";
+                        sIcon = s?.icon || "icon/main.png";
+                        label = idx === 1 ? "필살기" : idx >= 7 ? "도장" : `패시브${idx-1}`;
+                    } else if (typeof idx === 'string') {
+                        sName = idx; 
+                        if (sName === "피격") { sIcon = "icon/simul.png"; label = ""; } 
+                        else if (sName === "아군공격") { sIcon = "icon/compe.png"; label = ""; }
+                    }
+                    let finalRes = res;
+                    if (res === "Buff") finalRes = "버프 발동";
+                    else if (res === "Trigger") finalRes = "발동";
+                    else if (res === "Attack") finalRes = "공격";
+                    let m = []; if (chance) m.push(`${chance}%`); if (dur) m.push(`${dur}턴`);
+                    const mS = m.length ? ` (${m.join(' / ')})` : "";
+                    const tag = label ? `[${label}] ` : "";
+                    const actionPart = finalRes ? ` ${finalRes}` : "";
+                    const msg = `ICON:${sIcon}|${tag}${sName}${actionPart}${mS}`;
+                    if (!skipPush) dLogsArray.push(msg); 
+                    return msg; 
                 }
-                let finalRes = res;
-                if (res === "Buff") finalRes = "버프 발동";
-                else if (res === "Trigger") finalRes = "발동";
-                else if (res === "Attack") finalRes = "공격";
-                let m = []; if (chance) m.push(`${chance}%`); if (dur) m.push(`${dur}턴`);
-                const mS = m.length ? ` (${m.join(' / ')})` : "";
-                const tag = label ? `[${label}] ` : "";
-                const actionPart = finalRes ? ` ${finalRes}` : "";
-                const msg = `ICON:${sIcon}|${tag}${sName}${actionPart}${mS}`;
-                if (!skipPush) dLogsArray.push(msg); 
-                return msg; 
-            }
-        });
+            };
+        };
 
         for (let t = 1; t <= turns; t++) {
             const turnDebugLogs = [];

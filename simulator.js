@@ -4,6 +4,7 @@ import { charData } from './data.js';
 import { simCharData } from './sim_data.js';
 import { runSimulationCore } from './simulator-engine.js';
 import { getCharacterSelectorHtml, getSimulatorLayoutHtml, showDetailedLogModal } from './simulator-ui.js';
+import { getCharacterCommonControls } from './simulator-common.js';
 
 /**
  * 행동 패턴 에디터 업데이트
@@ -169,29 +170,60 @@ function renderSimulatorUI(charId) {
     const brVal = parseInt(stats.s1||0), brText = (brVal < 5) ? `0성 ${brVal}단계` : (brVal < 15) ? `1성 ${brVal-5}단계` : (brVal < 30) ? `2성 ${brVal-15}단계` : (brVal < 50) ? `3성 ${brVal-30}단계` : (brVal < 75) ? `4성 ${brVal-50}단계` : "5성";
     const hasMulti = data.skills.some(s => s.isMultiTarget || (s.damageDeal && s.damageDeal.some(d => d.isMultiTarget || d.stampIsMultiTarget)));
     const savedTurns = localStorage.getItem('sim_last_turns') || "10", savedIters = localStorage.getItem('sim_last_iters') || "100";
-    const useHitProb = sData.useHitProb || false;
 
-    container.innerHTML = getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, savedTurns, savedIters, useHitProb);
+    container.innerHTML = getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, savedTurns, savedIters);
 
     renderSimAttributePicker(charId);
     container.querySelector('.sim-char-profile-img').onclick = () => document.querySelector(`.main-image[data-id="${charId}"]`)?.click();
     const infoIcon = document.getElementById('sim-info-icon');
     if (infoIcon) { 
-        const tooltipText = sData.tooltipDesc || "아군은 3턴의 필살기를 가지며 방어를 사용하지 않는다고 가정합니다.";
+        const tooltipText = sData.tooltipDesc || "아군과 적군은 매턴 보통공격을 하며 3턴의 필살기를 가지고 있고 방어를 사용하지 않음을 가정으로 합니다.";
         infoIcon.onclick = (e) => { e.stopPropagation(); import('./ui.js').then(ui => { const control = ui.showSimpleTooltip(infoIcon, tooltipText); setTimeout(() => control.remove(), 3000); }); };
     }
 
-    if (sData.customControls) {
+    // 커스텀 컨트롤 + 공통 컨트롤 통합
+    const combinedControls = [
+        ...(sData.customControls || []),
+        ...getCharacterCommonControls(sData.commonControls)
+    ];
+
+    if (combinedControls.length > 0) {
         const wrapper = document.getElementById('sim-custom-controls'), list = document.getElementById('sim-custom-list');
         wrapper.style.display = 'block'; list.innerHTML = '';
-        sData.customControls.forEach(ctrl => {
-            const savedVal = localStorage.getItem(`sim_custom_${charId}_${ctrl.id}`);
+        combinedControls.forEach(ctrl => {
+            const storageKey = `sim_ctrl_${charId}_${ctrl.id}`;
+            const savedVal = localStorage.getItem(storageKey);
             const item = document.createElement('div'); item.style.cssText = `display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8f9fa; padding:8px 5px; border-radius:8px; border:1px solid #eee; flex: 0 0 calc(33.33% - 10px); min-width:80px; box-sizing:border-box;`;
-            item.innerHTML = `<span style="font-size:0.65em; color:#888; font-weight:bold; margin-bottom:4px; text-align:center; width:100%;">${ctrl.label}</span>`;
+            item.innerHTML = `<span style="font-size:0.65em; color:#888; font-weight:bold; margin-bottom:4px; text-align:center; width:100%;" title="${ctrl.description || ''}">${ctrl.label}</span>`;
             const ctrlEl = document.createElement('div');
-            if (ctrl.type === 'input') { const input = document.createElement('input'); input.type = 'number'; input.value = parseInt(savedVal) || ctrl.initial || 0; input.style.cssText = `width:60px; padding:4px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none;`; input.onchange = () => localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, input.value); ctrlEl.appendChild(input); }
-            else if (ctrl.type === 'toggle') { const check = document.createElement('input'); check.type = 'checkbox'; check.checked = (savedVal === 'true' || (savedVal === null && ctrl.initial === true)); check.onchange = (e) => localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, e.target.checked); ctrlEl.appendChild(check); }
-            else { const btn = document.createElement('button'); btn.style.cssText = `background:#fff; border:1px solid #6f42c1; color:#6f42c1; font-weight:bold; font-size:0.9em; padding:4px 12px; border-radius:20px; cursor:pointer; min-width:40px;`; btn.textContent = parseInt(savedVal) || ctrl.initial || 0; btn.onclick = () => { let next = parseInt(btn.textContent) + 1; if (next > ctrl.max) next = ctrl.min; btn.textContent = next; localStorage.setItem(`sim_custom_${charId}_${ctrl.id}`, next); }; ctrlEl.appendChild(btn); }
+            
+            if (ctrl.type === 'input') { 
+                const input = document.createElement('input'); 
+                input.type = 'number'; 
+                input.value = (savedVal !== null) ? parseInt(savedVal) : ctrl.initial; 
+                input.style.cssText = `width:60px; padding:4px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none;`; 
+                input.onchange = () => localStorage.setItem(storageKey, input.value); 
+                ctrlEl.appendChild(input); 
+            }
+            else if (ctrl.type === 'toggle') { 
+                const check = document.createElement('input'); 
+                check.type = 'checkbox'; 
+                check.checked = (savedVal === 'true' || (savedVal === null && ctrl.initial === true)); 
+                check.onchange = (e) => localStorage.setItem(storageKey, e.target.checked); 
+                ctrlEl.appendChild(check); 
+            }
+            else { 
+                const btn = document.createElement('button'); 
+                btn.style.cssText = `background:#fff; border:1px solid #6f42c1; color:#6f42c1; font-weight:bold; font-size:0.9em; padding:4px 12px; border-radius:20px; cursor:pointer; min-width:40px;`; 
+                btn.textContent = (savedVal !== null) ? parseInt(savedVal) : ctrl.initial; 
+                btn.onclick = () => { 
+                    let next = parseInt(btn.textContent) + 1; 
+                    if (next > ctrl.max) next = ctrl.min; 
+                    btn.textContent = next; 
+                    localStorage.setItem(storageKey, next); 
+                }; 
+                ctrlEl.appendChild(btn); 
+            }
             item.appendChild(ctrlEl); list.appendChild(item);
         });
     }
@@ -220,9 +252,6 @@ function renderSimulatorUI(charId) {
     document.getElementById('sim-turns').oninput = (e) => { document.getElementById('sim-turns-val').innerText = e.target.value; localStorage.setItem('sim_last_turns', e.target.value); updateActionEditor(charId); };
     document.getElementById('sim-iterations').onchange = (e) => localStorage.setItem('sim_last_iters', e.target.value);
     
-    const hitProbInput = document.getElementById('sim-hit-prob');
-    if (hitProbInput) hitProbInput.onchange = (e) => localStorage.setItem('sim_last_hit_prob', e.target.value);
-
     document.getElementById('sim-back-to-list').onclick = () => renderCharacterSelector();
     if (hasMulti) document.getElementById('sim-target-btn').onclick = (e) => { let c = (parseInt(e.target.innerText)%5)+1; e.target.innerText=c; localStorage.setItem(`sim_last_target_${charId}`,c); };
     document.getElementById('sim-edit-actions-btn').onclick = () => { const ed = document.getElementById('sim-action-editor'); ed.style.display = ed.style.display==='block' ? 'none' : 'block'; if(ed.style.display==='block') updateActionEditor(charId); };
@@ -276,18 +305,24 @@ function runSimulation(charId) {
         const targetCount = parseInt(document.getElementById('sim-target-btn')?.innerText || "1");
         const enemyAttrIdx = parseInt(localStorage.getItem(`sim_last_enemy_attr_${charId}`) || String(data.info?.속성 ?? 0));
         
-        // [추가] 피격 확률 읽기 (기본값 30)
-        const hitProb = sData.useHitProb ? parseInt(localStorage.getItem('sim_last_hit_prob') || "30") : 0;
-
+        // 커스텀 컨트롤 + 공통 컨트롤 통합값 수집
+        const combinedControls = [
+            ...(sData.customControls || []),
+            ...getCharacterCommonControls(sData.commonControls)
+        ];
+        
         const customValues = {}; 
-        if (sData.customControls) sData.customControls.forEach(c => { 
-            const v = localStorage.getItem(`sim_custom_${charId}_${c.id}`); 
+        combinedControls.forEach(c => { 
+            const v = localStorage.getItem(`sim_ctrl_${charId}_${c.id}`); 
             if (c.type === 'toggle') {
                 customValues[c.id] = (v !== null) ? (v === 'true') : (c.initial === true);
             } else {
                 customValues[c.id] = (v !== null) ? parseInt(v) : (c.initial || 0);
             }
         });
+
+        // [수정] 피격 확률은 이제 공통 컨트롤(hit_prob)에서 가져옴
+        const hitProb = customValues.hit_prob || 0;
 
         const result = runSimulationCore({ charId, charData: data, sData, stats, turns, iterations, targetCount, manualPattern: JSON.parse(localStorage.getItem(`sim_pattern_${charId}`)) || [], enemyAttrIdx, customValues, defaultGrowthRate: constants.defaultGrowth, hitProb });
         

@@ -1,7 +1,7 @@
 // sim_data.js
 export const simCharData = {
   "shinrirang": {
-    useHitProb: true,
+    commonControls: ["hit_prob"],
     // 1. 턴 시작 (타이머 청소)
     onTurn: (ctx) => {
         if (!ctx.simState.skill5_timers) ctx.simState.skill5_timers = [];
@@ -101,19 +101,12 @@ export const simCharData = {
     }
   },
   "tayangsuyi": {
-    useHitProb: false,
-    tooltipDesc: "아군은 매 턴 일반 공격을 1회씩 수행하며, 설정된 수만큼 필살기를 사용한다고 가정합니다.",
-    customControls: [
-      { id: "ally_warrior_debuffer_count", type: "counter", label: "아군 전사/방해 수", min: 0, max: 4, initial: 2 },
-      { id: "ally_ult_count", type: "counter", label: "아군 필살 횟수", min: 0, max: 3, initial: 0 }
-    ],
-    // 1. 턴 시작 (타이머 관리 및 전의 수급)
+    commonControls: ["ally_warrior_debuffer_count", "ally_ult_count"],
     // 1. 턴 시작 (타이머 관리 및 전의 수급)
     onTurn: (ctx) => {
         if (ctx.simState.skill5_timer > 0) ctx.simState.skill5_timer--;
 
-        const isAllyUltTurn = ctx.t > 1 && (ctx.t - 1) % 3 === 0;
-        if (!isAllyUltTurn) {
+        if (!ctx.isAllyUltTurn) {
             const allyCount = ctx.customValues.ally_warrior_debuffer_count;
             const rawProb = ctx.getVal(3, 'max');
             const prob = rawProb / 100;
@@ -125,6 +118,12 @@ export const simCharData = {
             if (allyCount > 0 && gained > 0) {
                 ctx.simState.battleSpirit = Math.min(9, (ctx.simState.battleSpirit || 0) + gained);
                 ctx.log("[전의]", `${gained}회 발동 (${rawProb.toFixed(0)}%)`);
+            }
+        } else {
+            // 아군 필살기 턴일 때 스킬 7 로그 출력 (횟수 포함)
+            const allyUltCount = ctx.customValues.ally_ult_count || 0;
+            if (allyUltCount > 0) {
+                ctx.log(6, `${allyUltCount}회 발동`, null, 1); 
             }
         }
     },
@@ -161,8 +160,7 @@ export const simCharData = {
         const spiritBonusPerStack = 6; 
         bonuses["필살기뎀증"] += spiritStacks * spiritBonusPerStack;
 
-        const isAllyUltTurn = ctx.t > 1 && (ctx.t - 1) % 3 === 0;
-        if (isAllyUltTurn) {
+        if (ctx.isAllyUltTurn) {
             const allyUltCount = ctx.customValues.ally_ult_count || 0;
             bonuses["필살기뎀증"] += allyUltCount * ctx.getVal(6, '필살기뎀증');
         }
@@ -177,5 +175,77 @@ export const simCharData = {
 
         return bonuses;
     }
+  },
+  "choiyuhyun": {
+    commonControls: ["hp_100_prob"],
+        onTurn: (ctx) => {
+            if (ctx.simState.skill5_timer > 0) ctx.simState.skill5_timer--;
+    
+            // 매 턴 시작 시 확률에 따라 HP 100% 유지 여부 결정
+            const prob = ctx.customValues.hp_100_prob ?? 100;
+            // 성공 시 1(턴), 실패 시 0을 대입하여 UI에 '1턴'으로 표시되게 함
+            ctx.simState.skill4_active = (Math.random() * 100 < prob) ? 1 : 0;
+    
+            if (ctx.simState.skill4_active > 0 && prob < 100) {
+                // 유지율이 100% 미만일 때 성공한 경우에만 로그 출력 (가독성)
+                ctx.log(3, "발동", null, 1);
+            }
+        },
+        onAttack: (ctx) => {
+            const extraHits = [];
+            const enemyCount = ctx.targetCount; // 공통 대상 수 버튼 값 사용
+    
+            // [패시브4] 신화성신환: 방어 후 공격 시 추가데미지 발생
+            if (ctx.simState.skill5_timer > 0) {
+                extraHits.push({
+                    skillId: "choiyuhyun_skill5",
+                    name: "신화성신환",
+                    coef: ctx.getVal(4, 'max')
+                });
+            }
+    
+            // [패시브5] 검추백형: 필살기 사용 시 적 수에 따른 추가데미지
+            if (ctx.isUlt) {
+                if (enemyCount >= 5) {
+                    extraHits.push({
+                        skillId: "choiyuhyun_skill7",
+                        name: "검추백형(5인)",
+                        coef: ctx.getVal(6, 'max'),
+                        isMulti: true
+                    });
+                } else if (enemyCount === 1) {
+                    extraHits.push({
+                        skillId: "choiyuhyun_skill7",
+                        name: "검추백형(단일)",
+                        coef: ctx.getVal(6, 'max') * 2 // 적이 1명일 때 75% (37.5 * 2)
+                    });
+                }
+            }
+    
+            return { extraHits };
+        },
+        onAfterAction: (ctx) => {
+            // [패시브4] 방어 시 2턴 간 추가데미지 상태 부여
+            if (ctx.isDefend) {
+                ctx.simState.skill5_timer = 2;
+                ctx.log(4, "Buff", null, 2);
+            }
+        },
+        getLiveBonuses: (ctx) => {
+            const bonuses = { "뎀증": 0 };
+            const enemyCount = ctx.targetCount; // 공통 대상 수 버튼 값 사용
+    
+            // [패시브2] 일죽별운: HP 100% 시 데미지 증가
+            if (ctx.simState.skill4_active > 0) {
+                bonuses["뎀증"] += ctx.getVal(3, '뎀증');
+            }
+    
+            // [도장] 사신현정검: 적의 수가 5명 이상일 시 데미지 증가
+            if (ctx.stats.stamp && enemyCount >= 5) {
+                bonuses["뎀증"] += ctx.getVal(7, '뎀증', true);
+            }
+    
+            return bonuses;
+        }
   }
 };

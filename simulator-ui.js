@@ -52,16 +52,6 @@ export function getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, sa
                     </div>
                 </div>
                 <div id="sim-custom-controls" style="display:none;background:#fff;border:1px solid #ddd;border-radius:12px;padding:15px;margin-bottom:15px;"><div id="sim-custom-list" style="display:flex;flex-wrap:wrap;gap:10px;"></div></div>
-                
-                ${useHitProb ? `
-                <div style="background:#fff; border:1px solid #ddd; border-radius:12px; padding:15px; margin-bottom:15px;">
-                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8f9fa; padding:8px 5px; border-radius:8px; border:1px solid #eee; flex: 0 0 calc(33.33% - 10px); min-width:80px; box-sizing:border-box;">
-                            <span style="font-size:0.65em; color:#888; font-weight:bold; margin-bottom:4px; text-align:center; width:100%;">턴당 피격 확률 (%)</span>
-                            <input type="number" id="sim-hit-prob" min="0" max="100" value="${localStorage.getItem('sim_last_hit_prob') || '30'}" style="width:60px; padding:4px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none;">
-                        </div>
-                    </div>
-                </div>` : ''}
 
                 <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:15px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
