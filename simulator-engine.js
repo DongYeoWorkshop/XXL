@@ -315,13 +315,30 @@ export function runSimulationCore(context) {
     const totals = iterationResults.map(d => d.total), avg = Math.floor(totals.reduce((a, b) => a + b, 0) / iterations);
     const min = Math.min(...totals), max = Math.max(...totals), closest = iterationResults.sort((a, b) => Math.abs(a.total - avg) - Math.abs(b.total - avg))[0];
     const range = max - min, binCount = Math.min(iterations, 100), bins = new Array(binCount).fill(0);
-    iterationResults.forEach(r => { let b = (range === 0) ? 0 : Math.floor(((r.total - min) / range) * (binCount - 1)); bins[b]++; });
-    const xLabels = []; if (range > 0) { for (let j = 0; j <= 5; j++) { const v = min + (range * (j / 5)); xLabels.push({ pos: (j / 5) * 100, label: v >= 1000 ? (v / 1000).toFixed(0) + 'K' : Math.floor(v) }); } }
+    const centerIdx = Math.floor(binCount / 2);
+    iterationResults.forEach(r => { 
+        let b = (range === 0) ? centerIdx : Math.floor(((r.total - min) / range) * (binCount - 1)); 
+        bins[b]++; 
+    });
+
+    const xLabels = []; 
+    if (range > 0) { 
+        for (let j = 0; j <= 5; j++) { 
+            const v = min + (range * (j / 5)); 
+            xLabels.push({ pos: (j / 5) * 100, label: v >= 1000 ? (v / 1000).toFixed(0) + 'K' : Math.floor(v) }); 
+        } 
+    } else {
+        // 값이 하나뿐일 때 중앙에 라벨 표시
+        xLabels.push({ pos: 50, label: min >= 1000 ? (min / 1000).toFixed(0) + 'K' : Math.floor(min) });
+    }
 
     return {
         min: min.toLocaleString(), max: max.toLocaleString(), avg: avg.toLocaleString(),
         logHtml: closest.logs.map(l => `<div>${l}</div>`).join(''),
-        graphData: bins.map((c, i) => ({ h: (c / Math.max(...bins)) * 100, isAvg: i === Math.floor(((closest.total - min) / (range || 1)) * (binCount - 1)) })),
+        graphData: bins.map((c, i) => ({ 
+            h: (c / Math.max(...bins)) * 100, 
+            isAvg: (range === 0) ? (i === centerIdx) : (i === Math.floor(((closest.total - min) / range) * (binCount - 1))) 
+        })),
         axisData: { x: xLabels, y: Array.from({length: 6}, (_, i) => Math.floor(Math.max(...bins) * (5 - i) / 5)) },
         turnData: closest.perTurnDmg, closestTotal: closest.total, closestLogs: closest.logs, closestStateLogs: closest.stateLogs, closestDetailedLogs: closest.detailedLogs, yMax: Math.max(...bins)
     };

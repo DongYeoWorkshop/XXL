@@ -247,5 +247,68 @@ export const simCharData = {
     
             return bonuses;
         }
+  },
+  "baade": {
+    commonControls: [],
+    customControls: [
+        { id: "start_with_scar", type: "toggle", label: "각흔 상태로 시작", initial: false }
+    ],
+    onTurn: (ctx) => {
+        // 전투 시작 시 설정에 따라 각흔 부여
+        if (ctx.t === 1 && ctx.customValues.start_with_scar) {
+            ctx.simState.scar_active = true;
+        }
+        // 스킬 7(집중 분쇄) 버프 타이머 관리
+        if (ctx.simState.skill7_timer > 0) ctx.simState.skill7_timer--;
+    },
+    onAttack: (ctx) => {
+        const extraHits = [];
+        const hasScar = ctx.simState.scar_active;
+
+        if (!ctx.isUlt) {
+            // [패시브5] 집중 분쇄: 각흔 대상 평타 시 필살기 버프
+            if (hasScar) {
+                ctx.simState.skill7_timer = 2;
+                ctx.log(6, "발동", null, 2);
+            }
+        } else {
+            // 필살기: 각흔 유무에 따라 동작 분기
+            if (hasScar) {
+                // [도장] 쇄강 파공격: 각흔 상태에서 필살기 시 추가데미지
+                if (ctx.stats.stamp) {
+                    extraHits.push({
+                        skillId: "baade_stamp_passive",
+                        coef: 174.75 // 도장 추가타 계수
+                    });
+                }
+                // 각흔 소모
+                ctx.simState.scar_active = false;
+                ctx.log("[각흔]", "소모");
+            } else {
+                // 각흔 부여
+                ctx.simState.scar_active = true;
+                ctx.log("[각흔]", "부여");
+            }
+        }
+        return { extraHits };
+    },
+    getLiveBonuses: (ctx) => {
+        const bonuses = { "평타뎀증": 0, "필살기뎀증": 0 };
+        const hasScar = ctx.simState.scar_active;
+
+        if (hasScar) {
+            // [패시브2] 그리움의 사랑 자장가: 필살기 뎀증
+            bonuses["필살기뎀증"] += ctx.getVal(3, '필살기뎀증');
+            // [패시브4] 광맥 직감: 평타 뎀증
+            bonuses["평타뎀증"] += ctx.getVal(4, '평타뎀증');
+        }
+
+        // [패시브5] 집중 분쇄: 평타로 쌓은 필살기 뎀증
+        if (ctx.simState.skill7_timer > 0) {
+            bonuses["필살기뎀증"] += ctx.getVal(6, '필살기뎀증');
+        }
+
+        return bonuses;
+    }
   }
 };
