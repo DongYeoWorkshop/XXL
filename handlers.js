@@ -184,7 +184,13 @@ export function handleImageClick(img) {
             if (saved) window.scrollTo(0, parseInt(saved));
         });
     } else if (id === 'simulator') {
-        if (contentDisplay) contentDisplay.style.backgroundImage = ''; // 배경 제거
+        if (contentDisplay) {
+            contentDisplay.style.backgroundImage = ''; // 배경 제거
+            const favBtn = contentDisplay.querySelector('.char-fav-btn');
+            if (favBtn) favBtn.classList.remove('active'); // 별 아이콘 초기화
+            // [추가] 시뮬레이터에서는 즐겨찾기 버튼 숨김
+            if (favBtn) favBtn.style.display = 'none';
+        }
         contentDisplay.className = 'hero-mode';
         document.querySelector('.main-content-column').style.setProperty('display', 'block', 'important');
         document.getElementById('simulator-page').style.setProperty('display', 'block', 'important');

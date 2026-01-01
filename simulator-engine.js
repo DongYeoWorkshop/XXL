@@ -3,240 +3,283 @@ import { calculateDamage, calculateBaseStats, assembleFinalStats } from './calcu
 import { getSkillMultiplier } from './formatter.js';
 
 /**
- * 버프 상태를 사용자 친화적인 정보로 변환
+ * 버프 상태 표시용 포매터
  */
 export function formatBuffState(state, charDataObj) {
     const entries = [];
+    const getSkillInfo = (idx) => {
+        const s = charDataObj.skills[idx];
+        if (!s) return { label: "스킬", name: "알 수 없음", icon: "icon/main.png" };
+        let label = (idx === 1) ? "필살기" : (idx >= 2 && idx <= 6) ? `패시브${idx - 1}` : (idx >= 7) ? "도장" : "스킬";
+        return { label, name: s.name, icon: s.icon || "icon/main.png" };
+    };
+
     for (const [key, val] of Object.entries(state)) {
         if (!val || val === 0 || (Array.isArray(val) && val.length === 0)) continue;
-        
-        let name = key, icon = 'icon/main.png'; 
-        
-        if (key.includes('battleSpirit')) { name = '전의'; icon = charDataObj.skills[3]?.icon; }
-        else if (key.includes('sleep_status')) { name = '수면'; icon = 'icon/main.png'; }
-        else if (key.includes('stride_timers')) { name = '열화질보'; icon = charDataObj.skills[3]?.icon; }
-        else if (key.includes('mark_timers')) { name = '호혈표지'; icon = charDataObj.skills[1]?.icon; }
-        else if (key.includes('pressure_timers')) { name = '용족의 위압'; icon = charDataObj.skills[1]?.icon; }
-        else if (key.includes('stamina_stacks')) { name = '체력응축'; icon = charDataObj.skills[1]?.icon; }
-        else if (key.includes('rage_count')) { name = '용의 분노'; icon = charDataObj.skills[3]?.icon; }
-        else if (key.includes('magic_focus')) { name = '마도 집중'; icon = charDataObj.skills[1]?.icon; }
-        else if (key === 'p1_debuff' || key === 'p1_timer' || key.includes('p2_timer') || key.includes('p2_fixed')) { 
-            name = (key === 'p1_debuff') ? '패시브1(디버프)' : '패시브1'; 
-            icon = charDataObj.skills[3]?.icon || charDataObj.skills[2]?.icon; 
+        if (key.startsWith('has_')) continue;
+
+        let name = key, icon = 'icon/main.png', displayDur = "";
+
+        const skillMatch = key.match(/^skill(\d+)/);
+        if (skillMatch) {
+            const idx = parseInt(skillMatch[1]);
+            const skillIdx = idx > 0 ? idx - 1 : 0;
+            const infoMapped = getSkillInfo(skillIdx);
+            name = infoMapped.name;
+            icon = infoMapped.icon;
+            if (Array.isArray(val)) {
+                const count = val.length;
+                const maxTurn = Math.max(...val);
+                displayDur = `${maxTurn}턴 / ${count}중첩`;
+            }
         }
-        else if (key === 'p4_debuff' || key.includes('p3_timer')) { 
-            name = (key === 'p4_debuff') ? '패시브4(디버프)' : '패시브2'; 
-            icon = (key === 'p4_debuff') ? charDataObj.skills[6]?.icon : charDataObj.skills[3]?.icon; 
+        else if (key.includes('battleSpirit')) { const info = getSkillInfo(3); name = "전의"; icon = info.icon; }
+        else if (key === 'scar_active' || key === 'mark_of_engraving') { const info = getSkillInfo(1); name = "각흔"; icon = info.icon; }
+        else if (key.includes('sleep_status')) { const info = getSkillInfo(1); name = "수면"; icon = info.icon; if (typeof val === 'object' && val.duration !== undefined) displayDur = `${val.duration}턴`; }
+        else if (key === 'atk_stacks') { 
+            const info = getSkillInfo(6); name = "패시브5"; icon = info.icon; 
+            displayDur = `${val}중첩`; 
         }
-        else if (key.includes('p4_timer')) { name = '패시브3'; icon = charDataObj.skills[4]?.icon; }
-        else if (key.includes('p5_timer')) { name = '패시브4'; icon = charDataObj.skills[5]?.icon; }
-        else if (key.includes('ult_timer') || key.includes('ult_atk') || key.includes('ult_fixed')) { name = '필살기'; icon = charDataObj.skills[1]?.icon; }
-        
-        const duration = Array.isArray(val) ? val.length : (typeof val === 'object' ? 'ON' : val);
-        entries.push({ name, duration, icon: icon || 'icon/main.png' });
+
+        if (!displayDur) {
+            const rawDur = Array.isArray(val) ? val.length : (typeof val === 'object' ? 'ON' : val);
+            if (rawDur === true || rawDur === 'ON') displayDur = 'ON';
+            else if (rawDur === false || rawDur === 0) continue;
+            else if (Array.isArray(val)) displayDur = `${val[0]}턴 / ${val.length}중첩`; 
+            else displayDur = `${rawDur}턴`;
+        }
+        entries.push({ name, duration: displayDur, icon });
     }
     return entries;
 }
 
 /**
- * 시뮬레이션 핵심 엔진 (DOM 의존성 없음)
+ * 시뮬레이션 핵심 엔진
  */
 export function runSimulationCore(context) {
-    const { 
-        charId, charData, sData, stats, turns, iterations, targetCount, 
-        manualPattern, enemyAttrIdx, defaultGrowthRate 
-    } = context;
-
-    const lvVal = parseInt(stats.lv || 1);
-    const brVal = parseInt(stats.s1 || 0);
-    const fitVal = parseInt(stats.s2 || 0);
+    const { charId, charData, sData, stats, turns, iterations, targetCount, manualPattern, enemyAttrIdx, defaultGrowthRate, hitProb } = context;
+    const lv = parseInt(stats.lv || 1), br = parseInt(stats.s1 || 0), fit = parseInt(stats.s2 || 0);
+    const baseStats = calculateBaseStats(charData.base, lv, br, fit, defaultGrowthRate);
     
-    // 기초 스탯 계산
-    const baseStats = calculateBaseStats(charData.base, lvVal, brVal, fitVal, defaultGrowthRate);
-    
-    // 상시 패시브 수집
-    const passiveStats = { "기초공증": 0, "공증": 0, "고정공증": 0, "뎀증": 0, "평타뎀증": 0, "필살기뎀증": 0, "트리거뎀증": 0, "뎀증디버프": 0, "속성디버프": 0, "HP증가": 0, "기초HP증가": 0, "회복증가": 0, "배리어증가": 0, "지속회복증가": 0 };
-    
-    charData.skills.forEach((s, idx) => {
-        const isDefaultBuff = charData.defaultBuffSkills?.includes(s.id);
-        if (!isDefaultBuff || idx === 1) return;
-        if (s.hasCounter || s.hasToggle || s.customLink) return;
-        const th = [0, 0, 0, 0, 30, 50, 75]; 
-        if (idx >= 4 && idx <= 6 && brVal < th[idx]) return;
-        if (s.buffEffects) {
-            const sLv = stats.skills?.[`s${idx+1}`] || 1; 
-            const sRate = getSkillMultiplier(sLv, s.startRate || 0.6);
-            for (const k in s.buffEffects) {
-                if (passiveStats.hasOwnProperty(k)) {
-                    const ef = s.buffEffects[k];
-                    let valToAdd = 0;
-                    if (typeof ef === 'object' && ef !== null) {
-                        let baseMax = ef.max;
-                        if (ef.targetAttribute !== undefined && charData.info.속성 === ef.targetAttribute && ef.attributeMax !== undefined) {
-                            baseMax = ef.attributeMax;
-                        }
-                        valToAdd = (baseMax !== undefined ? baseMax * sRate : ef.fixed) || 0;
-                    } else { valToAdd = ef || 0; }
-                    passiveStats[k] += valToAdd;
-                }
-            }
+    const getSkillValue = (skillIdx, effectKey, isStamp = false) => {
+        const skill = charData.skills[skillIdx];
+        if (!skill) return 0;
+        let targetIdx = skillIdx;
+        if (skill.syncLevelWith) {
+            const foundIdx = charData.skills.findIndex(s => s.id === skill.syncLevelWith);
+            if (foundIdx !== -1) targetIdx = foundIdx;
         }
-    });
-
-    const ultCD = (() => {
-        const m = charData.skills[1].desc?.match(/\(쿨타임\s*:\s*(\d+)턴\)/);
-        return m ? parseInt(m[1]) : 3;
-    })();
+        const lvS = parseInt(stats.skills?.[`s${targetIdx+1}`] || 1);
+        const rate = getSkillMultiplier(lvS, skill.startRate || 0.6);
+        let e = null;
+        const effects = isStamp ? skill.stampBuffEffects : skill.buffEffects;
+        if (effects && effects[effectKey] !== undefined) e = effects[effectKey];
+        else if (skill.damageDeal) {
+            const d = skill.damageDeal.find(dmg => dmg.type === effectKey);
+            if (d) e = d.val;
+        }
+        if (e === null && isStamp && skill.buffEffects && skill.buffEffects[effectKey] !== undefined) e = skill.buffEffects[effectKey];
+        if (e === null) return 0;
+        const val = (typeof e === 'object') ? ((charData.info.속성 === e.targetAttribute ? e.attributeMax : e.max) || e.fixed || 0) : e;
+        return val * (typeof e === 'object' && e.max ? rate : 1);
+    };
 
     const iterationResults = [];
+    const flow = sData.flow || ['onTurn', 'setup', 'action', 'hit', 'extra', 'onAfterAction'];
+
     for (let i = 0; i < iterations; i++) {
-        let total = 0;
+        let total = 0, simState = { battleSpirit: 0, atk_stacks: 0 };
+        const ultCD = (() => { const m = charData.skills[1].desc?.match(/\(쿨타임\s*:\s*(\d+)턴\)/); return m ? parseInt(m[1]) : 3; })();
         let cd = { ult: ultCD };
-        let simState = { battleSpirit: 0, afterDefendTurns: 0, p2_timer: 0, p3_timer: 0, choi_passive3_ready: false }; 
         const logs = [], perTurnDmg = [], stateLogs = [], detailedLogs = [];
 
-        for (let t = 1; t <= turns; t++) {
-            const debugLogs = [];
-            // 행동 전 로직
-            if (sData.onTurn) sData.onTurn({ t, turns, charId, charData, stats, simState, customValues: context.customValues, debugLogs });
-            debugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg })); 
-            debugLogs.length = 0;
-
-            stateLogs.push(formatBuffState(simState, charData));
-
-            const action = manualPattern.length >= t ? manualPattern[t-1] : (cd.ult === 0 ? 'ult' : 'normal');
-            const isUlt = (action === 'ult'), isDefend = (action === 'defend');
-            const skill = isUlt ? charData.skills[1] : charData.skills[0];
-            const sLv = isUlt ? (stats.skills?.s2 || 1) : (stats.skills?.s1 || 1);
-            const isStamped = isUlt && stats.stamp;
-            let tDmg = 0;
-
-            if (isDefend) {
-                logs.push(`${t}턴: [방어] - +0`);
-                detailedLogs.push({ t, type: 'action', msg: '방어를 선택하여 공격하지 않았습니다.' });
-            } else {
-                let dynamicBonus = { extraHits: [] };
-                if (sData.onCalculateDamage) {
-                    dynamicBonus = sData.onCalculateDamage({ 
-                        t, turns, isUlt, charData, stats, simState, customValues: context.customValues, 
-                        targetCount, passiveStats, debugLogs 
-                    }) || { extraHits: [] };
+        const makeCtx = (tVal, isUltVal, dLogsArray, isHitVal) => ({
+            t: tVal, turns, charId, charData, stats, simState, 
+            isUlt: isUltVal, targetCount, isHit: isHitVal,
+            customValues: context.customValues,
+            debugLogs: dLogsArray, 
+            getVal: (idx, key, stamp) => getSkillValue(idx, key, stamp || (isUltVal && stats.stamp)),
+            log: (idx, res, chance, dur, skipPush = false) => {
+                let sName = "스킬", sIcon = "icon/main.png", label = "";
+                if (typeof idx === 'number') {
+                    const s = charData.skills[idx];
+                    sName = s?.name || "알 수 없음";
+                    sIcon = s?.icon || "icon/main.png";
+                    label = idx === 1 ? "필살기" : idx >= 7 ? "도장" : `패시브${idx-1}`;
+                } else if (typeof idx === 'string') {
+                    sName = idx; 
+                    if (sName === "피격") { sIcon = "icon/simul.png"; label = ""; } 
+                    else if (sName === "아군공격") { sIcon = "icon/compe.png"; label = ""; }
                 }
-                debugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg })); 
-                debugLogs.length = 0;
-
-                const dyn = dynamicBonus || {};
-                const currentSubStats = { 
-                    ...passiveStats, 
-                    "기초공증": passiveStats["기초공증"] + (dyn["기초공증"] || 0),
-                    "공증": passiveStats["공증"] + (dyn["공증"] || 0),
-                    "고정공증": passiveStats["고정공증"] + (dyn["고정공증"] || 0),
-                    "뎀증": passiveStats["뎀증"] + (dyn["뎀증"] || 0),
-                    "평타뎀증": passiveStats["평타뎀증"] + (dyn["평타뎀증"] || 0),
-                    "필살기뎀증": passiveStats["필살기뎀증"] + (dyn["필살기뎀증"] || 0),
-                    "트리거뎀증": passiveStats["트리거뎀증"] + (dyn["트리거뎀증"] || 0),
-                    "뎀증디버프": passiveStats["뎀증디버프"] + (dyn["뎀증디버프"] || 0),
-                    "속성디버프": passiveStats["속성디버프"] + (dyn["속성디버프"] || 0)
-                };
-
-                const finalStats = assembleFinalStats(baseStats, currentSubStats);
-                const currentTotalAtk = finalStats.최종공격력;
-                
-                const getStatStr = (label, val) => {
-                    const parts = [`Atk:${currentTotalAtk.toLocaleString()}`];
-                    if (currentSubStats["뎀증"] !== 0) parts.push(`Dmg:${Number(currentSubStats["뎀증"].toFixed(1))}%`);
-                    if (val !== 0) parts.push(`${label}:${Number(val.toFixed(1))}%`);
-                    if (currentSubStats["뎀증디버프"] !== 0) parts.push(`Vul:${Number(currentSubStats["뎀증디버프"].toFixed(1))}%`);
-                    if (currentSubStats["속성디버프"] !== 0) parts.push(`A-Vul:${Number(currentSubStats["속성디버프"].toFixed(1))}%`);
-                    return parts.join(' / ');
-                };
-
-                // 메인 데미지 계산
-                let mainDmg = 0;
-                if (skill.damageDeal && !dyn.skipMainDamage) {
-                    skill.damageDeal.forEach(entry => {
-                        const coef = (isStamped && entry.val.stampMax !== undefined) ? entry.val.stampMax : entry.val.max;
-                        if (coef === undefined) return;
-                        const finalCoef = coef * getSkillMultiplier(sLv, skill.startRate || 0.6);
-                        const hitDmgUnit = calculateDamage(isUlt ? "필살공격" : "보통공격", currentTotalAtk, currentSubStats, finalCoef, isStamped, charData.info.속성, enemyAttrIdx);
-                        let hitDmg = hitDmgUnit;
-                        if ((entry.isMultiTarget ?? (isStamped ? entry.stampIsMultiTarget : skill.isMultiTarget)) && !entry.isSingleTarget) hitDmg *= targetCount;
-                        mainDmg += hitDmg;
-                    });
-                    const tLabel = isUlt ? "U-Dmg" : "N-Dmg", tVal = isUlt ? currentSubStats["필살기뎀증"] : currentSubStats["평타뎀증"];
-                    detailedLogs.push({ t, type: 'hit', msg: `[${isUlt ? '필살기' : '보통공격'}] ${skill.name}: +${mainDmg.toLocaleString()}`, statMsg: getStatStr(tLabel, tVal) });
-                    logs.push(`${t}턴: [${isUlt ? '필살기' : '보통공격'}] ${skill.name} +${mainDmg.toLocaleString()}`);
-                }
-                tDmg = mainDmg;
-
-                // 추가타 계산
-                if (dyn.extraHits) {
-                    dyn.extraHits.forEach(extra => {
-                        const extraDmgUnit = calculateDamage(extra.type || "추가공격", currentTotalAtk, currentSubStats, extra.coef, false, charData.info.속성, enemyAttrIdx);
-                        let extraFinalDmg = extraDmgUnit;
-                        if (extra.isMulti) extraFinalDmg *= targetCount;
-                        
-                        let extraName = extra.name || '추가타', autoType = extra.type || '추가타';
-                        if (extra.skillId) {
-                            const skillObj = charData.skills.find(s => s.id === extra.skillId);
-                            if (skillObj) {
-                                if (!extra.name) extraName = skillObj.name;
-                                const sIdx = charData.skills.indexOf(skillObj);
-                                const getLabel = (idx) => {
-                                    if (idx === 0) return "보통공격"; if (idx === 1) return "필살기";
-                                    if (idx >= 2 && idx <= 6) return `패시브${idx - 1}`; return "도장";
-                                };
-                                autoType = getLabel(sIdx);
-                                if (skillObj.syncLevelWith) {
-                                    const tIdx = charData.skills.findIndex(s => s.id === skillObj.syncLevelWith);
-                                    if (tIdx !== -1) autoType = getLabel(tIdx);
-                                }
-                            }
-                        }
-                        tDmg += extraFinalDmg;
-                        logs.push(`${t}턴: [${autoType}] ${extraName} +${extraFinalDmg.toLocaleString()}`);
-                        detailedLogs.push({ t, type: 'extra', msg: `[${autoType}] ${extraName}: +${extraFinalDmg.toLocaleString()}`, statMsg: getStatStr("T-Dmg", currentSubStats["트리거뎀증"]) });
-                    });
-                }
+                let finalRes = res;
+                if (res === "Buff") finalRes = "버프 발동";
+                else if (res === "Trigger") finalRes = "발동";
+                else if (res === "Attack") finalRes = "공격";
+                let m = []; if (chance) m.push(`${chance}%`); if (dur) m.push(`${dur}턴`);
+                const mS = m.length ? ` (${m.join(' / ')})` : "";
+                const tag = label ? `[${label}] ` : "";
+                const msg = `ICON:${sIcon}|${tag}${sName} ${finalRes}${mS}`;
+                if (!skipPush) dLogsArray.push(msg); 
+                return msg; 
             }
-            total += tDmg;
-            perTurnDmg.push({ dmg: tDmg, cumulative: total });
+        });
+
+        for (let t = 1; t <= turns; t++) {
+            const turnDebugLogs = [];
+            const isHit = (Math.random() * 100 < (hitProb || 0));
+            const actionType = manualPattern[t-1] || (cd.ult === 0 ? 'ult' : 'normal');
+            const isUlt = actionType === 'ult', isDefend = actionType === 'defend';
+            const skill = isUlt ? charData.skills[1] : charData.skills[0];
+            const dynCtx = makeCtx(t, isUlt, turnDebugLogs, isHit);
             
-            // 행동 후 로직
-            if (sData.onAfterAction) sData.onAfterAction({ t, turns, isUlt, isDefend, stats, simState, customValues: context.customValues, debugLogs, charData });
-            debugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
-            
+            let currentTDmg = 0;
+
+            const getLatestSubStats = () => {
+                const subStats = { "기초공증": 0, "공증": 0, "고정공증": 0, "뎀증": 0, "평타뎀증": 0, "필살기뎀증": 0, "트리거뎀증": 0, "뎀증디버프": 0, "속성디버프": 0, "HP증가": 0, "기초HP증가": 0, "회복증가": 0, "배리어증가": 0, "지속회복증가": 0 };
+                charData.skills.forEach((s, idx) => {
+                    if (!charData.defaultBuffSkills?.includes(s.id) || idx === 1) return;
+                    if (s.hasCounter || s.hasToggle || s.customLink) return;
+                    if (idx >= 4 && idx <= 6 && br < [0,0,0,0,30,50,75][idx]) return;
+                    if (s.buffEffects) for (const k in s.buffEffects) if (subStats.hasOwnProperty(k)) subStats[k] += getSkillValue(idx, k);
+                });
+                if (sData.getLiveBonuses) {
+                    const liveBonuses = sData.getLiveBonuses(dynCtx);
+                    for (const k in liveBonuses) if (subStats.hasOwnProperty(k)) subStats[k] += liveBonuses[k];
+                }
+                const final = assembleFinalStats(baseStats, subStats);
+                return { atk: final.최종공격력, subStats };
+            };
+
+            const processExtra = (e) => {
+                if (!e) return;
+                const slots = [e.step1, e.step2, e.step3];
+                // 하위 호환
+                if (!e.step1 && !e.step2 && !e.step3 && e.coef !== undefined) {
+                    if (e.msg) slots[0] = e.msg;
+                    slots[1] = e.coef;
+                }
+
+                slots.forEach(slot => {
+                    if (slot === undefined || slot === null) return;
+                    let result = (typeof slot === 'function') ? slot(dynCtx) : slot;
+                    if (result === undefined || result === null) return;
+
+                    // 로그 이벤트
+                    if (typeof result === 'string' || Array.isArray(result)) {
+                        const msgs = Array.isArray(result) ? result : [result];
+                        msgs.forEach(m => { if (m) detailedLogs.push({ t, type: 'debug', msg: m }); });
+                    } 
+                    // 데미지 이벤트
+                    else if (typeof result === 'number' || (typeof result === 'object' && (result.max || result.fixed))) {
+                        const latest = getLatestSubStats();
+                        const coefValue = (typeof result === 'object') ? (result.max || result.fixed || 0) : result;
+                        const dUnit = calculateDamage(e.type || "추가공격", latest.atk, latest.subStats, coefValue, false, charData.info.속성, enemyAttrIdx);
+                        const finalD = e.isMulti ? dUnit * targetCount : dUnit;
+                        const c = e.isMulti ? coefValue * targetCount : coefValue;
+                        const s = charData.skills.find(sk => sk.id === e.skillId);
+                        let label = "추가타";
+                        if (s) { const idx = charData.skills.indexOf(s); label = (idx === 0) ? "보통공격" : (idx === 1) ? "필살기" : (idx >= 2 && idx <= 6) ? `패시브${idx-1}` : "도장"; }
+                        
+                        const statParts = [];
+                        statParts.push(`Coef:${c.toFixed(1)}%`);
+                        statParts.push(`Atk:${latest.atk.toLocaleString()}`);
+                        if (latest.subStats["뎀증"] !== 0) statParts.push(`Dmg:${latest.subStats["뎀증"].toFixed(1)}%`);
+                        if (latest.subStats["트리거뎀증"] !== 0) statParts.push(`T-Dmg:${latest.subStats["트리거뎀증"].toFixed(1)}%`);
+
+                        currentTDmg += finalD;
+                        logs.push(`${t}턴: [${label}] ${e.name || s?.name || "추가타"} +${finalD.toLocaleString()}`);
+                        detailedLogs.push({ 
+                            t, type: 'action', 
+                            msg: `ICON:${s?.icon || 'icon/main.png'}|[${label}] ${e.name || s?.name}: +${finalD.toLocaleString()}`, 
+                            statMsg: statParts.join(' / ') 
+                        });
+                    }
+                });
+                if (e.onattack2) e.onattack2(dynCtx);
+            };
+
+            const handleHook = (hookName) => {
+                if (sData[hookName]) {
+                    const res = sData[hookName](dynCtx);
+                    if (res && res.extraHits) res.extraHits.forEach(processExtra);
+                }
+            };
+
+            flow.forEach(step => {
+                if (step === 'onTurn') {
+                    handleHook('onTurn');
+                    stateLogs.push(formatBuffState(simState, charData));
+                } else if (step === 'setup') {
+                    handleHook('onCalculateDamage');
+                } else if (step === 'action') {
+                    if (isDefend) {
+                        logs.push(`${t}턴: [방어] - +0`);
+                        detailedLogs.push({ t, type: 'action', msg: 'ICON:icon/simul.png|[방어]' });
+                        handleHook('onAttack'); // 방어 중에도 공격 관련 훅은 실행
+                    } else {
+                        const mainStats = getLatestSubStats();
+                        let mDmgSum = 0, mCoef = 0;
+                        skill.damageDeal?.forEach(e => {
+                            const c = (isUlt && stats.stamp && e.val.stampMax) ? e.val.stampMax : e.val.max;
+                            const fC = c * getSkillMultiplier(parseInt(isUlt ? (stats.skills?.s2 || 1) : (stats.skills?.s1 || 1)), skill.startRate || 0.6);
+                            const isM = skill.isMultiTarget || e.isMultiTarget;
+                            mCoef += isM ? fC * targetCount : fC;
+                            mDmgSum += calculateDamage(isUlt?"필살공격":"보통공격", mainStats.atk, mainStats.subStats, fC, isUlt && stats.stamp, charData.info.속성, enemyAttrIdx) * (isM ? targetCount : 1);
+                        });
+
+                        const statParts = [];
+                        statParts.push(`Coef:${mCoef.toFixed(1)}%`);
+                        statParts.push(`Atk:${mainStats.atk.toLocaleString()}`);
+                        if (mainStats.subStats["뎀증"] !== 0) statParts.push(`Dmg:${mainStats.subStats["뎀증"].toFixed(1)}%`);
+                        
+                        const specDmgKey = isUlt ? "필살기뎀증" : "평타뎀증";
+                        const specDmgLabel = isUlt ? "U-Dmg" : "N-Dmg";
+                        if (mainStats.subStats[specDmgKey] !== 0) {
+                            statParts.push(`${specDmgLabel}:${mainStats.subStats[specDmgKey].toFixed(1)}%`);
+                        }
+
+                        logs.push(`${t}턴: [${isUlt?'필살기':'보통공격'}] ${skill.name} +${mDmgSum.toLocaleString()}`);
+                        detailedLogs.push({ 
+                            t, type: 'action', 
+                            msg: `ICON:${skill.icon}|[${isUlt?'필살기':'보통공격'}] ${skill.name}: +${mDmgSum.toLocaleString()}`, 
+                            statMsg: statParts.join(' / ') 
+                        });
+                        currentTDmg = mDmgSum;
+                        handleHook('onAttack');
+                    }
+                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                    turnDebugLogs.length = 0;
+                } else if (step === 'hit') {
+                    if (isHit) {
+                        handleHook('onEnemyHit');
+                    }
+                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                    turnDebugLogs.length = 0;
+                } else if (step === 'extra') {
+                    // 모든 extraHits는 이미 각 훅 단계에서 즉시 처리됨
+                } else if (step === 'onAfterAction') {
+                    handleHook('onAfterAction');
+                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                }
+            });
+
+            total += currentTDmg; perTurnDmg.push({ dmg: currentTDmg, cumulative: total });
             if (isUlt) cd.ult = ultCD - 1; else if (cd.ult > 0) cd.ult--;
         }
         iterationResults.push({ total, logs, perTurnDmg, stateLogs, detailedLogs });
     }
 
-    // 통계 산출
-    const totals = iterationResults.map(d => d.total);
-    const avg = Math.floor(totals.reduce((a, b) => a + b, 0) / iterations);
-    const min = Math.min(...totals), max = Math.max(...totals);
-    const closest = iterationResults.reduce((prev, curr) => Math.abs(curr.total - avg) < Math.abs(prev.total - avg) ? curr : prev);
+    const totals = iterationResults.map(d => d.total), avg = Math.floor(totals.reduce((a, b) => a + b, 0) / iterations);
+    const min = Math.min(...totals), max = Math.max(...totals), closest = iterationResults.sort((a, b) => Math.abs(a.total - avg) - Math.abs(b.total - avg))[0];
     const range = max - min, binCount = Math.min(iterations, 100), bins = new Array(binCount).fill(0);
-    
-    let targetBinIdx = -1;
-    iterationResults.forEach(res => {
-        let bIdx = (range === 0) ? Math.floor(binCount / 2) : Math.floor(((res.total - min) / range) * binCount);
-        if (bIdx >= binCount) bIdx = binCount - 1;
-        bins[bIdx]++;
-        if (res === closest && targetBinIdx === -1) targetBinIdx = bIdx;
-    });
+    iterationResults.forEach(r => { let b = (range === 0) ? 0 : Math.floor(((r.total - min) / range) * (binCount - 1)); bins[b]++; });
+    const xLabels = []; if (range > 0) { for (let j = 0; j <= 5; j++) { const v = min + (range * (j / 5)); xLabels.push({ pos: (j / 5) * 100, label: v >= 1000 ? (v / 1000).toFixed(0) + 'K' : Math.floor(v) }); } }
 
     return {
-        min: min.toLocaleString(),
-        max: max.toLocaleString(),
-        avg: avg.toLocaleString(),
+        min: min.toLocaleString(), max: max.toLocaleString(), avg: avg.toLocaleString(),
         logHtml: closest.logs.map(l => `<div>${l}</div>`).join(''),
-        graphData: bins.map((c, i) => ({ h: (c / Math.max(...bins)) * 100, isAvg: i === targetBinIdx, count: c })),
-        turnData: closest.perTurnDmg,
-        closestTotal: closest.total,
-        closestLogs: closest.logs,
-        closestStateLogs: closest.stateLogs,
-        closestDetailedLogs: closest.detailedLogs,
-        minRaw: min, maxRaw: max, avgRaw: avg
+        graphData: bins.map((c, i) => ({ h: (c / Math.max(...bins)) * 100, isAvg: i === Math.floor(((closest.total - min) / (range || 1)) * (binCount - 1)) })),
+        axisData: { x: xLabels, y: Array.from({length: 6}, (_, i) => Math.floor(Math.max(...bins) * (5 - i) / 5)) },
+        turnData: closest.perTurnDmg, closestTotal: closest.total, closestLogs: closest.logs, closestStateLogs: closest.stateLogs, closestDetailedLogs: closest.detailedLogs, yMax: Math.max(...bins)
     };
 }
