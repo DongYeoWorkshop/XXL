@@ -252,10 +252,17 @@ export function runSimulationCore(context) {
                     
                     if (!skipPush) {
                         dLogsArray.push(msg);
-                        // [확정] 부모 스코프의 logs 배열에 직접 추가
+                        // [수정] 데미지 정보(': +')가 포함된 경우에만 메인 로그 리스트에 추가
                         const plainTag = label ? `<span class="sim-log-tag">[${label}]</span> ` : "";
                         const actionText = `${sName}${actionPart}${mS}`;
-                        logs.push(`<div class="sim-log-line"><span>${tVal}턴: ${plainTag}${actionText}</span></div>`);
+                        
+                        if (actionText.includes(': +')) {
+                            const parts = actionText.split(': ');
+                            const info = parts[0];
+                            const dmg = parts[1];
+                            // 텍스트 구조 유지하며 데미지만 우측 정렬 클래스 부여
+                            logs.push(`<div class="sim-log-line"><span>${tVal}턴: ${plainTag}${info}</span><span class="sim-log-dmg">${dmg}</span></div>`);
+                        }
                     }
                     return msg; 
                 }
@@ -445,7 +452,8 @@ export function runSimulationCore(context) {
                     turnDebugLogs.length = 0;
                 } else if (step === 'action') {
                     if (isDefend) {
-                        logs.push(`${t}턴: [방어] - +0`);
+                        const defenseTag = `<span class="sim-log-tag">[방어]</span>`;
+                        logs.push(`<div class="sim-log-line"><span>${t}턴: ${defenseTag}</span> <span class="sim-log-dmg">+0</span></div>`);
                         detailedLogs.push({ t, type: 'action', msg: 'ICON:icon/simul.png|[방어]' });
                         handleHook('onAttack');
                     } else {
