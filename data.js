@@ -1317,7 +1317,7 @@ export const charData = {
         excludeFromBuffSearch: true,
         isUltExtra: true,
         syncLevelWith: "shinrirang_skill2",
-        calc: [{ max: 30}],         
+        calc: [{ max: 40}],         
         damageDeal: [{ type: "추가공격", val: { max: 40 } }]       
       }    
     ]

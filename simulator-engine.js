@@ -3,12 +3,17 @@ import { calculateDamage, calculateBaseStats, assembleFinalStats } from './calcu
 import { getSkillMultiplier } from './formatter.js';
 import { commonControls } from './simulator-common.js';
 import { getStatusInfo, formatStatusMessage, formatStatusAction } from './simulator-status.js';
+import { simParams } from './sim_params.js';
 
 /**
  * 버프 상태 표시용 포매터
  */
-export function formatBuffState(state, charDataObj, sData, stats) {
+export function formatBuffState(charId, state, charDataObj, sData, stats) {
     const entries = [];
+    
+    // [추가] 해당 캐릭터의 파라미터 가져오기
+    const charParams = simParams[charId] || {};
+
     const getSkillInfo = (idx) => {
         const originalSkill = charDataObj.skills[idx];
         if (!originalSkill) return { label: "스킬", name: "알 수 없음", icon: "icon/main.png" };
@@ -42,6 +47,14 @@ export function formatBuffState(state, charDataObj, sData, stats) {
 
         let name = "", icon = 'icon/main.png', displayDur = "";
         const customName = sData?.stateDisplay?.[key];
+        
+        // [추가] simParams에서 해당 키에 맞는 customTag 찾기 (id 혹은 stateKey 매칭)
+        let foundCustomTag = null;
+        const matchedParam = Object.values(charParams).find(p => p.stateKey === key || p.id === key || (p.id && `${p.id}_stacks` === key));
+        if (matchedParam && matchedParam.customTag) {
+            foundCustomTag = matchedParam.customTag;
+        }
+
         const skillMatch = key.match(/^skill(\d+)/);
         
         // 1. 스킬 기반 버프 처리
@@ -56,7 +69,8 @@ export function formatBuffState(state, charDataObj, sData, stats) {
             if (skillIdx === 6 && br < 75) continue;
 
             const info = getSkillInfo(skillIdx);
-            name = customName || `[${info.label}]`;
+            // customTag가 있으면 최우선 적용
+            name = foundCustomTag ? `[${foundCustomTag}]` : (customName || `[${info.label}]`);
             icon = info.icon;
 
             if (Array.isArray(val)) {
@@ -110,43 +124,66 @@ export function runSimulationCore(context) {
     const baseStats = calculateBaseStats(charData.base, lv, br, fit, defaultGrowthRate);
     
     const getSkillValue = (skillIdx, effectKey, isStamp = false) => {
+        const skill = charData.skills[skillIdx];
+        if (!skill) return 0;
+
+        // [규칙 적용] 도장 및 부속 스킬 판별
+        const isStampIcon = skill.icon && skill.icon.includes('images/sigilwebp/');
+        const parentId = skill.syncLevelWith;
+        
+        // 레벨 계산을 위한 대상 스킬 찾기 (도장이거나 syncLevelWith가 있으면 부모 스킬의 레벨을 따름)
+        let targetIdx = skillIdx;
+        if (parentId) {
+            const foundIdx = charData.skills.findIndex(s => s.id === parentId);
+            if (foundIdx !== -1) targetIdx = foundIdx;
+        }
+
         // [추가] 돌파 단계에 따른 스킬 잠금 체크
         const br = parseInt(stats.s1 || 0);
         if (skillIdx === 4 && br < 30) return 0; // 패시브3
         if (skillIdx === 5 && br < 50) return 0; // 패시브4
         if (skillIdx === 6 && br < 75) return 0; // 패시브5
 
-        const skill = charData.skills[skillIdx];
-        if (!skill) return 0;
-        let targetIdx = skillIdx;
-        if (skill.syncLevelWith) {
-            const foundIdx = charData.skills.findIndex(s => s.id === skill.syncLevelWith);
-            if (foundIdx !== -1) targetIdx = foundIdx;
-        }
-        const lvS = parseInt(stats.skills?.[`s${targetIdx+1}`] || 1);
-        const rate = getSkillMultiplier(lvS, skill.startRate || 0.6);
+        const skillLvMap = stats.skills || {};
+        const lvS = parseInt(skillLvMap[`s${targetIdx+1}`] || 1) || 1;
+        const rate = getSkillMultiplier(lvS, skill.startRate || 0.6) || 1;
+        
         let e = null;
-        const effects = isStamp ? skill.stampBuffEffects : skill.buffEffects;
-        if (effects && effects[effectKey] !== undefined) e = effects[effectKey];
-        else if (skill.damageDeal) {
-            const d = skill.damageDeal.find(dmg => dmg.type === effectKey);
-            if (d) e = d.val;
+        // effectKey가 숫자인 경우 calc 배열의 인덱스로 취급
+        if (typeof effectKey === 'number') {
+            if (skill.calc && skill.calc[effectKey]) {
+                const calcItem = skill.calc[effectKey];
+                // calc[n]이 객체 {max: 100} 형태면 max를, 숫자면 그 값을 취함
+                e = (typeof calcItem === 'object') ? (isStampIcon ? (calcItem.stampMax || calcItem.max) : calcItem.max) : calcItem;
+            }
+        } else {
+            const effects = isStamp ? skill.stampBuffEffects : skill.buffEffects;
+            if (effects && effects[effectKey] !== undefined) e = effects[effectKey];
+            else if (skill.damageDeal) {
+                const d = skill.damageDeal.find(dmg => dmg.type === effectKey);
+                if (d) e = d.val;
+            }
+            if (e === null && effectKey === 'max' && skill.calc && skill.calc[0]) e = skill.calc[0];
+            if (e === null && isStamp && skill.buffEffects && skill.buffEffects[effectKey] !== undefined) e = skill.buffEffects[effectKey];
         }
-        if (e === null && effectKey === 'max' && skill.calc && skill.calc[0]) e = skill.calc[0];
-        if (e === null && isStamp && skill.buffEffects && skill.buffEffects[effectKey] !== undefined) e = skill.buffEffects[effectKey];
+
         if (e === null) return 0;
         
         const val = (typeof e === 'object' && e !== null) 
             ? (isStamp 
                 ? (e.stampMax !== undefined ? e.stampMax : (e.stampFixed !== undefined ? e.stampFixed : (e.attributeMax || e.max || e.fixed || 0)))
-                : ((charData.info.속성 === e.targetAttribute ? (e.attributeMax || e.max) : e.max) || e.fixed || 0)
+                : ((e.targetAttribute !== undefined && charData.info.속성 === e.targetAttribute ? (e.attributeMax || e.max) : e.max) || e.fixed || 0)
               )
             : (e || 0);
-        return val * (typeof e === 'object' && e.max ? rate : 1);
+        
+        const finalVal = Number(val) || 0;
+        // [수정] 스킬 레벨에 따른 추가 배율(rate)을 곱하지 않고 원본 수치 그대로 반환합니다.
+        return finalVal;
     };
 
     const iterationResults = [];
-    const flow = sData.flow || ['onTurn', 'setup', 'action', 'hit', 'extra', 'onAfterAction'];
+    // [명칭 통일] 엔진 내부 단계를 외부 훅 명칭과 일치시킵니다.
+    const flow = sData.flow || ['onTurn', 'onCalculateDamage', 'onAttack', 'onEnemyHit', 'onAfterAction'];
 
     for (let i = 0; i < iterations; i++) {
         // [수정] initialState 깊은 복사로 초기화 (없으면 기본값 사용)
@@ -203,7 +240,7 @@ export function runSimulationCore(context) {
                     if (idx === 6 && br < 75) return false;
                     return true;
                 },
-                log: (idx, res, chance, dur, skipPush = false) => {
+                log: (idx, res, chance, dur, skipPush = false, customTag = null) => {
                     if (typeof idx === 'number') {
                         const br = parseInt(stats.s1 || 0);
                         if (idx === 4 && br < 30) return "";
@@ -217,17 +254,18 @@ export function runSimulationCore(context) {
                         const s = charData.skills[idx];
                         sName = s?.name || "알 수 없음";
                         sIcon = s?.icon || "icon/main.png";
-                        label = idx === 1 ? "필살기" : idx >= 7 ? "도장" : `패시브${idx-1}`;
+                        label = customTag || (idx === 1 ? "필살기" : idx >= 7 ? "도장" : `패시브${idx-1}`);
                     } else if (typeof idx === 'string') {
                         const statusInfo = getStatusInfo(idx);
                         if (statusInfo) {
                             sName = statusInfo.name;
                             sIcon = statusInfo.icon;
-                            label = ""; 
+                            label = customTag || ""; 
                         } else {
                             sName = idx; 
                             if (sName === "피격") { sIcon = "icon/simul.png"; label = ""; } 
                             else if (sName === "아군공격") { sIcon = "icon/compe.png"; label = ""; }
+                            label = customTag || label;
                         }
                     }
 
@@ -265,6 +303,170 @@ export function runSimulationCore(context) {
                         }
                     }
                     return msg; 
+                },
+                // [추가] 스킬 ID로 인덱스 찾기 헬퍼
+                getSkillIdx: (skillId) => {
+                    return charData.skills.findIndex(s => s.id === skillId);
+                },
+                // [추가] 공용 버프 부여 함수
+                applyBuff: (skillParam) => {
+                    const { prob, duration, label, originalId, maxStacks, customTag, skipTrigger, probSource } = skillParam;
+                    
+                    // 확률 결정: 직접 입력된 prob 혹은 UI에서 가져온 probSource
+                    let finalProb = prob;
+                    if (probSource && ctx.customValues[probSource] !== undefined) {
+                        finalProb = ctx.customValues[probSource] / 100;
+                    }
+
+                    if (finalProb === undefined || Math.random() < finalProb) {
+                        const timerKey = skillParam.timerKey || `${originalId?.split('_').pop()}_timer`;
+                        if (maxStacks && maxStacks > 1) {
+                            ctx.addTimer(timerKey, duration, {}, maxStacks);
+                        } else {
+                            ctx.setTimer(timerKey, duration);
+                        }
+                        
+                        // [추가] 버프 부여 성공 이벤트 알림 (단, skipTrigger가 없을 때만)
+                        if (originalId && !skipTrigger) {
+                            ctx.checkStackTriggers(originalId);
+                        }
+
+                        const displayProb = finalProb && finalProb < 1 ? finalProb * 100 : null;
+                        // skipPush를 false로 변경하여 상세 로그에는 남기도록 함
+                        return ctx.log(ctx.getSkillIdx(originalId), label, displayProb, duration, false, customTag);
+                    }
+                    return "";
+                },
+                // [추가] 공용 추가타 생성 함수
+                applyHit: (skillParam, val) => {
+                    const { prob, label, originalId, skipTrigger, customTag } = skillParam;
+                    if (prob === undefined || Math.random() < prob) {
+                        return { 
+                            val: val, 
+                            chance: prob && prob < 1 ? prob * 100 : null, 
+                            name: label, 
+                            skillId: originalId,
+                            skipTrigger: skipTrigger, // 결과 객체에 포함하여 전달
+                            customTag: customTag
+                        };
+                    }
+                    return null;
+                },
+                // [추가] 공용 스택 쌓기 함수
+                gainStack: (skillParam) => {
+                    const { maxStacks, label, originalId, customTag } = skillParam;
+                    const stateKey = skillParam.stateKey || (skillParam.id ? `${skillParam.id}_stacks` : null);
+                    if (!stateKey) return "";
+
+                    const currentStacks = ctx.simState[stateKey] || 0;
+                    const nextStacks = Math.min(maxStacks, currentStacks + 1);
+                    ctx.simState[stateKey] = nextStacks;
+
+                    let skillIdx = null;
+                    if (originalId) {
+                        skillIdx = charData.skills.findIndex(s => s.id === originalId);
+                    } else {
+                        const skillMatch = stateKey.match(/skill(\d+)/);
+                        skillIdx = skillMatch ? parseInt(skillMatch[1]) - 1 : null;
+                    }
+
+                    return ctx.log(skillIdx !== -1 ? skillIdx : null, label, null, null, false, customTag);
+                },
+                // [추가] 유연한 스택 트리거 체크 함수
+                checkStackTriggers: (triggerId) => {
+                    const p = simParams[charId];
+                    if (!p || !triggerId) return;
+                    Object.values(p).forEach(param => {
+                        if (param.type === "stack" && param.triggers?.includes(triggerId)) {
+                            ctx.gainStack(param);
+                        }
+                    });
+                },
+                // [추가] 유연한 버프 트리거 체크 함수
+                checkBuffTriggers: (triggerId) => {
+                    const p = simParams[charId];
+                    if (!p || !triggerId) return;
+                    Object.values(p).forEach(param => {
+                        if (param.type === "buff" && param.triggers?.includes(triggerId)) {
+                            ctx.applyBuff(param);
+                        }
+                    });
+                },
+                // [추가] 만능 조건 체크 함수 (중첩 AND/OR 지원)
+                checkCondition: (cond) => {
+                    if (!cond) return true;
+                    
+                    // 1. AND 조건 (배열): 모든 요소가 참이어야 함
+                    if (Array.isArray(cond)) {
+                        return cond.every(c => ctx.checkCondition(c));
+                    }
+                    
+                    // 2. OR 조건 (객체 { or: [...] }): 하나라도 참이면 됨
+                    if (typeof cond === 'object') {
+                        if (cond.or) return cond.or.some(c => ctx.checkCondition(c));
+                        if (cond.and) return cond.and.every(c => ctx.checkCondition(c));
+                        return true;
+                    }
+                    
+                    // 3. 단일 조건 (문자열) 판별
+                    if (typeof cond === 'string') {
+                        // 기본 상태 체크
+                        if (cond === "isUlt") return ctx.isUlt;
+                        if (cond === "isNormal") return !ctx.isUlt && !ctx.isDefend;
+                        if (cond === "isDefend") return ctx.isDefend;
+                        if (cond === "!isDefend") return !ctx.isDefend;
+                        if (cond === "isStamp") return stats.stamp;
+                        
+                        // 적 수 체크 (예: "targetCount:5", "targetCount:>=2")
+                        if (cond.startsWith("targetCount:")) {
+                            const expr = cond.split(":")[1];
+                            if (expr.startsWith(">=")) return targetCount >= parseInt(expr.substring(2));
+                            if (expr.startsWith("<=")) return targetCount <= parseInt(expr.substring(2));
+                            if (expr.startsWith(">")) return targetCount > parseInt(expr.substring(1));
+                            if (expr.startsWith("<")) return targetCount < parseInt(expr.substring(1));
+                            return targetCount === parseInt(expr);
+                        }
+                        
+                        // 특정 버프/스택 존재 여부 (예: "hasBuff:skill4", "hasStack:skill4_spirit:9")
+                        if (cond.startsWith("hasBuff:")) {
+                            const key = cond.split(":")[1] + "_timer";
+                            const val = simState[key];
+                            return Array.isArray(val) ? val.length > 0 : val > 0;
+                        }
+                        if (cond.startsWith("hasStack:")) {
+                            const parts = cond.split(":");
+                            const id = parts[1];
+                            const targetVal = parts[2] ? parseInt(parts[2]) : 1;
+                            
+                            // 1. 직접 매칭되는 키가 있는지 확인
+                            if (simState[id] !== undefined) return simState[id] >= targetVal;
+                            
+                            // 2. _stacks 접미사를 붙여서 확인
+                            const stackKey = id.endsWith("_stacks") ? id : id + "_stacks";
+                            return (simState[stackKey] || 0) >= targetVal;
+                        }
+                    }
+                    return false;
+                },
+                // [추가] 가중치 기반 수치 계산 함수 (디버프 비중용)
+                getWeightedVal: (skillParam, effectKey) => {
+                    // 1. 활성화 여부 체크 (타이머 확인)
+                    const timerKey = skillParam.timerKey || `${skillParam.originalId.split('_').pop()}_timer`;
+                    const timerVal = ctx.simState[timerKey];
+                    const isActive = Array.isArray(timerVal) ? timerVal.length > 0 : timerVal > 0;
+                    
+                    if (!isActive) return 0;
+
+                    // 2. 기본 수치 가져오기 (testVal이 있으면 최우선 사용)
+                    const baseVal = skillParam.testVal !== undefined ? skillParam.testVal : ctx.getVal(ctx.getSkillIdx(skillParam.originalId), effectKey);
+                    const limit = skillParam.targetLimit;
+                    
+                    // 3. 비중 계산
+                    // 타겟 제한이 없거나 전체 타겟이면 원본 수치 그대로 반환
+                    if (!limit || limit >= targetCount) return baseVal;
+
+                    const weight = limit / targetCount;
+                    return baseVal * weight;
                 }
             };
             return ctx;
@@ -302,103 +504,130 @@ export function runSimulationCore(context) {
                 });
                 if (sData.getLiveBonuses) {
                     const liveBonuses = sData.getLiveBonuses(dynCtx);
-                    for (const k in liveBonuses) if (subStats.hasOwnProperty(k)) subStats[k] += liveBonuses[k];
+                    for (const k in liveBonuses) {
+                        if (subStats.hasOwnProperty(k)) {
+                            const val = Number(liveBonuses[k]);
+                            if (!isNaN(val)) subStats[k] += val;
+                        }
+                    }
                 }
                 const final = assembleFinalStats(baseStats, subStats);
                 return { atk: final.최종공격력, subStats };
             };
 
+            // [추가] 데미지 계산 및 로그 기록 통합 처리기
+            const calculateAndLogHit = (event) => {
+                // [복구] 매 타격 시점의 최신 스탯을 즉시 정산 (getLiveBonuses 결과값 포함)
+                const latest = getLatestSubStats();
+                
+                let coefValue = 0;
+                if (event.val !== undefined) coefValue = event.val;
+                else coefValue = event.max || event.fixed || event.coef || 0;
+
+                const targetSkillId = event.skillId;
+                const s = charData.skills.find(sk => sk.id === targetSkillId);
+                const isMulti = event.isMulti !== undefined ? event.isMulti : (s?.isMultiTarget || false);
+
+                // [중요] 중복 합산 방지: 이미 latest.subStats 에 모든 보너스가 들어있으므로
+                // 여기서 다시 비중을 계산하여 더해주면 안 됩니다.
+                const currentStats = { ...latest.subStats };
+
+                const dUnit = calculateDamage(event.type || "추가공격", latest.atk, currentStats, coefValue, false, charData.info.속성, enemyAttrIdx);
+                const finalD = isMulti ? dUnit * targetCount : dUnit;
+                
+                const c = isMulti ? coefValue * targetCount : coefValue;
+                const effectiveVul = currentStats["뎀증디버프"] + currentStats["속성디버프"];
+
+                let label = "추가타";
+                if (s) { 
+                    const idx = charData.skills.indexOf(s); 
+                    label = (idx === 0) ? "보통공격" : (idx === 1) ? "필살기" : (idx >= 2 && idx <= 6) ? `패시브${idx-1}` : "도장"; 
+                }
+                
+                // [추가] 고유 태그(customTag)가 있으면 우선 사용
+                if (event.customTag) {
+                    label = event.customTag;
+                }
+
+                const baseName = event.name || s?.name || "추가타";
+                const statParts = [`Coef:${c.toFixed(1)}%`, `Atk:${latest.atk.toLocaleString()}`];
+                if (latest.subStats["뎀증"] !== 0) statParts.push(`Dmg:${latest.subStats["뎀증"].toFixed(1)}%`);
+                if (latest.subStats["트리거뎀증"] !== 0) statParts.push(`T-Dmg:${latest.subStats["트리거뎀증"].toFixed(1)}%`);
+                if (latest.subStats["뎀증디버프"] !== 0) statParts.push(`Vul:${latest.subStats["뎀증디버프"].toFixed(1)}%`);
+                if (latest.subStats["속성디버프"] !== 0) statParts.push(`A-Vul:${latest.subStats["속성디버프"].toFixed(1)}%`);
+
+                currentTDmg += finalD;
+                
+                // 1. 데미지 로그를 먼저 기록 (임시 보관소에 저장하여 순서 보장)
+                if (finalD > 0) {
+                    const plainTag = `<span class="sim-log-tag">[${label}]</span>`;
+                    logs.push(`<div class="sim-log-line"><span>${t}턴: ${plainTag} ${baseName}${event.stack ? ' x'+event.stack : ''}:</span> <span class="sim-log-dmg">+${finalD.toLocaleString()}</span></div>`);
+                }
+                
+                dynCtx.debugLogs.push({
+                    type: 'action',
+                    msg: `ICON:${s?.icon || 'icon/main.png'}|[${label}] ${baseName}${event.stack ? ' <span style="color:#ff4d4d">x'+event.stack+'</span>' : ''}: +${finalD.toLocaleString()}${event.chance ? ' ('+event.chance+'%)' : ''}`,
+                    statMsg: statParts.join(' / ')
+                });
+
+                // 2. 그 다음에 스택 트리거 체크
+                if (targetSkillId && !event.skipTrigger) {
+                    dynCtx.checkStackTriggers(targetSkillId);
+                }
+            };
+
             const processExtra = (e) => {
                 if (!e) return;
 
-                // [추가] 돌파 단계에 따른 스킬 해금 여부 자동 체크
+                // [추가] 발동 조건(condition) 체크 - 조건이 맞지 않으면 즉시 종료
+                if (e.condition && !dynCtx.checkCondition(e.condition)) {
+                    return;
+                }
+
+                // 1. 자동화된 파라미터 객체 처리
+                if (e.type === "buff" || e.type === "hit" || e.type === "action") {
+                    if (e.type === "buff") {
+                        dynCtx.applyBuff(e);
+                    } else if (e.type === "hit") {
+                        const skillIdx = dynCtx.getSkillIdx(e.originalId);
+                        const val = e.val !== undefined ? e.val : (e.valIdx !== undefined ? dynCtx.getVal(skillIdx, e.valIdx) : dynCtx.getVal(skillIdx, e.valKey || '추가공격'));
+                        const hitRes = dynCtx.applyHit(e, val);
+                        if (hitRes) {
+                            calculateAndLogHit({ ...hitRes, isMulti: e.isMulti });
+                        }
+                    } else if (e.type === "action") {
+                        if (e.action === "all_consume") {
+                            const key = e.stateKey || (e.id + "_stacks");
+                            dynCtx.simState[key] = 0;
+                            // [수정] skipPush: false 를 위해 log 함수 호출 방식 변경
+                            dynCtx.log(e.label || key, "all_consume");
+                        }
+                    }
+                    return;
+                }
+
+                // 2. 레거시 및 커스텀 객체 처리
                 if (e.skillId) {
                     const skillIdx = charData.skills.findIndex(s => s.id === e.skillId);
-                    if (skillIdx !== -1) {
-                        const br = parseInt(stats.s1 || 0);
-                        // 패시브 3 (idx 4) -> 30단, 패시브 4 (idx 5) -> 50단, 패시브 5 (idx 6) -> 75단
-                        if (skillIdx === 4 && br < 30) return;
-                        if (skillIdx === 5 && br < 50) return;
-                        if (skillIdx === 6 && br < 75) return;
-                    }
+                    if (skillIdx !== -1 && !dynCtx.isUnlocked(skillIdx)) return;
                 }
 
                 const slots = [e.step1, e.step2, e.step3];
-                // 하위 호환
-                if (!e.step1 && !e.step2 && !e.step3 && e.coef !== undefined) {
-                    if (e.msg) slots[0] = e.msg;
+                if (!e.step1 && !e.step2 && !e.step3 && (e.coef !== undefined || e.val !== undefined)) {
                     slots[1] = e;
                 }
 
                 slots.forEach(slot => {
-                    if (slot === undefined || slot === null) return;
+                    if (!slot) return;
                     let result = (typeof slot === 'function') ? slot(dynCtx) : slot;
-                    if (result === undefined || result === null) return;
+                    if (!result) return;
 
-                    // 결과가 배열인 경우 (여러 로그/데미지 처리)
                     const results = Array.isArray(result) ? result : [result];
-
                     results.forEach(res => {
-                        // 로그 이벤트 (문자열)
                         if (typeof res === 'string') {
-                            detailedLogs.push({ t, type: 'debug', msg: res });
-                            // [수정] 메인 로그(logs)에는 더 이상 문자열(버프 발동 등)을 넣지 않음
-                        } 
-                        // 데미지 이벤트 (숫자 또는 객체)
-                        else if (typeof res === 'number' || (typeof res === 'object' && (res.max || res.fixed || res.val || res.coef))) {
-                            const latest = getLatestSubStats();
-                            let coefValue = 0;
-                            let displayChance = "";
-                            let customName = e.name;
-                            let targetSkillId = res.skillId || e.skillId;
-
-                            let plainStack = "";
-                            let richStack = "";
-                            if (typeof res === 'object') {
-                                coefValue = res.val || res.max || res.fixed || res.coef || 0;
-                                if (res.chance) displayChance = ` (${res.chance}%)`;
-                                if (res.name) customName = res.name;
-                                if (res.stack) {
-                                    plainStack = ` x${res.stack}`;
-                                    richStack = ` <span style="color:#ff4d4d">x${res.stack}</span>`;
-                                }
-                            } else {
-                                coefValue = res;
-                            }
-
-                            const dUnit = calculateDamage(e.type || "추가공격", latest.atk, latest.subStats, coefValue, false, charData.info.속성, enemyAttrIdx);
-                            const finalD = e.isMulti ? dUnit * targetCount : dUnit;
-                            const c = e.isMulti ? coefValue * targetCount : coefValue;
-                            
-                            const s = charData.skills.find(sk => sk.id === targetSkillId);
-                            let label = "추가타";
-                            if (s) { 
-                                const idx = charData.skills.indexOf(s); 
-                                label = (idx === 0) ? "보통공격" : (idx === 1) ? "필살기" : (idx >= 2 && idx <= 6) ? `패시브${idx-1}` : "도장"; 
-                            }
-                            
-                            const statParts = [`Coef:${c.toFixed(1)}%`, `Atk:${latest.atk.toLocaleString()}`];
-                            if (latest.subStats["뎀증"] !== 0) statParts.push(`Dmg:${latest.subStats["뎀증"].toFixed(1)}%`);
-                            if (latest.subStats["트리거뎀증"] !== 0) statParts.push(`T-Dmg:${latest.subStats["트리거뎀증"].toFixed(1)}%`);
-                            if (latest.subStats["뎀증디버프"] !== 0) statParts.push(`Vul:${latest.subStats["뎀증디버프"].toFixed(1)}%`);
-                            if (latest.subStats["속성디버프"] !== 0) statParts.push(`A-Vul:${latest.subStats["속성디버프"].toFixed(1)}%`);
-
-                            const baseName = customName || s?.name || "추가타";
-                            currentTDmg += finalD;
-                            
-                            // [수정] 데미지가 0보다 큰 경우에만 메인 로그에 기록 (HTML 구조화)
-                            if (finalD > 0) {
-                                const plainTag = `<span class="sim-log-tag">[${label}]</span>`;
-                                const dmgValue = `+${finalD.toLocaleString()}`;
-                                const dmgText = `<span class="sim-log-dmg">${dmgValue}</span>`;
-                                logs.push(`<div class="sim-log-line"><span>${t}턴: ${plainTag} ${baseName}${plainStack}:</span> ${dmgText}</div>`);
-                            }
-                            
-                            detailedLogs.push({
-                                t, type: 'action',
-                                msg: `ICON:${s?.icon || 'icon/main.png'}|[${label}] ${baseName}${richStack}: +${finalD.toLocaleString()}${displayChance}`,
-                                statMsg: statParts.join(' / ')
-                            });
+                            dynCtx.debugLogs.push(res);
+                        } else {
+                            calculateAndLogHit({ ...e, ...(typeof res === 'object' ? res : { val: res }) });
                         }
                     });
                 });
@@ -410,9 +639,42 @@ export function runSimulationCore(context) {
                     const res = sData[hookName](dynCtx);
                     // [핵심] flat(Infinity)를 통해 중첩 배열 구조를 지원하고 null/false 값을 걸러냄
                     if (res && res.extraHits) {
-                        res.extraHits.flat(Infinity).filter(Boolean).forEach(processExtra);
+                        const flattened = res.extraHits.flat(Infinity).filter(Boolean);
+                        
+                        // [추가] order 속성이 있다면 그 순서대로 정렬하여 실행 (서순 보장)
+                        flattened.sort((a, b) => {
+                            const orderA = a.order || 999;
+                            const orderB = b.order || 999;
+                            return orderA - orderB;
+                        });
+
+                        flattened.forEach(processExtra);
                     }
                 }
+            };
+
+            // [업그레이드] 단계별 또는 이벤트별 자동 파라미터 실행기
+            const autoExecuteParams = (phaseOrEventName, activeCtx) => {
+                const p = simParams[charId];
+                if (!p) return;
+                
+                const targets = Object.values(p).filter(param => 
+                    param.phase === phaseOrEventName || 
+                    (param.triggers && param.triggers.includes(phaseOrEventName))
+                );
+                if (targets.length === 0) return;
+
+                targets.sort((a, b) => {
+                    const orderA = a.order !== undefined ? a.order : 999;
+                    const orderB = b.order !== undefined ? b.order : 999;
+                    return orderA - orderB;
+                });
+
+                // [중요] 주입받은 현재 컨텍스트를 사용하여 실행
+                targets.forEach(param => {
+                    // processExtra가 내부에서 dynCtx를 사용하도록 전달 (여기서는 클로저 사용 중)
+                    processExtra(param);
+                });
             };
 
             flow.forEach(step => {
@@ -443,55 +705,92 @@ export function runSimulationCore(context) {
                     }
 
                     handleHook('onTurn');
-                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                    autoExecuteParams('onTurn'); // [복구] 턴 시작 자동 스킬 실행
+                    
+                    turnDebugLogs.forEach(item => {
+                        if (typeof item === 'string') detailedLogs.push({ t, type: 'debug', msg: item });
+                        else detailedLogs.push({ t, ...item });
+                    });
                     turnDebugLogs.length = 0;
-                    stateLogs.push(formatBuffState(simState, charData, sData, stats));
-                } else if (step === 'setup') {
+                    stateLogs.push(formatBuffState(charId, simState, charData, sData, stats));
+                } else if (step === 'onCalculateDamage') {
                     handleHook('onCalculateDamage');
-                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                    autoExecuteParams('onCalculateDamage'); // [복구] 설정 단계 자동 스킬 실행
+                    
+                    turnDebugLogs.forEach(item => {
+                        if (typeof item === 'string') detailedLogs.push({ t, type: 'debug', msg: item });
+                        else detailedLogs.push({ t, ...item });
+                    });
                     turnDebugLogs.length = 0;
-                } else if (step === 'action') {
+                } else if (step === 'onAttack') {
                     if (isDefend) {
                         const defenseTag = `<span class="sim-log-tag">[방어]</span>`;
                         logs.push(`<div class="sim-log-line"><span>${t}턴: ${defenseTag}</span> <span class="sim-log-dmg">+0</span></div>`);
-                        detailedLogs.push({ t, type: 'action', msg: 'ICON:icon/simul.png|[방어]' });
+                        dynCtx.debugLogs.push('ICON:icon/simul.png|[방어]');
+                        
+                        // [순서 교정] 먼저 기존 상태로 공격 훅을 처리한 후
                         handleHook('onAttack');
                     } else {
                         const mainStats = getLatestSubStats();
                         let mDmgSum = 0, mCoef = 0;
                         const targetType = isUlt ? "필살공격" : "보통공격";
 
-                        skill.damageDeal?.forEach(e => {
-                            // [수정] 현재 액션 타입과 일치하는 데미지만 메인 로그에 합산
+                        // [복구] 엔진의 자동 합산을 제거하고, getLiveBonuses에서 정산된 값을 그대로 믿고 계산합니다.
+                        const currentStats = { ...mainStats.subStats };
+
+                        skill.damageDeal?.forEach((e, idx) => {
                             if (e.type !== targetType && e.type !== "기초공격") return;
 
-                            const c = (isUlt && stats.stamp && e.val.stampMax) ? e.val.stampMax : e.val.max;
-                            const fC = c * getSkillMultiplier(parseInt(isUlt ? (stats.skills?.s2 || 1) : (stats.skills?.s1 || 1)), skill.startRate || 0.6);
-                            const isM = skill.isMultiTarget || e.isMultiTarget;
-                            mCoef += isM ? fC * targetCount : fC;
-                            mDmgSum += calculateDamage(targetType, mainStats.atk, mainStats.subStats, fC, isUlt && stats.stamp, charData.info.속성, enemyAttrIdx) * (isM ? targetCount : 1);
+                            // 이미 레벨 배율이 적용된 최종 계수 (getVal이 이미 곱해서 줌)
+                            const finalCoef = dynCtx.getVal(charData.skills.indexOf(skill), idx);
+                            
+                            // 단일기면 1명, 아니면 전체 타격
+                            const componentTargetCount = e.isSingleTarget ? 1 : targetCount;
+                            const dUnit = calculateDamage(targetType, mainStats.atk, currentStats, finalCoef, isUlt && stats.stamp, charData.info.속성, enemyAttrIdx);
+                            
+                            // 로그용 계수 합산
+                            const rawC = (isUlt && stats.stamp && e.val.stampMax) ? e.val.stampMax : e.val.max;
+                            mCoef += rawC * componentTargetCount;
+                            mDmgSum += dUnit * componentTargetCount;
                         });
+
+                        const effectiveVul = currentStats["뎀증디버프"] + currentStats["속성디버프"];
                         const statParts = [`Coef:${mCoef.toFixed(1)}%`, `Atk:${mainStats.atk.toLocaleString()}`];
                         if (mainStats.subStats["뎀증"] !== 0) statParts.push(`Dmg:${mainStats.subStats["뎀증"].toFixed(1)}%`);
-                        if (mainStats.subStats["뎀증디버프"] !== 0) statParts.push(`Vul:${mainStats.subStats["뎀증디버프"].toFixed(1)}%`);
-                        if (mainStats.subStats["속성디버프"] !== 0) statParts.push(`A-Vul:${mainStats.subStats["속성디버프"].toFixed(1)}%`);
+                        if (effectiveVul !== 0) statParts.push(`Vul:${effectiveVul.toFixed(1)}%`);
+                        
                         const specDmgKey = isUlt ? "필살기뎀증" : "평타뎀증";
                         const specDmgLabel = isUlt ? "U-Dmg" : "N-Dmg";
                         if (mainStats.subStats[specDmgKey] !== 0) statParts.push(`${specDmgLabel}:${mainStats.subStats[specDmgKey].toFixed(1)}%`);
                         
-                        // [수정] 데미지가 0보다 큰 경우에만 메인 로그와 상세 로그 기록
                         if (mDmgSum > 0) {
                             const mainTag = `<span class="sim-log-tag">[${isUlt?'필살기':'보통공격'}]</span>`;
                             const dmgText = `<span class="sim-log-dmg">+${mDmgSum.toLocaleString()}</span>`;
                             logs.push(`<div class="sim-log-line"><span>${t}턴: ${mainTag} ${skill.name}:</span> ${dmgText}</div>`);
-                            detailedLogs.push({ t, type: 'action', msg: `ICON:${skill.icon}|${mainTag} ${skill.name}: ${dmgText}`, statMsg: statParts.join(' / ') });
+                            dynCtx.debugLogs.push({ type: 'action', msg: `ICON:${skill.icon}|${mainTag} ${skill.name}: ${dmgText}`, statMsg: statParts.join(' / ') });
                         }
                         currentTDmg = mDmgSum;
+
+                        // [복구] 메인 공격 이벤트 알림 (스택 트리거 체크)
+                        const p = simParams[charId];
+                        if (p) {
+                            const mainSkillId = isUlt ? p.ultTrigger : p.normalTrigger;
+                            if (mainSkillId) dynCtx.checkStackTriggers(mainSkillId);
+                        }
+
                         handleHook('onAttack');
                     }
-                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                    autoExecuteParams(step); // 'action' 단계의 자동화 스킬들 실행
+                    
+                    turnDebugLogs.forEach(item => {
+                        if (typeof item === 'string') {
+                            detailedLogs.push({ t, type: 'debug', msg: item });
+                        } else {
+                            detailedLogs.push({ t, ...item });
+                        }
+                    });
                     turnDebugLogs.length = 0;
-                } else if (step === 'hit') {
+                } else if (step === 'onEnemyHit') {
                     // [수정] 조롱/고정 피격 메커니즘으로 확장
                     const tauntRes = sData.isTaunted && sData.isTaunted(dynCtx);
                     const tauntLabel = (typeof tauntRes === 'object' ? tauntRes.label : (typeof tauntRes === 'string' ? tauntRes : "조롱 상태"));
@@ -505,10 +804,8 @@ export function runSimulationCore(context) {
                     hitTypeMsg = "";
 
                     if (isTaunted) {
-                        // 조롱 메커니즘: 확률이 100%가 아닐 수도 있으므로 판정 수행
                         if (tauntProb >= 100 || Math.random() * 100 < tauntProb) {
                             isHit = true;
-                            // [수정] 중앙 집중화된 메시지 포매터 사용
                             hitTypeMsg = formatStatusMessage(tauntLabel, tauntProb);
                         }
                     } else if (nProb > 0) {
@@ -520,19 +817,31 @@ export function runSimulationCore(context) {
 
                     if (isHit) {
                         const actualHitCount = isTaunted ? targetCount : 1;
-                        // [수정] 메인 로그(logs)에서는 피격 안내를 제거하여 딜량 집중
                         for (let h = 0; h < actualHitCount; h++) {
                             const hitMsg = hitTypeMsg;
+                            dynCtx.debugLogs.push(`ICON:icon/simul.png|${hitMsg}`);
                             
-                            detailedLogs.push({ t, type: 'action', msg: `ICON:icon/simul.png|${hitMsg}` });
+                            // [서순 보장] 피격 이벤트 발생 시에만 트리거된 스킬들을 실행
+                            autoExecuteParams("being_hit");
+
                             handleHook('onEnemyHit');
                         }
                     }
-                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+
+                    turnDebugLogs.forEach(item => {
+                        if (typeof item === 'string') detailedLogs.push({ t, type: 'debug', msg: item });
+                        else detailedLogs.push({ t, ...item });
+                    });
                     turnDebugLogs.length = 0;
                 } else if (step === 'onAfterAction') {
                     handleHook('onAfterAction');
-                    turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
+                    autoExecuteParams('onAfterAction'); // 행동 종료 자동 스킬 실행
+
+                    turnDebugLogs.forEach(item => {
+                        if (typeof item === 'string') detailedLogs.push({ t, type: 'debug', msg: item });
+                        else detailedLogs.push({ t, ...item });
+                    });
+                    turnDebugLogs.length = 0;
                 }
             });
             total += currentTDmg; perTurnDmg.push({ dmg: currentTDmg, cumulative: total });
@@ -543,7 +852,6 @@ export function runSimulationCore(context) {
     const totals = iterationResults.map(d => d.total), avg = Math.floor(totals.reduce((a, b) => a + b, 0) / iterations);
     const min = Math.min(...totals), max = Math.max(...totals), closest = iterationResults.sort((a, b) => Math.abs(a.total - avg) - Math.abs(b.total - avg))[0];
     
-    // [수정] 모바일(600px 미만)에서는 30개, PC에서는 100개로 구간 설정
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 600;
     const range = max - min, binCount = isMobile ? 30 : Math.min(iterations, 100), bins = new Array(binCount).fill(0);
     
@@ -552,6 +860,7 @@ export function runSimulationCore(context) {
     const xLabels = []; 
     if (range > 0) { for (let j = 0; j <= 5; j++) { const v = min + (range * (j / 5)); xLabels.push({ pos: (j / 5) * 100, label: v >= 1000 ? (v / 1000).toFixed(0) + 'K' : Math.floor(v) }); } } 
     else { xLabels.push({ pos: 50, label: min >= 1000 ? (min / 1000).toFixed(0) + 'K' : Math.floor(min) }); }
+    
     return {
         min: min.toLocaleString(), max: max.toLocaleString(), avg: avg.toLocaleString(),
         logHtml: closest.logs.map(l => `<div>${l}</div>`).join(''),
