@@ -554,6 +554,71 @@ export const simCharData = {
         return bonuses;
     }
   },
+  "wang": {
+    commonControls: ["hit_prob"],
+    tooltipDesc: "",
+    initialState: {
+        skill5_timer: [], // 피격 시 뎀증 (최대 2중첩)
+        skill2_buff_timer: 0 // 패란의 영감 (3턴)
+    },
+    
+    // 1. 공격
+    onAttack: (ctx) => {
+        const extraHits = [];
+
+        // [도장] 패란의 영감: 필살기 사용 시 3턴 버프 부여
+        if (ctx.isUlt && ctx.stats.stamp) {
+            ctx.setTimer("skill2_buff_timer", 3);
+            ctx.log(1, "Buff", null, 3); // 1번 인덱스(skill2)를 가리킴
+        }
+
+        // [도장] 패란의 영감 추가타: 버프 중 평타 시 발동
+        if (!ctx.isUlt && ctx.simState.skill2_buff_timer > 0) {
+            // 기본 1회
+            extraHits.push({
+                skillId: "wang_skill2",
+                name: "패란의 영감",
+                coef: ctx.getVal(1, '추가공격')
+            });
+            
+            // 50% 확률로 1회 더
+            if (Math.random() < 0.5) {
+                extraHits.push({
+                    skillId: "wang_skill2",
+                    name: "패란의 영감",
+                    coef: ctx.getVal(1, '추가공격'),
+                    chance: 50
+                });
+            }
+        }
+
+        return { extraHits };
+    },
+
+    // 2. 피격 (반격/버프)
+    onEnemyHit: (ctx) => {
+        const extraHits = [];
+        // [패시브5] 영감 공명: 피격 시 2턴 간 뎀증 (최대 2중첩)
+        if (ctx.simState.skill5_timer.length < 2) {
+             ctx.addTimer("skill5_timer", 2);
+        } else {
+             // 2중첩일 경우 가장 오래된 스택 갱신 (선택사항, 엔진이 알아서 처리하게 둬도 됨)
+             // 여기선 단순 로그 출력을 위해 분기만 유지
+        }
+        ctx.log(4, "발동", null, 2);
+        return { extraHits };
+    },
+
+    // 3. 실시간 보너스
+    getLiveBonuses: (ctx) => {
+        const bonuses = { "뎀증": 0 };
+        // [패시브5] 영감 공명 수치 반영
+        if (ctx.simState.skill5_timer) {
+            bonuses["뎀증"] += ctx.simState.skill5_timer.length * ctx.getVal(4, '뎀증');
+        }
+        return bonuses;
+    }
+  },
   "locke": {
     commonControls: ["hit_prob"],
     tooltipDesc: "자동 체크 시 적군의 HP는 1턴에 100%로 시작해 마지막 턴에 0%가 되게 설정하며, 턴 내에서는 파티원이 먼저 행동한다 가정합니다.", // 여기에 캐릭터별 설명을 직접 입력하세요.

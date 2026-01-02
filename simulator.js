@@ -284,7 +284,18 @@ function renderSimulatorUI(charId) {
     document.getElementById('sim-iterations').onchange = (e) => localStorage.setItem('sim_last_iters', e.target.value);
     
     document.getElementById('sim-back-to-list').onclick = () => renderCharacterSelector();
-    if (hasMulti) document.getElementById('sim-target-btn').onclick = (e) => { let c = (parseInt(e.target.innerText)%5)+1; e.target.innerText=c; localStorage.setItem(`sim_last_target_${charId}`,c); };
+    if (hasMulti) document.getElementById('sim-target-btn').onclick = (e) => { 
+        let c = (parseInt(e.target.innerText)%5)+1; 
+        e.target.innerText=c; 
+        localStorage.setItem(`sim_last_target_${charId}`,c); 
+        
+        // [추가] 2인 이상 시 안내 토스트 띄우기
+        if (c >= 2) {
+            import('./ui.js').then(ui => {
+                ui.showToast('현재 단일 대상에게 적용되는 상태가 적 전체에게 동일한 상태로 적용되니 오차가 크게 발생할 수 있습니다.');
+            });
+        }
+    };
     document.getElementById('sim-edit-actions-btn').onclick = () => { const ed = document.getElementById('sim-action-editor'); ed.style.display = ed.style.display==='block' ? 'none' : 'block'; if(ed.style.display==='block') updateActionEditor(charId); };
     document.getElementById('sim-reset-pattern-btn').onclick = () => { if (confirm('패턴을 초기화하시겠습니까?')) { localStorage.removeItem(`sim_pattern_${charId}`); updateActionEditor(charId); } };
     document.getElementById('run-simulation-btn').onclick = () => runSimulation(charId);
