@@ -69,6 +69,21 @@ export const statusRegistry = {
         name: "[데미지 감소]",
         icon: "icon/compe.PNG",
         type: "status"
+    },
+
+    // 10. 받는 데미지 증가 (디버프 공용)
+    "vuln_timer": {
+        name: "[받는 데미지 증가]",
+        icon: "icon/compe.PNG",
+        type: "status"
+    },
+
+    // 11. 열화질보 (골든라이더 전용)
+    "blazing_stride_timer": {
+        name: "[열화질보]",
+        icon: "icon/compe.PNG",
+        type: "stack",
+        unit: "중첩"
     }
 };
 

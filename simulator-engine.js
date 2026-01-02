@@ -7,22 +7,33 @@ import { getStatusInfo, formatStatusMessage, formatStatusAction } from './simula
 /**
  * 버프 상태 표시용 포매터
  */
-export function formatBuffState(state, charDataObj, sData) {
+export function formatBuffState(state, charDataObj, sData, stats) {
     const entries = [];
     const getSkillInfo = (idx) => {
-        let s = charDataObj.skills[idx];
-        if (!s) return { label: "스킬", name: "알 수 없음", icon: "icon/main.png" };
+        const originalSkill = charDataObj.skills[idx];
+        if (!originalSkill) return { label: "스킬", name: "알 수 없음", icon: "icon/main.png" };
         
+        // 아이콘 경로에 'sigilwebp'가 포함되어 있는지 아주 확실하게 체크
+        const isStampIcon = originalSkill.icon && (originalSkill.icon.indexOf('sigilwebp/') !== -1);
+
+        let s = originalSkill;
         if (s.syncLevelWith) {
             const parentIdx = charDataObj.skills.findIndex(sk => sk.id === s.syncLevelWith);
             if (parentIdx !== -1) {
-                idx = parentIdx;
                 s = charDataObj.skills[parentIdx];
             }
         }
 
-        let label = (idx === 1) ? "필살기" : (idx >= 2 && idx <= 6) ? `패시브${idx - 1}` : (idx >= 7) ? "도장" : "스킬";
-        return { label, name: s.name, icon: s.icon || "icon/main.png" };
+        let label = "";
+        if (isStampIcon) {
+            label = "도장";
+        } else {
+            // 연동 여부와 상관없이 원래 인덱스(idx)를 우선 참조하여 라벨 결정
+            // (보통공격:0, 필살기:1, 패시브:2~6)
+            label = (idx === 1) ? "필살기" : (idx >= 2 && idx <= 6) ? `패시브${idx - 1}` : "스킬";
+        }
+
+        return { label, name: originalSkill.name, icon: originalSkill.icon || "icon/main.png" };
     };
 
     for (const [key, val] of Object.entries(state)) {
@@ -36,7 +47,15 @@ export function formatBuffState(state, charDataObj, sData) {
         // 1. 스킬 기반 버프 처리
         if (skillMatch) {
             const skillNum = parseInt(skillMatch[1]);
-            const info = getSkillInfo(skillNum - 1);
+            const skillIdx = skillNum - 1;
+
+            // [추가] 돌파 단계에 따른 상태 표시 차단 (stats 정보 활용)
+            const br = parseInt(stats.s1 || 0);
+            if (skillIdx === 4 && br < 30) continue;
+            if (skillIdx === 5 && br < 50) continue;
+            if (skillIdx === 6 && br < 75) continue;
+
+            const info = getSkillInfo(skillIdx);
             name = customName || `[${info.label}]`;
             icon = info.icon;
 
@@ -91,6 +110,12 @@ export function runSimulationCore(context) {
     const baseStats = calculateBaseStats(charData.base, lv, br, fit, defaultGrowthRate);
     
     const getSkillValue = (skillIdx, effectKey, isStamp = false) => {
+        // [추가] 돌파 단계에 따른 스킬 잠금 체크
+        const br = parseInt(stats.s1 || 0);
+        if (skillIdx === 4 && br < 30) return 0; // 패시브3
+        if (skillIdx === 5 && br < 50) return 0; // 패시브4
+        if (skillIdx === 6 && br < 75) return 0; // 패시브5
+
         const skill = charData.skills[skillIdx];
         if (!skill) return 0;
         let targetIdx = skillIdx;
@@ -111,10 +136,12 @@ export function runSimulationCore(context) {
         if (e === null && isStamp && skill.buffEffects && skill.buffEffects[effectKey] !== undefined) e = skill.buffEffects[effectKey];
         if (e === null) return 0;
         
-        // [수정] 속성이 일치할 때 attributeMax가 없으면 max를 기본으로 사용
-        const val = (typeof e === 'object') 
-            ? ((charData.info.속성 === e.targetAttribute ? (e.attributeMax || e.max) : e.max) || e.fixed || 0) 
-            : e;
+        const val = (typeof e === 'object' && e !== null) 
+            ? (isStamp 
+                ? (e.stampMax !== undefined ? e.stampMax : (e.stampFixed !== undefined ? e.stampFixed : (e.attributeMax || e.max || e.fixed || 0)))
+                : ((charData.info.속성 === e.targetAttribute ? (e.attributeMax || e.max) : e.max) || e.fixed || 0)
+              )
+            : (e || 0);
         return val * (typeof e === 'object' && e.max ? rate : 1);
     };
 
@@ -148,20 +175,42 @@ export function runSimulationCore(context) {
                 setTimer: (key, dur) => {
                     simState[key] = ctx.isHit ? dur + 1 : dur;
                 },
-                // [수정] 고정된 인자 대신 현재 객체의 isHit 상태를 참조
-                addTimer: (key, dur, data = {}) => {
+                // [수정] maxStacks 지원: 이미 꽉 찼으면 새로 추가하지 않고 가장 오래된 타이머를 갱신
+                addTimer: (key, dur, data = {}, maxStacks = Infinity) => {
                     if (!simState[key]) simState[key] = [];
                     const finalDur = ctx.isHit ? dur + 1 : dur;
-                    // 데이터가 실제로 있을 때만 객체로 저장, 없으면 숫자만 저장
-                    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                        simState[key].push({ ...data, dur: finalDur });
+                    
+                    if (simState[key].length < maxStacks) {
+                        // 자리가 있으면 새로 추가
+                        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                            simState[key].push({ ...data, dur: finalDur });
+                        } else {
+                            simState[key].push(finalDur);
+                        }
                     } else {
-                        simState[key].push(finalDur);
+                        // 자리가 없으면 가장 오래된 것(0번)의 지속시간만 갱신
+                        const oldest = simState[key][0];
+                        if (typeof oldest === 'object') oldest.dur = finalDur;
+                        else simState[key][0] = finalDur;
                     }
                 },
                 formatAction: (key, action) => formatStatusAction(key, action),
                 getVal: (idx, key, stamp) => getSkillValue(idx, key, stamp || (isUltVal && stats.stamp)),
+                isUnlocked: (idx) => {
+                    const br = parseInt(stats.s1 || 0);
+                    if (idx === 4 && br < 30) return false;
+                    if (idx === 5 && br < 50) return false;
+                    if (idx === 6 && br < 75) return false;
+                    return true;
+                },
                 log: (idx, res, chance, dur, skipPush = false) => {
+                    if (typeof idx === 'number') {
+                        const br = parseInt(stats.s1 || 0);
+                        if (idx === 4 && br < 30) return "";
+                        if (idx === 5 && br < 50) return "";
+                        if (idx === 6 && br < 75) return "";
+                    }
+
                     let sName = "스킬", sIcon = "icon/main.png", label = "";
                     
                     if (typeof idx === 'number') {
@@ -170,12 +219,11 @@ export function runSimulationCore(context) {
                         sIcon = s?.icon || "icon/main.png";
                         label = idx === 1 ? "필살기" : idx >= 7 ? "도장" : `패시브${idx-1}`;
                     } else if (typeof idx === 'string') {
-                        // [수정] 등록된 상태 정보가 있으면 가져오기
                         const statusInfo = getStatusInfo(idx);
                         if (statusInfo) {
                             sName = statusInfo.name;
                             sIcon = statusInfo.icon;
-                            label = ""; // 상태이상은 별도의 패시브 라벨 미표시
+                            label = ""; 
                         } else {
                             sName = idx; 
                             if (sName === "피격") { sIcon = "icon/simul.png"; label = ""; } 
@@ -183,7 +231,6 @@ export function runSimulationCore(context) {
                         }
                     }
 
-                    // [수정] 행동 키워드 한글 변환 확장
                     let finalRes = res;
                     const actionMap = {
                         "Buff": "버프 발동",
@@ -199,12 +246,16 @@ export function runSimulationCore(context) {
 
                     let m = []; if (chance) m.push(`${chance}%`); if (dur) m.push(`${dur}턴`);
                     const mS = m.length ? ` (${m.join(' / ')})` : "";
-                    const tag = label ? `[${label}] ` : "";
+                    const tag = label ? `<span class="sim-log-tag">[${label}]</span> ` : "";
                     const actionPart = finalRes ? ` ${finalRes}` : "";
                     const msg = `ICON:${sIcon}|${tag}${sName}${actionPart}${mS}`;
                     
                     if (!skipPush) {
                         dLogsArray.push(msg);
+                        // [확정] 부모 스코프의 logs 배열에 직접 추가
+                        const plainTag = label ? `<span class="sim-log-tag">[${label}]</span> ` : "";
+                        const actionText = `${sName}${actionPart}${mS}`;
+                        logs.push(`<div class="sim-log-line"><span>${tVal}턴: ${plainTag}${actionText}</span></div>`);
                     }
                     return msg; 
                 }
@@ -252,6 +303,19 @@ export function runSimulationCore(context) {
 
             const processExtra = (e) => {
                 if (!e) return;
+
+                // [추가] 돌파 단계에 따른 스킬 해금 여부 자동 체크
+                if (e.skillId) {
+                    const skillIdx = charData.skills.findIndex(s => s.id === e.skillId);
+                    if (skillIdx !== -1) {
+                        const br = parseInt(stats.s1 || 0);
+                        // 패시브 3 (idx 4) -> 30단, 패시브 4 (idx 5) -> 50단, 패시브 5 (idx 6) -> 75단
+                        if (skillIdx === 4 && br < 30) return;
+                        if (skillIdx === 5 && br < 50) return;
+                        if (skillIdx === 6 && br < 75) return;
+                    }
+                }
+
                 const slots = [e.step1, e.step2, e.step3];
                 // 하위 호환
                 if (!e.step1 && !e.step2 && !e.step3 && e.coef !== undefined) {
@@ -315,9 +379,12 @@ export function runSimulationCore(context) {
                             const baseName = customName || s?.name || "추가타";
                             currentTDmg += finalD;
                             
-                            // [수정] 데미지가 0보다 큰 경우에만 메인 로그에 기록
+                            // [수정] 데미지가 0보다 큰 경우에만 메인 로그에 기록 (HTML 구조화)
                             if (finalD > 0) {
-                                logs.push(`${t}턴: [${label}] ${baseName}${plainStack}: +${finalD.toLocaleString()}`);
+                                const plainTag = `<span class="sim-log-tag">[${label}]</span>`;
+                                const dmgValue = `+${finalD.toLocaleString()}`;
+                                const dmgText = `<span class="sim-log-dmg">${dmgValue}</span>`;
+                                logs.push(`<div class="sim-log-line"><span>${t}턴: ${plainTag} ${baseName}${plainStack}:</span> ${dmgText}</div>`);
                             }
                             
                             detailedLogs.push({
@@ -371,7 +438,7 @@ export function runSimulationCore(context) {
                     handleHook('onTurn');
                     turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
                     turnDebugLogs.length = 0;
-                    stateLogs.push(formatBuffState(simState, charData, sData));
+                    stateLogs.push(formatBuffState(simState, charData, sData, stats));
                 } else if (step === 'setup') {
                     handleHook('onCalculateDamage');
                     turnDebugLogs.forEach(msg => detailedLogs.push({ t, type: 'debug', msg }));
@@ -404,12 +471,13 @@ export function runSimulationCore(context) {
                         const specDmgLabel = isUlt ? "U-Dmg" : "N-Dmg";
                         if (mainStats.subStats[specDmgKey] !== 0) statParts.push(`${specDmgLabel}:${mainStats.subStats[specDmgKey].toFixed(1)}%`);
                         
-                        // [수정] 데미지가 0보다 큰 경우에만 메인 로그에 기록
+                        // [수정] 데미지가 0보다 큰 경우에만 메인 로그와 상세 로그 기록
                         if (mDmgSum > 0) {
-                            logs.push(`${t}턴: [${isUlt?'필살기':'보통공격'}] ${skill.name}: +${mDmgSum.toLocaleString()}`);
+                            const mainTag = `<span class="sim-log-tag">[${isUlt?'필살기':'보통공격'}]</span>`;
+                            const dmgText = `<span class="sim-log-dmg">+${mDmgSum.toLocaleString()}</span>`;
+                            logs.push(`<div class="sim-log-line"><span>${t}턴: ${mainTag} ${skill.name}:</span> ${dmgText}</div>`);
+                            detailedLogs.push({ t, type: 'action', msg: `ICON:${skill.icon}|${mainTag} ${skill.name}: ${dmgText}`, statMsg: statParts.join(' / ') });
                         }
-                        
-                        detailedLogs.push({ t, type: 'action', msg: `ICON:${skill.icon}|[${isUlt?'필살기':'보통공격'}] ${skill.name}: +${mDmgSum.toLocaleString()}`, statMsg: statParts.join(' / ') });
                         currentTDmg = mDmgSum;
                         handleHook('onAttack');
                     }
@@ -466,7 +534,11 @@ export function runSimulationCore(context) {
     }
     const totals = iterationResults.map(d => d.total), avg = Math.floor(totals.reduce((a, b) => a + b, 0) / iterations);
     const min = Math.min(...totals), max = Math.max(...totals), closest = iterationResults.sort((a, b) => Math.abs(a.total - avg) - Math.abs(b.total - avg))[0];
-    const range = max - min, binCount = Math.min(iterations, 100), bins = new Array(binCount).fill(0);
+    
+    // [수정] 모바일(600px 미만)에서는 30개, PC에서는 100개로 구간 설정
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 600;
+    const range = max - min, binCount = isMobile ? 30 : Math.min(iterations, 100), bins = new Array(binCount).fill(0);
+    
     const centerIdx = Math.floor(binCount / 2);
     iterationResults.forEach(r => { let b = (range === 0) ? centerIdx : Math.floor(((r.total - min) / range) * (binCount - 1)); bins[b]++; });
     const xLabels = []; 

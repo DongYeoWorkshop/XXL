@@ -388,7 +388,7 @@ function runSimulation(charId) {
         document.getElementById('sim-min-dmg').innerText = result.min; 
         document.getElementById('sim-avg-dmg').innerText = result.avg; 
         document.getElementById('sim-max-dmg').innerText = result.max; 
-        document.getElementById('sim-log').innerHTML = result.logHtml;
+        document.getElementById('sim-log').innerHTML = result.closestLogs.join('');
         
         // [추가] 분석 로그 제목 옆에 총 데미지 표시
         const totalHeader = document.getElementById('sim-total-dmg-header');

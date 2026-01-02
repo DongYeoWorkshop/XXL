@@ -812,7 +812,7 @@ export const charData = {
         hasCounter: true, // 카운터 버튼 필요
         counterRange: { min: 0, max: 3 },
         name: "분노의 해류", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "카라트가 피격 시 2턴 간 카라트의 데미지 {0}% 증가(최대 3중첩)", 
         calc: [{ max: 5 }],
       },
@@ -911,7 +911,7 @@ export const charData = {
         excludeFromBuffSearch: true, 
         decimalPlaces: 2, 
         name: "방어 장갑:가시", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "필살기 발동 시 50% 확률로 1턴 간 아군에게 받는 필살기 데미지 {0}% 감소 부여", 
         calc: [{ max: 15 }],
       },
@@ -1095,7 +1095,7 @@ export const charData = {
         excludeFromBuffSearch: true, 
         decimalPlaces: 2, 
         name: "용의 역린", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "공격대상의 [용족의 위압] 3중첩 이상일 경우 공격할 때 적 전체에게 공격력의 {0}% 데미지를 줌", 
         calc: [{ max: 75 }],
         damageDeal: [{ type: "추가공격", val: { max: 75 } }]        
@@ -1186,7 +1186,7 @@ export const charData = {
         hasCounter: true,
         counterRange: { min: 0, max: 2 },  
         name: "영감 공명", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "멍이 피격 시 2턴 간 아군 전체의 데미지 5% 증가(최대 2중첩)", 
         calc: [{ max: 5 }]
       },
@@ -1386,7 +1386,7 @@ export const charData = {
         toggleType: "isAppliedStamped",        
         buffDesc: "수면 상태 대상 공격의 데미지 {0}% 증가",  
         name: "반격 연환각", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "각 아군이 수면 상태의 대상 공격 시 아군의 공격 데미지 {0}% 증가", 
         calc: [{ max: 36 }],
       },
@@ -1495,7 +1495,7 @@ export const charData = {
         toggleType: "isAppliedStamped",        
         buffDesc: "피격 시 데미지 {0}% 증가",  
         name: "불타오른다——!", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "피격 시 자신에게 2턴 지속의 [열화질보] 1중첩을 부여하며 2턴 간 데미지 {0}% 증가", 
         calc: [{ max: 20 }]
       },
@@ -1585,7 +1585,7 @@ export const charData = {
         toggleType: "isAppliedStamped",        
         buffDesc: "발동스킬의 효과 {0}% 증가",  
         name: "마음의 물결을 멈추다", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "제트블랙이 보통공격 시 50% 확률로 2턴 간 아군 전체의 발동스킬 효과 {0}% 증가", 
         calc: [{ max: 24 }]
       },
@@ -1691,7 +1691,7 @@ export const charData = {
         toggleType: "isAppliedStamped",        
         buffDesc: "피격 시 기초공격력 {0}% 증가",  
         name: "큐브 레이저 필드", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "루테닉스가 피격 시 2턴 간 자신의 기초공격력 {0}% 증가", 
         calc: [{ max: 30 }]
       },
@@ -1780,7 +1780,7 @@ export const charData = {
         excludeFromBuffSearch: true, 
         decimalPlaces: 2, 
         name: "저격 전의 정적", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "방어 시 2턴 간 자신의 보통공격에 공격력 {0}%의 보통공격 데미지를 부여", 
         calc: [{ max: 120, startRate:0.55}],
         damageDeal: [{ type: "보통공격", val: { max: 120,startRate:0.55 } }]        
@@ -1901,7 +1901,7 @@ export const charData = {
         counterRange: { min: 0, max: 4 },      
         buffDesc: "아군 피격 시 기초공격력 {0}% 증가(최대 4중첩)",  
         name: "쿼터백 지휘선", 
-        icon: "icon/passive2.webp", 
+        icon: "icon/passive5.webp", 
         desc: "자신을 제외한 아군이 피격 시 2턴 간 파미도의 기초공격력 {0}% 증가(최대 4중첩)", 
         calc: [{ max: 7.5 }]
       },

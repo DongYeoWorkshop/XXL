@@ -53,3 +53,17 @@
   text-overflow: ellipsis;
   max-width: 70px;
 }
+
+/* 분석 로그 줄 정렬 (PC/모바일 공통) */
+.sim-log-line {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.sim-log-dmg {
+  font-weight: bold !important;
+  margin-left: auto !important;
+  text-align: right !important;
+}

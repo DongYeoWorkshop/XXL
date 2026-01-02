@@ -154,7 +154,7 @@ export function showDetailedLogModal(resultToSave) {
 
         const buffListHtml = buffs.length > 0 ? buffs.map(b => `
             <div style="display:flex; align-items:center; gap:3px; background:#fff; border:1px solid #ddd; padding:1px 5px; border-radius:4px; font-size: 0.9em;">
-                <img src="${b.icon}" style="width:12px; height:12px; object-fit:contain;">
+                <img src="${b.icon}" style="width:12px; height:12px; object-fit:contain; background:black; border-radius:2px;">
                 <span>${b.name} / ${b.duration}</span>
             </div>`).join('') : '<span style="color:#ccc;">-</span>';
 
@@ -189,7 +189,7 @@ export function showDetailedLogModal(resultToSave) {
                             iconHtml = prefix ? `<span style="margin-right: 5px;">${prefix}</span>` : '';
                         }
 
-                        const statsInfo = d.statMsg ? `<span style="font-size: 0.9em; color: #666; margin-left: auto; padding-left: 15px; font-family: 'Cascadia Code', monospace; font-weight: bold;">${d.statMsg}</span>` : '';
+                        const statsInfo = d.statMsg ? `<span class="sim-detail-stat-info" style="font-size: 0.9em; color: #666; margin-left: auto; padding-left: 15px; font-family: 'Cascadia Code', monospace; font-weight: bold;">${d.statMsg}</span>` : '';
                         
                         if (d.type === 'action' || msg.includes('피격 발생')) {
                             let actionColor = '#666', actionBorder = '#ccc';
@@ -220,7 +220,7 @@ export function showDetailedLogModal(resultToSave) {
             </div>
         </div>
         <div style="flex: 1; overflow-y: auto; background: #fff;">${combinedLogsHtml}</div>
-        <div style="padding: 12px; text-align: center; font-size: 0.8em; color: #999; border-top: 1px solid #eee; background: #f9f9f9;">
+        <div class="sim-modal-footer-hint" style="padding: 12px; text-align: center; font-size: 0.8em; color: #999; border-top: 1px solid #eee; background: #f9f9f9;">
             이 로그는 평균값에 가장 가까운 실행 회차의 상세 데이터입니다.
         </div>`;
 

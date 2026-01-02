@@ -82,11 +82,9 @@ export const simCharData = {
             skillId: "shinrirang_skill5",
             isHitAction: true,
             step1: (ctx) => {
-                // [수정] initialState 덕분에 초기화 불필요
-                if (ctx.simState.skill5_timer.length < 2) {
-                    ctx.addTimer("skill5_timer", 2);
-                    return ctx.log(4, "발동", null, 2, true);
-                }
+                // 스마트 addTimer 사용 (최대 2중첩)
+                ctx.addTimer("skill5_timer", 2, {}, 2);
+                return ctx.log(4, "apply", null, 2, true);
             },
             step2: (ctx) => {
                 // 반격 데미지 후 스택 적립
@@ -328,14 +326,14 @@ export const simCharData = {
 
         // [패시브2] 긴박 공감: 공격 시 50% 확률로 받뎀증 (2턴)
         if (Math.random() < 0.5) {
-            ctx.addTimer("skill4_vuln_timer", 2, { val: ctx.getVal(3, '뎀증디버프')});
-            ctx.log(3, "발동", 50, 2);
+            ctx.addTimer("skill4_vuln_timer", 2, { val: ctx.getVal(3, '뎀증디버프'), name: "긴박공감" });
+            ctx.log(3, "apply", 50, 2);
         }
 
         // [패시브5] 급습 밧줄: 필살기 발동 시 받뎀증 (1턴)
         if (ctx.isUlt) {
-            ctx.addTimer("skill4_vuln_timer", 1, { val: ctx.getVal(6, '뎀증디버프')});
-            ctx.log(6, "발동", null, 1);
+            ctx.addTimer("skill4_vuln_timer", 1, { val: ctx.getVal(6, '뎀증디버프'), name: "급습밧줄" });
+            ctx.log(6, "apply", null, 1);
         }
 
         return { extraHits };
@@ -395,15 +393,11 @@ export const simCharData = {
                 activeDogs > 0 && Array.from({ length: activeDogs }, () => ({
                     skillId: "anuberus_skill4",
                     step1: (ctx) => {
-                        // 패시브3 스택 적립
-                        if (ctx.simState.skill5_hound_stack_timer.length < 4) {
-                            ctx.addTimer("skill5_hound_stack_timer", 3, { val: ctx.getVal(4, 'max') });
-                        }
-                        // 패시브2 디버프 부여 및 로그
-                        if (ctx.simState.skill4_vuln_timer.length < 4) {
-                            ctx.addTimer("skill4_vuln_timer", 3, { val: ctx.getVal(3, '속성디버프') });
-                            return ctx.log(3, "발동", null, 3, true);
-                        }
+                        // 패시브3 스택 적립 (최대 4중첩)
+                        ctx.addTimer("skill5_hound_stack_timer", 3, { val: ctx.getVal(4, 'max') }, 4);
+                        // 패시브2 디버프 부여 (최대 4중첩)
+                        ctx.addTimer("skill4_vuln_timer", 3, { val: ctx.getVal(3, '속성디버프') }, 4);
+                        return ctx.log(3, "apply", null, 3, true);
                     }
                 })),
 
@@ -461,6 +455,115 @@ export const simCharData = {
         return bonuses;
     }
   },
+  "goldenryder": {
+    commonControls: ["hit_prob"],
+    tooltipDesc: "",
+    initialState: {
+        blazing_stride_timer: [3, 3, 3, 3, 3, 3], // 턴 시작 시 1 깎여서 2턴 남은 상태로 시작
+        skill2_buff_timer: 0, // 필살기 버프 (3턴)
+        skill5_buff_timer: 0, // 피격 뎀증 (2턴)
+        skill7_buff_timer: 0  // 패시브7 버프 (3턴)
+    },
+    
+    // 1. 공격
+    onAttack: (ctx) => {
+        const extraHits = [];
+        const br = parseInt(ctx.stats.s1 || 0);
+        
+        // [열화질보 주사위 굴리기 - 최대 3회]
+        const rollStride = (skillIdx) => {
+            if (Math.random() < 0.33) {
+                // 엔진의 스마트 addTimer 사용 (최대 6중첩 명시)
+                ctx.addTimer("blazing_stride_timer", 2, {}, 6);
+                // 로그는 이제 항상 찍힘
+                ctx.log(skillIdx, "gain", 33, 2);
+            }
+        };
+
+        // (1) 패시브 2 (skill4): 항상 굴림
+        rollStride(3);
+
+        // (2) 필살기 도장 효과: 도장이 켜져 있으면 굴림
+        if (ctx.stats.stamp) {
+            rollStride(1); 
+        }
+
+        // (3) 패시브 5 (skill7): 5성(75단) 해금 시 굴림
+        if (ctx.isUnlocked(6)) {
+            rollStride(6);
+        }
+
+        if (ctx.isUlt) {
+            // [필살기] 3턴간 평타 뎀증 및 추뎀 부여
+            ctx.setTimer("skill2_buff_timer", 3);
+            ctx.log(1, "apply", null, 3);
+
+            // [패시브7] 3턴간 평타 추뎀 부여
+            ctx.setTimer("skill7_buff_timer", 3);
+            ctx.log(6, "apply", null, 3);
+        } else {
+            // [보통공격 시 추가타들]
+            // 1. 필살기 추뎀 (skill2)
+            if (ctx.simState.skill2_buff_timer > 0) {
+                // 도장 ON이면 100%, 아니면 50% (getVal의 3번째 인자로 도장 여부 전달)
+                const coefVal = ctx.getVal(1, '추가공격', ctx.stats.stamp);
+                extraHits.push({
+                    skillId: "goldenryder_skill2",
+                    coef: coefVal
+                });
+            }
+            // 2. 패시브7 추뎀 (skill7)
+            if (ctx.simState.skill7_buff_timer > 0) {
+                extraHits.push({
+                    skillId: "goldenryder_skill7",
+                    coef: ctx.getVal(6, '추가공격')
+                });
+            }
+        }
+
+        return { extraHits };
+    },
+
+    // 2. 피격 (열화질보 획득 및 뎀증)
+    onEnemyHit: (ctx) => {
+        const extraHits = [];
+        // [패시브3] 3성(30단) 이상일 때만 피격 시너지 작동
+        if (ctx.isUnlocked(4)) {
+            // 엔진의 스마트 addTimer 사용 (최대 6중첩)
+            ctx.addTimer("blazing_stride_timer", 1, {}, 6);
+            ctx.log("[패시브3] [열화질보]", "gain", null, 2);
+
+            // 2턴 간 뎀증
+            ctx.setTimer("skill5_buff_timer", 1); 
+            ctx.log(4, "apply", null, 2);
+        }
+
+        return { extraHits };
+    },
+
+    // 3. 실시간 보너스
+    getLiveBonuses: (ctx) => {
+        const bonuses = { "뎀증": 0, "평타뎀증": 0 };
+        
+        // 열화질보 중첩당 평타 뎀증 (패시브4)
+        const strideCount = ctx.simState.blazing_stride_timer.length;
+        if (strideCount > 0) {
+            bonuses["평타뎀증"] += strideCount * ctx.getVal(3, '평타뎀증');
+        }
+
+        // 필살기 버프 평타 뎀증 (skill2)
+        if (!ctx.isUlt && ctx.simState.skill2_buff_timer > 0) {
+            bonuses["평타뎀증"] += ctx.getVal(1, '평타뎀증', true); // 도장 효과 반영
+        }
+
+        // 패시브5 피격 뎀증
+        if (ctx.simState.skill5_buff_timer > 0) {
+            bonuses["뎀증"] += ctx.getVal(4, '뎀증');
+        }
+
+        return bonuses;
+    }
+  },
   "tyrantino": {
     commonControls: ["hit_prob"],
     tooltipDesc: "",
@@ -508,13 +611,9 @@ export const simCharData = {
 
             // [도장] 전율의 용의 위압: 필살기 시 위압 3중첩 부여 (2턴 지속)
             if (ctx.stats.stamp) {
-                // 최대 5중첩 제한
-                const space = 5 - ctx.simState.fear_timer.length;
-                const toAdd = Math.min(3, space);
-                if (toAdd > 0) {
-                    for(let i=0; i<toAdd; i++) ctx.addTimer("fear_timer", 2);
-                    ctx.log("fear_timer", "apply", null, 2);
-                }
+                // 스마트 addTimer (최대 5중첩) 사용
+                for(let i=0; i<3; i++) ctx.addTimer("fear_timer", 2, {}, 5);
+                ctx.log("fear_timer", "apply", null, 2);
             }
         }
 
@@ -533,10 +632,8 @@ export const simCharData = {
 
         // [도장] 전율의 용의 위압: 피격 시 위압 1중첩 부여 (최대 5)
         if (ctx.stats.stamp) {
-            if (ctx.simState.fear_timer.length < 5) {
-                ctx.addTimer("fear_timer", 1); // 엔진 보정(+1)으로 최종 2턴 됨
-                ctx.log("fear_timer", "apply", null, 2);
-            }
+            ctx.addTimer("fear_timer", 1, {}, 5); // 엔진 보정(+1)으로 최종 2턴 됨
+            ctx.log("fear_timer", "apply", null, 2);
         }
 
         return { extraHits };
@@ -549,6 +646,105 @@ export const simCharData = {
         // [패시브7] 승리의 Lowball: 적에게 뎀감 효과(dmg_reduce_timer) 있을 시 뎀증
         if (ctx.simState.dmg_reduce_timer > 0) {
             bonuses["뎀증"] += ctx.getVal(6, '뎀증');
+        }
+
+        return bonuses;
+    }
+  },
+  "tamrang": {
+    commonControls: [],
+    tooltipDesc: "",
+    customControls: [
+        { id: "self_sleep_active", type: "toggle", label: "수면버프 자가적용", initial: false, description: "체크 시 아군이 소비하지 않은 디버프를 본인이 다음 턴에 직접 사용합니다." }
+    ],
+    initialState: {
+        sleep_timer: 0,
+        skill4_vuln_timer: [], // 패시브2 받뎀증
+        skill7_vuln_timer: 0,  // 패시브7 받뎀증
+        skill8_vuln_timer: 0   // 도장 1회용 75% 받뎀증 (턴제로 변경)
+    },
+    
+    // 1. 턴 시작
+    onTurn: (ctx) => {
+        // 자동 처리
+    },
+
+    // 2. 공격
+    onAttack: (ctx) => {
+        const extraHits = [];
+        
+        // [패시브2] 복숭아꽃 개화: 공격 시 50% 확률로 받뎀증 (2턴)
+        if (Math.random() < 0.5) {
+            ctx.addTimer("skill4_vuln_timer", 2, { val: ctx.getVal(3, '뎀증디버프') });
+            ctx.log(3, "apply", 50, 2);
+        }
+
+        // 1회성 디버프(수면 뎀증, 도장 75%)는 공격 후에 소모됨 (자가적용 ON일 때만 여기까지 도달)
+        if (!ctx.isUlt && ctx.simState.sleep_timer > 0 && ctx.customValues.self_sleep_active) {
+            // 이번 공격에 혜택을 받고 (getLiveBonuses에서 처리), 공격 후 제거를 위해 flag 설정
+            ctx.simState.consume_next = true;
+        }
+
+        return { extraHits };
+    },
+
+    // 3. 공격 종료 후 (디버프 부여 또는 소모)
+    onAfterAction: (ctx) => {
+        if (ctx.isUlt) {
+            // [필살기] 공격 후에 디버프 부여 (파티원들을 위해)
+            ctx.setTimer("sleep_timer", 2);
+            ctx.log("sleep_status_timer", "apply", null, 2);
+
+            ctx.setTimer("skill7_vuln_timer", 1);
+            ctx.log(6, "apply", null, 1);
+
+            if (ctx.stats.stamp) {
+                ctx.simState.skill8_vuln_timer = 2; // 2턴 부여
+                ctx.log(7, "apply", null, "1회 / 2");
+            }
+
+            // [추가] 자가적용 OFF 시 즉시 아군이 소비한 것으로 처리
+            if (!ctx.customValues.self_sleep_active) {
+                ctx.simState.sleep_timer = 0;
+                ctx.simState.skill8_vuln_timer = 0; // 타이머 0으로 종료
+                ctx.log("-아군의 디버프 소비-");
+            }
+        }
+
+        // 자가적용으로 본인이 직접 쓴 경우 소모
+        if (ctx.simState.consume_next) {
+            ctx.simState.sleep_timer = 0;
+            ctx.simState.skill8_vuln_timer = 0; // 타이머 0으로 종료
+            ctx.simState.consume_next = false;
+            ctx.log("sleep_status_timer", "consume");
+        }
+        return { extraHits: [] };
+    },
+
+    // 4. 실시간 보너스
+    getLiveBonuses: (ctx) => {
+        const bonuses = { "뎀증": 0, "뎀증디버프": 0 };
+        
+        // [패시브4] 반격 연환각: 수면 상태 대상 공격 시 뎀증
+        if (ctx.simState.sleep_timer > 0) {
+            bonuses["뎀증"] += ctx.getVal(4, '뎀증');
+        }
+
+        // 패시브2 받뎀증 합산
+        if (ctx.simState.skill4_vuln_timer) {
+            ctx.simState.skill4_vuln_timer.forEach(v => {
+                bonuses["뎀증디버프"] += v.val;
+            });
+        }
+
+        // 패시브7 받뎀증 합산
+        if (ctx.simState.skill7_vuln_timer > 0) {
+            bonuses["뎀증디버프"] += ctx.getVal(6, '뎀증디버프');
+        }
+
+        // 도장 1회용 받뎀증 (75%)
+        if (ctx.simState.skill8_vuln_timer > 0) {
+            bonuses["뎀증디버프"] += 75;
         }
 
         return bonuses;
@@ -599,13 +795,9 @@ export const simCharData = {
     onEnemyHit: (ctx) => {
         const extraHits = [];
         // [패시브5] 영감 공명: 피격 시 2턴 간 뎀증 (최대 2중첩)
-        if (ctx.simState.skill5_timer.length < 2) {
-             ctx.addTimer("skill5_timer", 2);
-        } else {
-             // 2중첩일 경우 가장 오래된 스택 갱신 (선택사항, 엔진이 알아서 처리하게 둬도 됨)
-             // 여기선 단순 로그 출력을 위해 분기만 유지
-        }
-        ctx.log(4, "발동", null, 2);
+        // 스마트 addTimer (최대 2중첩) 사용
+        ctx.addTimer("skill5_timer", 2, {}, 2);
+        ctx.log(4, "apply", null, 2);
         return { extraHits };
     },
 

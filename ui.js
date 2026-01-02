@@ -66,7 +66,14 @@ export function showSimpleTooltip(target, text) {
     const removeTooltip = () => {
         tooltip.classList.remove('show');
         setTimeout(() => { if (tooltip.parentNode) tooltip.remove(); }, 200);
+        document.removeEventListener('click', removeTooltip);
     };
+
+    // [추가] 화면 아무 곳이나 누르면 즉시 닫히도록 설정
+    // 클릭 이벤트가 툴팁을 연 클릭과 겹치지 않도록 짧은 지연시간 부여
+    setTimeout(() => {
+        document.addEventListener('click', removeTooltip);
+    }, 10);
 
     return { remove: removeTooltip, onMouseLeave: onMouseLeave };
 }

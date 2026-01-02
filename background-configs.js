@@ -18,7 +18,7 @@ export const backgroundConfigs = {
 
     // 파미도 설정 (오른쪽 정렬)
     "famido": {
-        mobile:  { align: "right", xPos: "-350px", yPos: "100px" },
+        mobile:  { align: "right", xPos: "-350px", yPos: "00px" },
         tablet:  { align: "right", xPos: "-300px", yPos: "150px", size: "900px auto" },
         pc:      { align: "right", xPos: "-250px", yPos: "00px" }
     }
