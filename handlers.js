@@ -173,7 +173,12 @@ export function handleImageClick(img) {
     hideAllSections();
 
     if (id === 'hero') {
-        if (contentDisplay) contentDisplay.style.backgroundImage = ''; // 배경 제거
+        if (contentDisplay) {
+            contentDisplay.style.backgroundImage = ''; // 배경 제거
+            // [추가] 비교탭에서도 즐겨찾기 버튼 숨김
+            const favBtn = contentDisplay.querySelector('.char-fav-btn');
+            if (favBtn) favBtn.style.display = 'none';
+        }
         contentDisplay.className = 'hero-mode'; 
         forceMainHeader();
         import('./hero-tab.js').then(mod => {
@@ -277,7 +282,7 @@ export function handleImageClick(img) {
             const isSimDisabled = constants.disabledSimChars.includes(id);
             
             // 시뮬레이터 바로가기 버튼 (왼쪽 상단)
-            const simBtnHtml = `<button class="sim-shortcut-btn" ${isSimDisabled ? 'disabled' : ''} title="${isSimDisabled ? '시뮬레이터 미지원' : '이 캐릭터의 시뮬레이터로 이동'}">🚀</button>`;
+            const simBtnHtml = `<button class="sim-shortcut-btn" ${isSimDisabled ? 'disabled' : ''} title="${isSimDisabled ? '시뮬레이터 미지원' : '이 캐릭터의 시뮬레이터로 이동'}">⚡</button>`;
             
             // 제목은 이름만 표시 (가운데 정렬 유지)
             dom.titleArea.innerHTML = `${simBtnHtml} <span>${data.title}</span>`;
@@ -292,6 +297,7 @@ export function handleImageClick(img) {
                 favBtn.className = 'char-fav-btn';
                 contentDisplay.appendChild(favBtn);
             }
+            favBtn.style.display = ''; // [수정] 시뮬레이터에서 숨겨진 버튼 다시 보이기
             favBtn.className = `char-fav-btn ${isFav ? 'active' : ''}`;
             favBtn.innerText = isFav ? '★' : '☆';
 

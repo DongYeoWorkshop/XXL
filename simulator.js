@@ -201,9 +201,40 @@ function renderSimulatorUI(charId) {
                 const input = document.createElement('input'); 
                 input.type = 'number'; 
                 input.value = (savedVal !== null) ? parseInt(savedVal) : ctrl.initial; 
-                input.style.cssText = `width:60px; padding:4px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none;`; 
+                input.style.cssText = `width:50px; padding:4px; border:1px solid #6f42c1; border-radius:4px; text-align:center; font-weight:bold; outline:none; font-size:0.85em;`; 
                 input.onchange = () => localStorage.setItem(storageKey, input.value); 
                 ctrlEl.appendChild(input); 
+
+                if (ctrl.hasAuto) {
+                    const autoLabel = document.createElement('label');
+                    autoLabel.style.cssText = 'font-size:0.6em; color:#666; margin-left:4px; display:flex; align-items:center; gap:2px; cursor:pointer; font-weight:bold;';
+                    const autoCheck = document.createElement('input');
+                    autoCheck.type = 'checkbox';
+                    autoCheck.style.margin = '0';
+                    const autoKey = `sim_ctrl_${charId}_${ctrl.autoId}`;
+                    const isAutoChecked = (localStorage.getItem(autoKey) === 'true');
+                    autoCheck.checked = isAutoChecked;
+                    
+                    // 초기 상태 설정
+                    if (isAutoChecked) {
+                        input.disabled = true;
+                        input.style.backgroundColor = '#e9ecef';
+                        input.style.color = '#adb5bd';
+                    }
+
+                    autoCheck.onchange = (e) => {
+                        const checked = e.target.checked;
+                        localStorage.setItem(autoKey, checked);
+                        input.disabled = checked;
+                        input.style.backgroundColor = checked ? '#e9ecef' : '#ffffff';
+                        input.style.color = checked ? '#adb5bd' : '#000000';
+                    };
+                    autoLabel.appendChild(autoCheck);
+                    autoLabel.appendChild(document.createTextNode('자동'));
+                    ctrlEl.appendChild(autoLabel);
+                    ctrlEl.style.display = 'flex';
+                    ctrlEl.style.alignItems = 'center';
+                }
             }
             else if (ctrl.type === 'toggle') { 
                 const check = document.createElement('input'); 
@@ -318,6 +349,11 @@ function runSimulation(charId) {
                 customValues[c.id] = (v !== null) ? (v === 'true') : (c.initial === true);
             } else {
                 customValues[c.id] = (v !== null) ? parseInt(v) : (c.initial || 0);
+            }
+
+            if (c.hasAuto && c.autoId) {
+                const av = localStorage.getItem(`sim_ctrl_${charId}_${c.autoId}`);
+                customValues[c.autoId] = (av === 'true');
             }
         });
 

@@ -92,8 +92,8 @@ export function formatBuffDescription(skill, buffCharId, currentId, savedStats, 
     }
 
     // [개선] formatter.js의 지능형 포맷팅 기능을 활용하여 속성별 수치 하나만 노출
-    const listDesc = getDynamicDesc(skillToFormat, skillLevel, isOwnerUltStamped, skillToFormat.buffDesc, targetAttrIdx);
-    const fullDesc = getDynamicDesc(skillToFormat, skillLevel, isOwnerUltStamped, skillToFormat.desc, targetAttrIdx);
+    let listDesc = getDynamicDesc(skillToFormat, skillLevel, isOwnerUltStamped, skillToFormat.buffDesc, targetAttrIdx);
+    let fullDesc = getDynamicDesc(skillToFormat, skillLevel, isOwnerUltStamped, skillToFormat.desc, targetAttrIdx);
 
     if (skillToFormat.ratioEffects && skillToFormat.ratioEffects["고정공증"] && skillToFormat.ratioEffects["고정공증"].from === "기초공격력") {
         const ratioData = skillToFormat.ratioEffects["고정공증"];

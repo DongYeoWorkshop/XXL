@@ -31,6 +31,44 @@ export const statusRegistry = {
         name: "[조롱]",
         icon: "icon/compe.PNG",
         type: "status"
+    },
+
+    // 5. 호혈표지 (카라트 전용)
+    "blood_mark_timer": {
+        name: "[호혈표지]",
+        icon: "icon/compe.PNG",
+        type: "stack",
+        unit: "중첩"
+    },
+
+    // 6. 배리어 (오렘/탱커 전용)
+    "shield_timer": {
+        name: "[배리어]",
+        icon: "icon/compe.PNG",
+        type: "status"
+    },
+
+    // 7. 용의 분노 (타란디오 전용)
+    "fury_stacks": {
+        name: "[용의 분노]",
+        icon: "icon/compe.PNG",
+        type: "stack",
+        unit: "중첩"
+    },
+
+    // 8. 용족의 위압 (타란디오 적 디버프)
+    "fear_timer": {
+        name: "[용족의 위압]",
+        icon: "icon/compe.PNG",
+        type: "stack",
+        unit: "중첩" 
+    },
+
+    // 9. 데미지 감소 (타란디오 적 디버프)
+    "dmg_reduce_timer": {
+        name: "[데미지 감소]",
+        icon: "icon/compe.PNG",
+        type: "status"
     }
 };
 
@@ -54,7 +92,7 @@ export function formatStatusAction(key, action) {
         "consume": "소모",
         "all_consume": "모두 소모",
         "activate": "발동",
-        "gain": "수급"
+        "gain": "획득"
     };
     return `${label} ${actions[action] || action}`;
 }

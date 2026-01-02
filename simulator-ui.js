@@ -81,7 +81,7 @@ export function getSimulatorLayoutHtml(charId, data, stats, brText, hasMulti, sa
                         <option value="1000" ${savedIters==="1000"?'selected':''}>1000회</option>
                     </select>
                 </div>
-                <button id="run-simulation-btn" style="width:100%;padding:16px;background:#6f42c1;color:white;border:none;border-radius:12px;font-weight:bold;cursor:pointer;font-size:1.1em;">분석 시작 🚀</button>
+                <button id="run-simulation-btn" style="width:100%;padding:16px;background:#6f42c1;color:white;border:none;border-radius:12px;font-weight:bold;cursor:pointer;font-size:1.1em;">분석 시작 <span style="display:inline-block; filter: grayscale(100%) brightness(5);">⚡</span></button>
             </div>
             <div class="sim-pane-display">
                 <div id="simulation-result-area" style="display:none;">
@@ -145,6 +145,13 @@ export function showDetailedLogModal(resultToSave) {
     for (let t = 1; t <= resultToSave.turnData.length; t++) {
         const turnDetails = (resultToSave.closestDetailedLogs || []).filter(d => d.t === t);
         const buffs = resultToSave.closestStateLogs ? resultToSave.closestStateLogs[t-1] : [];
+        const turnInfo = resultToSave.closestTurnInfoLogs ? resultToSave.closestTurnInfoLogs[t-1] : {};
+        
+        let turnLabelExtra = '';
+        if (turnInfo.enemyHp !== undefined) {
+            turnLabelExtra = `<span style="font-size:0.7em; color:#dc3545; font-weight:normal; margin-left:5px;">(적 HP: ${turnInfo.enemyHp}%)</span>`;
+        }
+
         const buffListHtml = buffs.length > 0 ? buffs.map(b => `
             <div style="display:flex; align-items:center; gap:3px; background:#fff; border:1px solid #ddd; padding:1px 5px; border-radius:4px; font-size: 0.9em;">
                 <img src="${b.icon}" style="width:12px; height:12px; object-fit:contain;">
@@ -154,7 +161,7 @@ export function showDetailedLogModal(resultToSave) {
         combinedLogsHtml += `
             <div style="padding: 12px 15px; border-bottom: 1px solid #eee; ${t % 2 === 0 ? 'background: #fcfcfc;' : ''}">
                 <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
-                    <div style="font-weight: bold; color: #6f42c1; font-size: 1.1em; min-width: 40px;">${t}턴</div>
+                    <div style="font-weight: bold; color: #6f42c1; font-size: 1.1em; min-width: 40px; white-space:nowrap;">${t}턴${turnLabelExtra}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:4px; font-size: 0.75em; color: #666;">${buffListHtml}</div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px; padding-left: 5px; border-left: 2px solid #f0f0f0;">

@@ -57,7 +57,19 @@ export function formatBuffState(state, charDataObj, sData) {
                 name = statusInfo.name;
                 icon = statusInfo.icon;
                 const unit = statusInfo.unit || "턴";
-                displayDur = typeof val === 'number' ? `${val}${unit}` : "ON";
+                
+                if (Array.isArray(val)) {
+                    if (val.length === 0) continue;
+                    const maxDur = Math.max(...val);
+                    // 스킬 버프 템플릿과 동일하게 "턴 / 중첩" 순서로 통일
+                    if (statusInfo.type === 'stack') {
+                        displayDur = `${maxDur}턴 / ${val.length}중첩`;
+                    } else {
+                        displayDur = `${maxDur}턴`;
+                    }
+                } else {
+                    displayDur = typeof val === 'number' ? `${val}${unit}` : "ON";
+                }
             } else if (customName) {
                 name = customName;
                 displayDur = typeof val === 'number' ? (key.includes('stack') ? `${val}중첩` : `${val}턴`) : "ON";
@@ -110,10 +122,16 @@ export function runSimulationCore(context) {
     const flow = sData.flow || ['onTurn', 'setup', 'action', 'hit', 'extra', 'onAfterAction'];
 
     for (let i = 0; i < iterations; i++) {
-        let total = 0, simState = { battleSpirit: 0, atk_stacks: 0 };
+        // [수정] initialState 깊은 복사로 초기화 (없으면 기본값 사용)
+        let simState = sData.initialState ? JSON.parse(JSON.stringify(sData.initialState)) : {};
+        // 기본값 보장
+        if (simState.battleSpirit === undefined) simState.battleSpirit = 0;
+        if (simState.atk_stacks === undefined) simState.atk_stacks = 0;
+
+        let total = 0;
         const ultCD = (() => { const m = charData.skills[1].desc?.match(/\(쿨타임\s*:\s*(\d+)턴\)/); return m ? parseInt(m[1]) : 3; })();
         let cd = { ult: ultCD };
-        const logs = [], perTurnDmg = [], stateLogs = [], detailedLogs = [];
+        const logs = [], perTurnDmg = [], stateLogs = [], detailedLogs = [], turnInfoLogs = [];
 
         const makeCtx = (tVal, isUltVal, logsArray, dLogsArray, isHitVal, isDefendVal) => {
             const isAllyUlt = sData && typeof sData.isAllyUltTurn === 'function' 
@@ -174,7 +192,7 @@ export function runSimulationCore(context) {
                         "apply": "부여",
                         "consume": "소모",
                         "all_consume": "모두 소모",
-                        "gain": "수급",
+                        "gain": "획득",
                         "activate": "발동"
                     };
                     if (actionMap[res]) finalRes = actionMap[res];
@@ -199,6 +217,14 @@ export function runSimulationCore(context) {
             const actionType = manualPattern[t-1] || (cd.ult === 0 ? 'ult' : 'normal');
             const isUlt = actionType === 'ult', isDefend = actionType === 'defend';
             const skill = isUlt ? charData.skills[1] : charData.skills[0];
+
+            // [추가] 적 HP 자동 감소 로직
+            if (context.customValues.enemy_hp_auto) {
+                // 1턴부터 아군이 친 것으로 가정하여 감소 시작, 마지막 턴에 0% 도달
+                const autoHp = Math.max(0, Math.floor(100 * (1 - t / turns)));
+                context.customValues.enemy_hp_percent = autoHp;
+            }
+
             // [수정] logs 배열을 makeCtx에 전달
             const dynCtx = makeCtx(t, isUlt, logs, turnDebugLogs, false, isDefend);
             
@@ -317,6 +343,13 @@ export function runSimulationCore(context) {
 
             flow.forEach(step => {
                 if (step === 'onTurn') {
+                    // [추가] 턴 정보 기록 (적 HP 등)
+                    if (context.customValues.enemy_hp_auto && context.customValues.enemy_hp_percent !== undefined) {
+                        turnInfoLogs.push({ enemyHp: context.customValues.enemy_hp_percent });
+                    } else {
+                        turnInfoLogs.push({});
+                    }
+
                     // [추가] 자동 타이머 관리 로직
                     for (const key in simState) {
                         if (key.endsWith('_timer')) {
@@ -429,7 +462,7 @@ export function runSimulationCore(context) {
             total += currentTDmg; perTurnDmg.push({ dmg: currentTDmg, cumulative: total });
             if (isUlt) cd.ult = ultCD - 1; else if (cd.ult > 0) cd.ult--;
         }
-        iterationResults.push({ total, logs, perTurnDmg, stateLogs, detailedLogs });
+        iterationResults.push({ total, logs, perTurnDmg, stateLogs, detailedLogs, turnInfoLogs });
     }
     const totals = iterationResults.map(d => d.total), avg = Math.floor(totals.reduce((a, b) => a + b, 0) / iterations);
     const min = Math.min(...totals), max = Math.max(...totals), closest = iterationResults.sort((a, b) => Math.abs(a.total - avg) - Math.abs(b.total - avg))[0];
@@ -444,6 +477,6 @@ export function runSimulationCore(context) {
         logHtml: closest.logs.map(l => `<div>${l}</div>`).join(''),
         graphData: bins.map((c, i) => ({ h: (c / Math.max(...bins)) * 100, isAvg: (range === 0) ? (i === centerIdx) : (i === Math.floor(((closest.total - min) / range) * (binCount - 1))) })),
         axisData: { x: xLabels, y: Array.from({length: 6}, (_, i) => Math.floor(Math.max(...bins) * (5 - i) / 5)) },
-        turnData: closest.perTurnDmg, closestTotal: closest.total, closestLogs: closest.logs, closestStateLogs: closest.stateLogs, closestDetailedLogs: closest.detailedLogs, yMax: Math.max(...bins)
+        turnData: closest.perTurnDmg, closestTotal: closest.total, closestLogs: closest.logs, closestStateLogs: closest.stateLogs, closestDetailedLogs: closest.detailedLogs, closestTurnInfoLogs: closest.turnInfoLogs, yMax: Math.max(...bins)
     };
 }

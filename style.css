@@ -18,32 +18,31 @@
    Any quick fixes or character-specific temporary styles can be added here.
 */
 
-/* 시뮬레이터 바로가기 버튼 (🚀) */
+/* 시뮬레이터 바로가기 버튼 */
 .sim-shortcut-btn {
   position: absolute !important;
   top: 15px !important;
   left: 15px !important;
-  background: none !important; /* 배경 원 제거 */
-  border: none !important;     /* 테두리 제거 */
-  border-radius: 50% !important;
-  width: 32px !important;
-  height: 32px !important;
-  font-size: 1.3rem !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 5px !important; /* 별 버튼과 패딩 맞춤 */
+  font-size: 1.2em !important; /* 번개는 날카로우므로 조금 더 크게 설정 */
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   transition: all 0.2s !important;
-  color: #c3a6ff !important; /* 아이콘 색상을 조금 더 밝은 연보라로 변경 */
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.9), 
-               0 0 12px rgba(180, 150, 255, 0.7),
-               0 0 20px rgba(111, 66, 193, 0.5); /* 밝은 흰색 중심의 강력한 광채 */
-  box-shadow: none !important; /* 박스 그림자 제거 */
   z-index: 10 !important;
+  line-height: 1 !important;
+  color: #c3a6ff !important; 
+  /* 이모지 강제 색상 변경: 노란색(기본) -> 보라색으로 회전 (약 250도) 및 채도/밝기 조절 */
+  filter: hue-rotate(250deg) saturate(1.5) brightness(1.2) drop-shadow(0 0 5px rgba(195, 166, 255, 0.6)) !important;
+  transform: rotate(10deg) !important; /* 10도 회전 */
 }
 
 .sim-shortcut-btn:hover:not(:disabled) {
-  transform: scale(1.2) !important; /* 배경이 없으므로 호버 시 크기를 조금 더 키움 */
+  transform: rotate(10deg) scale(1.1) !important; /* 회전 상태 유지하며 크기 조절 */
 }
 
 .sim-shortcut-btn:disabled {
