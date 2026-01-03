@@ -30,7 +30,8 @@ export const simParams = {
     skill5_buff: { 
       type: "buff",
       originalId: "shinrirang_skill5",
-      order: 1, // 순서는 여기서 결정됨
+      phase: "onEnemyHit", // 페이즈 명시
+      order: 1,
       maxStacks: 2,
       duration: 2,
       skipTrigger: true, 
@@ -40,7 +41,8 @@ export const simParams = {
     skill5_counter: { 
       type: "hit",
       originalId: "shinrirang_skill5",
-      order: 2, // 순서는 여기서 결정됨
+      phase: "onEnemyHit", // 페이즈 명시
+      order: 2,
       valKey: "추가공격",
       triggers: ["being_hit"],
       label: "반격 연환각"
@@ -49,9 +51,8 @@ export const simParams = {
     // [패시브5] 굶주린 늑대의 투지 (스택)
     skill7: { 
       originalId: "shinrirang_skill7",
-      id: "skill7",
+      id: "skill7_stacks",
       type: "stack",
-      phase: "onAttack",
       order: 1,
       triggers: ["shinrirang_skill1", "shinrirang_skill2", "shinrirang_skill5"], 
       maxStacks: 10,
@@ -87,18 +88,21 @@ export const simParams = {
     // [패시브2] 화산섬 전투의 춤 (전의 스택)
     skill4_spirit: {
       type: "stack",
-      id: "skill4_spirit", // 이제 엔진이 skill4_spirit_stacks 로 자동 관리
+      id: "skill4_spirit_stacks", 
       originalId: "tayangsuyi_skill4",
       customTag: "전의",
       maxStacks: 9,
       bonusPerStack: 6, 
       triggers: ["ally_attack"], 
-      label: "획득"
+      label: "획득",
+      prob: 0.5,
+      scaleProb: true,
+      startRate: 0.64
     },
     // [필살기] 전의 소모 (도장 없을 때)
     skill4_spirit_consume: {
       type: "action", 
-      id: "skill4_spirit", // 키값 일치 (엔진이 skill4_spirit_stacks 를 소모함)
+      id: "skill4_spirit_stacks", 
       phase: "onAfterAction",
       condition: ["isUlt", "!isStamp"], 
       action: "all_consume",
@@ -109,6 +113,7 @@ export const simParams = {
     skill5_buff: {
       type: "buff",
       originalId: "tayangsuyi_skill5",
+      timerKey: "skill5_timer",
       phase: "onAttack", // 행동 단계에서 체크
       order: 1,
       duration: 2,
@@ -120,6 +125,7 @@ export const simParams = {
     skill7_buff: {
       type: "buff",
       originalId: "tayangsuyi_skill7",
+      timerKey: "skill7_timer",
       maxStacks: 3,
       duration: 1,
       triggers: ["ally_ult"], 

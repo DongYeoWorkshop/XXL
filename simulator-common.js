@@ -67,3 +67,25 @@ export function getCharacterCommonControls(keys) {
     if (!keys || !Array.isArray(keys)) return [];
     return keys.map(key => commonControls[key]).filter(Boolean);
 }
+
+/**
+ * 스킬 인덱스 상수 (도장은 위치가 가변적이므로 제외)
+ */
+export const SKILL_IDX = {
+    NORMAL: 0,      // 스킬1 (보통공격)
+    ULT: 1,         // 스킬2 (필살기)
+    PASSIVE_1: 2,   // 스킬3
+    PASSIVE_2: 3,   // 스킬4
+    PASSIVE_3: 4,   // 스킬5 (해금 30)
+    PASSIVE_4: 5,   // 스킬6 (해금 50)
+    PASSIVE_5: 6    // 스킬7 (해금 75)
+};
+
+/**
+ * 패시브 스킬 해금 조건 (돌파 단계)
+ */
+export const UNLOCK_REQ = {
+    [SKILL_IDX.PASSIVE_3]: 30,
+    [SKILL_IDX.PASSIVE_4]: 50,
+    [SKILL_IDX.PASSIVE_5]: 75
+};

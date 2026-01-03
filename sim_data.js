@@ -48,12 +48,10 @@ export const simCharData = {
         // [패시브2] 아군 캐릭터 수만큼 전의 획득 이벤트 발생
         if (!ctx.isAllyUltTurn) {
             const allyCount = ctx.customValues.ally_warrior_debuffer_count || 0;
-            const prob = ctx.getVal(3, 'max') / 100;
             
+            // 엔진이 sim_params 설정을 보고 확률 체크를 하므로, 여기서는 횟수만큼 트리거만 실행
             for (let i = 0; i < allyCount; i++) {
-                if (Math.random() < prob) {
-                    ctx.checkStackTriggers("ally_attack");
-                }
+                ctx.checkStackTriggers("ally_attack");
             }
         } 
         // [패시브5] 아군 필살기 횟수만큼 궐기 버프 이벤트 발생
@@ -82,8 +80,9 @@ export const simCharData = {
         const bonuses = { "뎀증": 0, "공증": 0, "평타뎀증": 0, "필살기뎀증": 0 };
         
         // [패시브2] 전의 중첩당 필살기 뎀증
-        const spiritStacks = ctx.simState.skill4_spirit_stacks || 0;
-        bonuses["필살기뎀증"] += spiritStacks * p.skill4_spirit.bonusPerStack;
+        const spiritStacks = Number(ctx.simState.skill4_spirit_stacks) || 0;
+        const bonusPerStack = (p && p.skill4_spirit && p.skill4_spirit.bonusPerStack) ? p.skill4_spirit.bonusPerStack : 6;
+        bonuses["필살기뎀증"] += spiritStacks * bonusPerStack;
 
         // [패시브5] 궐기 중첩당 필살기 뎀증 (1턴 지속 중첩 버프)
         const gweolgiTimer = ctx.simState.skill7_timer;

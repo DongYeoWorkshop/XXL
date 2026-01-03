@@ -254,8 +254,15 @@ function updateSubStatList(subStats) {
         const li = document.createElement('li');
         if (isDesktop) li.style.cssText = `display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; gap: 4px; text-align: center;`;
         else li.style.cssText = `display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 8px 10px;`;
+        
         let val = subStats[cat] || 0;
-        if (cat === "고정공증") val = Math.floor(val); 
+        if (cat === "고정공증") {
+            val = Math.floor(val); 
+        } else {
+            // 소수점 최대 2자리까지만 표시 (불필요한 .00 제거를 위해 parseFloat 사용)
+            val = parseFloat(Number(val).toFixed(2));
+        }
+
         const displayName = subStatDisplayNames[cat] || cat;
         if (isDesktop) li.innerHTML = `<span class="stat-label" style="font-size: 0.75em; font-weight: normal; color: #aaa;">${displayName}</span> <span style="font-size: 1.1em; font-weight: bold; color: #fff;">${val}${cat !== "고정공증" ? '%' : ''}</span>`;
         else li.innerHTML = `<span class="stat-label" style="font-size: 0.82em; font-weight: normal; color: #aaa;">${displayName}</span> <span style="font-size: 1.1em; font-weight: bold; color: #fff;">${val}${cat !== "고정공증" ? '%' : ''}</span>`;

@@ -190,7 +190,15 @@ export function calculateCharacterStats(charId, charData, skillLevels, isUltStam
                                         }
                                     }
                                 }
-                                valueToAdd = (baseMax !== undefined ? baseMax * rate : effectData.fixed) || 0;
+                                
+                                // [수정] 개별 startRate가 있으면 우선 적용하여 배율 재계산
+                                let currentRate = rate;
+                                const specificStartRate = isOwnerUltStamped ? (effectData.stampStartRate ?? effectData.startRate) : effectData.startRate;
+                                if (specificStartRate !== undefined) {
+                                    currentRate = getSkillMultiplierFn(Math.max(1, Math.min(levelToUse, 10)), specificStartRate);
+                                }
+
+                                valueToAdd = (baseMax !== undefined ? baseMax * currentRate : effectData.fixed) || 0;
                             } else if (typeof effectData === 'number') {
                                 valueToAdd = effectData;
                             }
@@ -336,7 +344,13 @@ export function calculateCharacterStats(charId, charData, skillLevels, isUltStam
                             const effectData = buffSkill.stampBuffEffects[effectStat];
                             let valueToAdd = 0;
                             if (typeof effectData === 'object' && effectData !== null) {
-                                valueToAdd = (effectData.max !== undefined ? effectData.max * rate : effectData.fixed) || 0;
+                                // [수정] 개별 startRate 우선 적용 (도장이므로 stampStartRate 우선)
+                                let currentRate = rate;
+                                const specificStartRate = effectData.stampStartRate ?? effectData.startRate;
+                                if (specificStartRate !== undefined) {
+                                    currentRate = getSkillMultiplierFn(Math.max(1, Math.min(levelToUse, 10)), specificStartRate);
+                                }
+                                valueToAdd = (effectData.max !== undefined ? effectData.max * currentRate : effectData.fixed) || 0;
                             } else if (typeof effectData === 'number') valueToAdd = effectData;
                             
                             // [추가] 커스텀 배율 적용
