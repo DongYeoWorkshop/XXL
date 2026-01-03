@@ -258,7 +258,13 @@ export const charData = {
         icon: "icon/passive5.webp", 
         desc: "[각흔]을 보유한 적을 보통공격으로 타격 시 2턴 간 바드의 필살기 데미지 {0}% 증가", 
         calc: [{ max: 45 }] },
-            { id: "baade_stamp_passive", name: "쇄강 파공격", icon: "images/sigilwebp/sigil_baade.webp", excludeFromBuffSearch: true, isUltExtra: true, damageDeal: [{ type: "추가공격", val: { max: 174.75 } }] }
+            { id: "baade_skill8", 
+              name: "쇄강 파공격", 
+              icon: "images/sigilwebp/sigil_baade.webp", 
+              excludeFromBuffSearch: true, 
+              syncLevelWith: "baade_skill2",
+              isUltExtra: true, 
+              damageDeal: [{ type: "추가공격", val: { max: 174.75 } }] }
           ]
         },
   "anuberus": {
@@ -359,6 +365,7 @@ export const charData = {
         icon: "images/sigilwebp/sigil_anuberus.webp",
         excludeFromBuffSearch: true,
         isUltExtra: true,
+        syncLevelWith: "anuberus_skill2", // 필살기 레벨 동기화 추가
         damageDeal: [{ type: "추가공격", val: { max: 30 } }]
       }
     ]
