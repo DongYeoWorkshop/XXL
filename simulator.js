@@ -1,7 +1,8 @@
 // simulator.js
 import { state, constants } from './state.js';
 import { charData } from './data.js';
-import { simCharData } from './sim_data.js?v=20260119';
+import { simCharData } from './sim_data.js';
+import { simDataV2 } from './sim_data2.js';
 import { runSimulationCore, collectSimulationConfig } from './simulator-engine.js';
 import { calculateBaseStats } from './calculations.js';
 import { getCharacterSelectorHtml, getSimulatorLayoutHtml, showDetailedLogModal, renderAxisLabels, renderDamageLineChart, displaySimResult, updateActionEditor } from './simulator-ui.js';
@@ -56,7 +57,8 @@ function renderSimAttributePicker(charId) {
 }
 
 function renderSimulatorUI(charId) {
-    const container = document.getElementById('simulator-content'), data = charData[charId], sData = simCharData[charId] || {}, stats = state.savedStats[charId] || {};
+    const container = document.getElementById('simulator-content'), data = charData[charId], stats = state.savedStats[charId] || {};
+    const sData = simDataV2[charId] || simCharData[charId] || {};
     
     container.setAttribute('data-last-char-id', charId);
 
@@ -230,8 +232,8 @@ function renderSimulatorUI(charId) {
         editBtn.innerHTML = "⚙️ 행동 수정";
     }
 
-    const sSupportData1 = simCharData[supportId1] || {};
-    const sSupportData2 = simCharData[supportId2] || {};
+    const sSupportData1 = simDataV2[supportId1] || simCharData[supportId1] || {};
+    const sSupportData2 = simDataV2[supportId2] || simCharData[supportId2] || {};
     
     // [수정] 서포터 컨트롤 자동 생성 로직 제거 (사용자가 직접 가서 설정하게 함)
     const combinedControls = [
@@ -483,16 +485,15 @@ function runSimulation(rawCharId) {
     // 브라우저가 스피너를 렌더링할 시간을 준 뒤 계산 시작
     setTimeout(() => {
         const data = charData[charId];
-        const sData = simCharData[charId] || {}; // 이제 공백이 제거된 ID로 정확히 찾음
+        const sData = simDataV2[charId] || simCharData[charId] || {};
         const stats = state.savedStats[charId] || {};
         
         // [수정] 데이터 수집 로직 통합 함수 사용
-        const config = collectSimulationConfig(charId, charData, simCharData);
+        const config = collectSimulationConfig(charId, charData);
 
         const result = runSimulationCore({ 
             charId, 
             charData: data, 
-            sData, 
             stats, 
             ...config,
             defaultGrowthRate: constants.defaultGrowth 

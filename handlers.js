@@ -215,12 +215,12 @@ export function initHandlers(domElements, logicFunctions) {
 
         if (crossedMobile || crossedPC) {
             if (state.currentId === 'hero') {
-                import('./hero-tab.js').then(mod => {
+                import(`./hero-tab.js?v=20260313`).then(mod => {
                     mod.clearHeroTabRemnants();
                     mod.renderHeroTab(dom, logic.updateStats);
                 });
             } else if (state.currentId === 'simulator') {
-                import('./simulator.js').then(mod => {
+                import(`./simulator.js?v=20260313`).then(mod => {
                     // 시뮬레이터는 가로세로 비율 왜곡 방지를 위해 전체 UI 다시 그리기 권장
                     mod.initSimulator(); 
                 });
@@ -467,15 +467,15 @@ export function handleImageClick(img, pushHistory = true) {
         contentDisplay.className = 'hero-mode'; 
         document.body.classList.add('hero-mode-active'); // 히어로/시뮬 공통 클래스
         forceMainHeader();
-        import('./hero-tab.js').then(mod => { mod.clearHeroTabRemnants(); mod.renderHeroTab(dom, logic.updateStats); });
+        import(`./hero-tab.js?v=20260313`).then(mod => { mod.clearHeroTabRemnants(); mod.renderHeroTab(dom, logic.updateStats); });
     } else if (id === 'simulator') {
         contentDisplay.className = 'hero-mode';
         document.body.classList.add('hero-mode-active'); // 히어로/시뮬 공통 클래스
         document.querySelector('.main-content-column').style.setProperty('display', 'block', 'important');
         document.getElementById('simulator-page').style.setProperty('display', 'block', 'important');
         forceMainHeader();
-        import('./hero-tab.js').then(mod => mod.clearHeroTabRemnants());
-        import('./simulator.js?v=20260117_FINAL').then(mod => mod.initSimulator());
+        import(`./hero-tab.js?v=20260313`).then(mod => mod.clearHeroTabRemnants());
+        import(`./simulator.js?v=20260313`).then(mod => mod.initSimulator());
     } else {
         document.body.classList.add('char-page-active'); // [추가] 일반 캐릭터 탭 전용 클래스
         contentDisplay.className = '';

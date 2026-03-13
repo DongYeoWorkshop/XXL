@@ -1,5 +1,5 @@
 // damage-calculator.js
-import { calculateDamage } from './calculations.js?v=20260118';
+import { calculateDamage } from './calculations.js?v=20260313';
 import { getSkillMultiplier } from './formatter.js';
 import { state } from './state.js';
 import { charData } from './data.js';
@@ -129,13 +129,29 @@ export function getFormattedDamage(skill, lv, isUltStamped, isForCard = false, a
 
     damageEntriesToCalc.forEach(entry => {
         const isStamped = isStampedSkill && isUltStamped;
-        const baseMax = (isStamped && entry.val.stampMax !== undefined) ? entry.val.stampMax : entry.val.max;
+        
+        let baseMax = 0;
+        let isFixedVal = false;
+        
+        // [수정] fixed 또는 stampFixed가 있으면 우선 사용
+        if (isStamped && entry.val.stampFixed !== undefined) {
+            baseMax = entry.val.stampFixed;
+            isFixedVal = true;
+        } else if (entry.val.fixed !== undefined) {
+            baseMax = entry.val.fixed;
+            isFixedVal = true;
+        } else {
+            baseMax = (isStamped && entry.val.stampMax !== undefined) ? entry.val.stampMax : (entry.val.max || 0);
+        }
         
         const currentStartRate = (isStamped && entry.val.stampStartRate !== undefined) 
                                  ? entry.val.stampStartRate 
                                  : (entry.val.startRate !== undefined ? entry.val.startRate : skill.startRate);
         
-        const coeff = (typeof entry.val === 'object') ? (baseMax * getSkillMultiplier(lv, currentStartRate)) : entry.val;
+        // [수정] 고정 수치(fixed)인 경우 레벨 배율을 곱하지 않음
+        const coeff = (typeof entry.val === 'object') 
+                      ? (isFixedVal ? baseMax : (baseMax * getSkillMultiplier(lv, currentStartRate))) 
+                      : entry.val;
         
         let currentIsMultiTarget = skill.isMultiTarget;
         if (entry.isMultiTarget !== undefined) currentIsMultiTarget = entry.isMultiTarget;

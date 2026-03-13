@@ -62,9 +62,16 @@ export function getDynamicDesc(skill, level, isStamped, descriptionToFormat = nu
     }
 
     calculatedValues.forEach((val, idx) => {
-        // 수치 부분만 지정된 색상(#f2a11f)으로 강조
-        const styledVal = `<span style="color: #f2a11f; font-weight: bold;">${val.toLocaleString()}</span>`;
-        desc = desc.replace(`{${idx}}`, styledVal);
+        const placeholder = `{${idx}}`;
+        const styledValueOnly = `<span style="color: #f2a11f; font-weight: bold;">${val.toLocaleString()}</span>`;
+        const styledValueWithPercent = `<span style="color: #f2a11f; font-weight: bold;">${val.toLocaleString()}%</span>`;
+
+        // {idx}% 형태가 있으면 %까지 포함해서 치환, 아니면 {idx}만 치환
+        if (desc.includes(`${placeholder}%`)) {
+            desc = desc.split(`${placeholder}%`).join(styledValueWithPercent);
+        } else {
+            desc = desc.split(placeholder).join(styledValueOnly);
+        }
     });
 
     return desc;

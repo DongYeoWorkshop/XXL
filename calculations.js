@@ -46,16 +46,19 @@ export function calculateCharacterStats(charId, charData, skillLevels, isUltStam
             };
 
             let isUnlockedByBreakthrough = true;
-            const skillIdx = buffOwnerData.skills.findIndex(s => s.id === buff.skillId);
+            // [수정] SYNC 대상이 있으면 그 스킬의 인덱스를 기준으로 돌파 체크
+            const targetIdForBreakthrough = buffSkill.syncLevelWith || buff.skillId;
+            const checkIdx = buffOwnerData.skills.findIndex(s => s.id === targetIdForBreakthrough);
+            
             const breakthroughValue = isOwnerCurrent 
                 ? (liveBr !== undefined ? liveBr : parseInt(allSavedStats?.[charId]?.s1 || 0))
                 : parseInt(allSavedStats?.[appliedCharId]?.s1 || 0);
             
             const thresholds = [0, 0, 0, 0, 30, 50, 75]; 
-            // [수정] 테스트 더미는 돌파 제한 무시
-            if (appliedCharId !== 'test_dummy') {
-                if (skillIdx >= 4 && skillIdx <= 6) {
-                    isUnlockedByBreakthrough = (breakthroughValue >= thresholds[skillIdx]);
+            // [수정] 테스트 더미는 돌파 제한 무시, ignoreBreakthrough 설정 시에도 무시
+            if (appliedCharId !== 'test_dummy' && !buffSkill.ignoreBreakthrough) {
+                if (checkIdx >= 4 && checkIdx <= 6) {
+                    isUnlockedByBreakthrough = (breakthroughValue >= thresholds[checkIdx]);
                 }
             }
             if (!isUnlockedByBreakthrough) return;
@@ -388,7 +391,16 @@ function getElementMultiplier(attackerAttr, targetAttr) {
 export function calculateDamage(damageType, baseAttack, stats, coefficient, isStamped = false, attackerAttr, targetAttr) {
     let coeffValue = 0;
     if (coefficient) {
-        if (typeof coefficient === 'object' && coefficient !== null) { coeffValue = (isStamped && coefficient.stampMax !== undefined) ? coefficient.stampMax : coefficient.max; } 
+        if (typeof coefficient === 'object' && coefficient !== null) { 
+            // [수정] fixed 또는 stampFixed가 있으면 우선 사용, 없으면 max/stampMax 사용
+            if (isStamped && coefficient.stampFixed !== undefined) {
+                coeffValue = coefficient.stampFixed;
+            } else if (coefficient.fixed !== undefined) {
+                coeffValue = coefficient.fixed;
+            } else {
+                coeffValue = (isStamped && coefficient.stampMax !== undefined) ? coefficient.stampMax : (coefficient.max || 0);
+            }
+        } 
         else { coeffValue = coefficient; }
     }
     const sub_뎀증 = (stats["뎀증"] || 0) / 100;

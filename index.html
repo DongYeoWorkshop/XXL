@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,12 +11,13 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-G21D7PVJEZ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
 
     gtag('config', 'G-G21D7PVJEZ');
   </script>
-  <meta name="description" content="동여성 공방은 게임 XXL WOOFIA(XXL 우피아)의 팬사이트로 캐릭터의 스탯, 데미지 계산 그리고 딜량 시뮬레이션을 제공하는 게임 정보 사이트입니다.">
+  <meta name="description"
+    content="동여성 공방은 게임 XXL WOOFIA(XXL 우피아)의 팬사이트로 캐릭터의 스탯, 데미지 계산 그리고 딜량 시뮬레이션을 제공하는 게임 정보 사이트입니다.">
   <meta name="keywords" content="동여성 공방, XXL 우피아, XXL WOOFIA, XXL 우피아 동여성, xxl 우피아 동여성 공방,우피아 동여성">
   <meta property="og:title" content="동여성 공방">
   <meta property="og:description" content="게임 XXL Woofia의 캐릭터의 스탯, 데미지 계산 그리고 딜량 시뮬레이션을 제공하는 게임 정보 사이트입니다.">
@@ -23,409 +25,492 @@
   <meta property="og:type" content="website">
   <link rel="icon" type="image/png" sizes="32x32" href="icon/main32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="icon/main16x16.png">
-  <link rel="stylesheet" href="style.css?v=20260119">
-  <link rel="stylesheet" href="hero-tab.css?v=20260119">
-  <link rel="stylesheet" href="skills.css?v=20260119">
-  <link rel="stylesheet" href="components.css?v=20260119">
-  <link rel="stylesheet" href="responsive.css?v=20260119">
+  <link rel="stylesheet" href="style.css?v=20260313">
+  <link rel="stylesheet" href="hero-tab.css?v=20260313">
+  <link rel="stylesheet" href="skills.css?v=20260313">
+  <link rel="stylesheet" href="components.css?v=20260313">
+  <link rel="stylesheet" href="responsive.css?v=20260313">
   <!-- JS Module Preload: 병렬 다운로드 가속 -->
-  <link rel="modulepreload" href="main.js?v=20260119">
-  <link rel="modulepreload" href="ui.js?v=20260119">
-  <link rel="modulepreload" href="logic.js?v=20260119">
-  <link rel="modulepreload" href="data.js?v=20260119">
-  <link rel="modulepreload" href="state.js?v=20260119">
-  <link rel="modulepreload" href="handlers.js?v=20260119">
-  <link rel="modulepreload" href="formatter.js?v=20260119">
-  <link rel="modulepreload" href="buffs.js?v=20260119">
-  <link rel="modulepreload" href="breakthrough.js?v=20260119">
+  <link rel="modulepreload" href="main.js?v=20260313">
+  <link rel="modulepreload" href="ui.js?v=20260313">
+  <link rel="modulepreload" href="logic.js?v=20260313">
+  <link rel="modulepreload" href="data.js?v=20260313">
+  <link rel="modulepreload" href="state.js?v=20260313">
+  <link rel="modulepreload" href="handlers.js?v=20260313">
+  <link rel="modulepreload" href="formatter.js?v=20260313">
+  <link rel="modulepreload" href="buffs.js?v=20260313">
+  <link rel="modulepreload" href="breakthrough.js?v=20260313">
 </head>
 
 <body>
 
-    <header class="header">
-        <div class="header-left">
+  <header class="header">
+    <div class="header-left">
 
-<!-- 상단 고정 헤더 + 캐릭터 목록 통합 래퍼 -->
-<div id="sticky-wrapper">
-  <div id="char-list-container" class="hidden">
-    <div id="sort-container">
-      <div class="sort-icon-all" title="전체 보기">ALL</div>
-      <img src="icon/fire.webp" class="sort-icon" data-attr="0" title="불 속성 정렬">
-      <img src="icon/water.webp" class="sort-icon" data-attr="1" title="물 속성 정렬">
-      <img src="icon/wood.webp" class="sort-icon" data-attr="2" title="나무 속성 정렬">
-      <img src="icon/light.webp" class="sort-icon" data-attr="3" title="빛 속성 정렬">
-      <img src="icon/dark.webp" class="sort-icon" data-attr="4" title="어둠 속성 정렬">
-      <div class="sort-icon-fav" title="즐겨찾기 보기">★</div>
-    </div>
-    <div class="image-row">
-      <img src="images/tayangsuyi.webp" class="main-image" style="background-color: #30363d;" data-id="tayangsuyi" loading="lazy">
-      <img src="images/choiyuhee.webp" class="main-image" style="background-color: #30363d;" data-id="choiyuhee" loading="lazy">
-      <img src="images/choiyuhyun.webp" class="main-image" style="background-color: #30363d;" data-id="choiyuhyun" loading="lazy">
-      <img src="images/kumoyama.webp" class="main-image" style="background-color: #30363d;" data-id="kumoyama" loading="lazy">
-      <img src="images/khafka.webp" class="main-image" style="background-color: #30363d;" data-id="khafka" loading="lazy">
-      <img src="images/codeb.webp" class="main-image" style="background-color: #30363d;" data-id="codeb" loading="lazy">      
-      <img src="images/beernox.webp" class="main-image" style="background-color: #30363d;" data-id="beernox" loading="lazy">
-      <img src="images/dallawan.webp" class="main-image" style="background-color: #30363d;" data-id="dallawan" loading="lazy">      
-      <img src="images/kyrian.webp" class="main-image" style="background-color: #30363d;" data-id="kyrian" loading="lazy">
-      <img src="images/meng.webp" class="main-image" style="background-color: #30363d;" data-id="meng" loading="lazy">
-      <img src="images/baade.webp" class="main-image" style="background-color: #30363d;" data-id="baade" loading="lazy">
-      <img src="images/locke.webp" class="main-image" style="background-color: #30363d;" data-id="locke" loading="lazy">
-      <img src="images/orem.webp" class="main-image" style="background-color: #30363d;" data-id="orem" loading="lazy">
-      <img src="images/leo.webp" class="main-image" style="background-color: #30363d;" data-id="leo" loading="lazy">
-      <img src="images/tyrantino.webp" class="main-image" style="background-color: #30363d;" data-id="tyrantino" loading="lazy">
-      <img src="images/wang.webp" class="main-image" style="background-color: #30363d;" data-id="wang" loading="lazy">
-      <img src="images/anuberus.webp" class="main-image" style="background-color: #30363d;" data-id="anuberus" loading="lazy">
-      <img src="images/shinrirang.webp" class="main-image" style="background-color: #30363d;" data-id="shinrirang" loading="lazy">
-      <img src="images/tamrang.webp" class="main-image" style="background-color: #30363d;" data-id="tamrang" loading="lazy">
-      <img src="images/goldenryder.webp" class="main-image" style="background-color: #30363d;" data-id="goldenryder" loading="lazy">
-      <img src="images/jetblack.webp" class="main-image" style="background-color: #30363d;" data-id="jetblack" loading="lazy">
-      <img src="images/rutenix.webp" class="main-image" style="background-color: #30363d;" data-id="rutenix" loading="lazy">
-      <img src="images/duncan.webp" class="main-image" style="background-color: #30363d;" data-id="duncan" loading="lazy">
-      <img src="images/famido.webp" class="main-image" style="background-color: #30363d;" data-id="famido" loading="lazy">
-      <img src="images/rikano.webp" class="main-image" style="background-color: #30363d;" data-id="rikano" loading="lazy">
-      <img src="images/bossren.webp" class="main-image" style="background-color: #30363d;" data-id="bossren" loading="lazy">
-      <img src="images/izuminosuke.webp" class="main-image" style="background-color: #30363d;" data-id="izuminosuke" loading="lazy">
-      <img src="images/yuzhan.webp" class="main-image" style="background-color: #30363d;" data-id="yuzhan" loading="lazy" data-new="true">
-      <img src="images/suichong.webp" class="main-image" style="background-color: #30363d;" data-id="suichong" loading="lazy" data-new="true">      
-    </div>
-  </div>
-
-  <div id="sticky-header" class="sticky-header">
-    <div class="sticky-content" style="padding-left: 5px;">
-      <img src="icon/main.png" id="header-toggle-icon" class="header-main-icon-btn" title="메인으로 이동">
-      <span id="sticky-header-title">동여성 공방</span>
-      <div id="header-shortcuts" class="header-shortcuts-area">
-        <img src="icon/main-m.png" class="header-shortcut-icon" data-id="char-list" title="캐릭터 목록" style="width: 24px; height: 24px; margin-right: 2px;">
-        <img src="icon/compe-m.png" class="header-shortcut-icon" data-id="hero" title="딜량 비교 (Hero)">
-        <img src="icon/simul-m.png" class="header-shortcut-icon" data-id="simulator" title="전투 시뮬레이터">
-      </div>
-      <span id="sticky-attr"></span>
-      <span id="sticky-name"></span>
-      <span id="sticky-lv"></span>
-      <span id="sticky-br"></span>
-      <span id="sticky-fit"></span>
-      <button id="char-list-toggle-btn" class="header-btn">≡</button>
-    </div>
-  </div>
-</div>
-  </div>
-</div>
-
-<div id="content-display">
-  <button class="char-report-btn" title="캐릭터 분석 보고서" style="display: none;"><img src="icon/debuffer.webp" style="width: 22px;"></button>
-  <button class="sim-shortcut-btn" title="이 캐릭터로 시뮬레이터 시작" style="display: none;"><img src="icon/bolt.png" style="width: 24px;"></button>
-  <button class="char-fav-btn">☆</button>
-  <div id="internal-char-bg">
-      <img id="char-bg-img" src="" alt="" style="display: none;">
-  </div>
-  <!-- 상단 캐릭터 핵심 정보 (1열 고정) -->
-  <div class="char-header-row" style="margin-top: 10px !important;">
-    <h2 id="display-title"></h2>
-    <div id="info-display" style="display: none; margin-top: 5px; margin-bottom: 15px; font-size: 0.95em; color: #666; justify-content: center; align-items: center; gap: 20px;">
-      <!-- 속성 and 포지션 will go here -->
-    </div>
-  </div>
-
-  <!-- 오른쪽 컬럼 (스탯/슬라이더) : 모바일에서는 상단 배치 -->
-  <div class="side-content-column">
-    <div id="calc-and-stats-row" style="display: none; gap: 15px; margin-top: 15px; align-items: center;">
-      
-      <!-- 왼쪽: 슬라이더 영역 -->
-      <div id="calc-area" style="flex: 1; display: none; padding-top: 0; border-top: none;">
-        
-        <!-- 레벨 슬라이더 -->
-        <div class="slider-group">
-          <label class="slider-label">Lv. <span id="level-val">1</span></label>
-          <div class="slider-box">
-            <input type="range" id="level-slider" min="1" max="60" value="1" list="level-ticks">
+      <!-- 상단 고정 헤더 + 캐릭터 목록 통합 래퍼 -->
+      <div id="sticky-wrapper">
+        <div id="char-list-container" class="hidden">
+          <div id="sort-container">
+            <div class="sort-icon-all" title="전체 보기">ALL</div>
+            <img src="icon/fire.webp" class="sort-icon" data-attr="0" title="불 속성 정렬">
+            <img src="icon/water.webp" class="sort-icon" data-attr="1" title="물 속성 정렬">
+            <img src="icon/wood.webp" class="sort-icon" data-attr="2" title="나무 속성 정렬">
+            <img src="icon/light.webp" class="sort-icon" data-attr="3" title="빛 속성 정렬">
+            <img src="icon/dark.webp" class="sort-icon" data-attr="4" title="어둠 속성 정렬">
+            <div class="sort-icon-fav" title="즐겨찾기 보기">★</div>
           </div>
-          <datalist id="level-ticks">
-            <option value="1"></option>
-            <option value="5"></option>
-            <option value="10"></option>
-            <option value="15"></option>
-            <option value="20"></option>
-            <option value="25"></option>
-            <option value="30"></option>
-            <option value="35"></option>
-            <option value="40"></option>
-            <option value="45"></option>
-            <option value="50"></option>
-            <option value="55"></option>
-            <option value="60"></option>
-          </datalist>
+          <div class="image-row">
+            <img src="images/tayangsuyi.webp" class="main-image" style="background-color: #30363d;" data-id="tayangsuyi"
+              loading="lazy">
+            <img src="images/choiyuhee.webp" class="main-image" style="background-color: #30363d;" data-id="choiyuhee"
+              loading="lazy">
+            <img src="images/choiyuhyun.webp" class="main-image" style="background-color: #30363d;" data-id="choiyuhyun"
+              loading="lazy">
+            <img src="images/kumoyama.webp" class="main-image" style="background-color: #30363d;" data-id="kumoyama"
+              loading="lazy">
+            <img src="images/khafka.webp" class="main-image" style="background-color: #30363d;" data-id="khafka"
+              loading="lazy">
+            <img src="images/codeb.webp" class="main-image" style="background-color: #30363d;" data-id="codeb"
+              loading="lazy">
+            <img src="images/beernox.webp" class="main-image" style="background-color: #30363d;" data-id="beernox"
+              loading="lazy">
+            <img src="images/dallawan.webp" class="main-image" style="background-color: #30363d;" data-id="dallawan"
+              loading="lazy">
+            <img src="images/kyrian.webp" class="main-image" style="background-color: #30363d;" data-id="kyrian"
+              loading="lazy">
+            <img src="images/meng.webp" class="main-image" style="background-color: #30363d;" data-id="meng"
+              loading="lazy">
+            <img src="images/baade.webp" class="main-image" style="background-color: #30363d;" data-id="baade"
+              loading="lazy">
+            <img src="images/locke.webp" class="main-image" style="background-color: #30363d;" data-id="locke"
+              loading="lazy">
+            <img src="images/orem.webp" class="main-image" style="background-color: #30363d;" data-id="orem"
+              loading="lazy">
+            <img src="images/leo.webp" class="main-image" style="background-color: #30363d;" data-id="leo"
+              loading="lazy">
+            <img src="images/tyrantino.webp" class="main-image" style="background-color: #30363d;" data-id="tyrantino"
+              loading="lazy">
+            <img src="images/wang.webp" class="main-image" style="background-color: #30363d;" data-id="wang"
+              loading="lazy">
+            <img src="images/anuberus.webp" class="main-image" style="background-color: #30363d;" data-id="anuberus"
+              loading="lazy">
+            <img src="images/shinrirang.webp" class="main-image" style="background-color: #30363d;" data-id="shinrirang"
+              loading="lazy">
+            <img src="images/tamrang.webp" class="main-image" style="background-color: #30363d;" data-id="tamrang"
+              loading="lazy">
+            <img src="images/goldenryder.webp" class="main-image" style="background-color: #30363d;"
+              data-id="goldenryder" loading="lazy">
+            <img src="images/jetblack.webp" class="main-image" style="background-color: #30363d;" data-id="jetblack"
+              loading="lazy">
+            <img src="images/rutenix.webp" class="main-image" style="background-color: #30363d;" data-id="rutenix"
+              loading="lazy">
+            <img src="images/duncan.webp" class="main-image" style="background-color: #30363d;" data-id="duncan"
+              loading="lazy">
+            <img src="images/famido.webp" class="main-image" style="background-color: #30363d;" data-id="famido"
+              loading="lazy">
+            <img src="images/rikano.webp" class="main-image" style="background-color: #30363d;" data-id="rikano"
+              loading="lazy">
+            <img src="images/bossren.webp" class="main-image" style="background-color: #30363d;" data-id="bossren"
+              loading="lazy">
+            <img src="images/izuminosuke.webp" class="main-image" style="background-color: #30363d;"
+              data-id="izuminosuke" loading="lazy">
+            <img src="images/yuzhan.webp" class="main-image" style="background-color: #30363d;" data-id="yuzhan"
+              loading="lazy">
+            <img src="images/suichong.webp" class="main-image" style="background-color: #30363d;" data-id="suichong"
+              loading="lazy">
+            <img src="images/souran.webp" class="main-image" style="background-color: #30363d;" data-id="souran"
+              loading="lazy" data-new="true">
+          </div>
         </div>
 
-        <!-- 추가 슬라이더들 (이제 세로로 쌓임) -->
-        <div id="bonus-sliders" style="display: none; flex-direction: column;">
-          
-          <!-- 돌파 슬라이더 -->
-          <div class="slider-group">
-            <label class="slider-label" style="display: flex; align-items: center; justify-content: flex-start; gap: 5px;">
-                돌파 <span id="extra1-val">0</span>
-                <div style="display: flex; flex-direction: column; gap: 0; margin-top: 2px;">
-                    <button id="br-up-btn" style="padding: 0; line-height: 1; background: none; border: none; cursor: pointer; font-size: 0.7em; color: #007bff;">▲</button>
-                    <button id="br-down-btn" style="padding: 0; line-height: 1; background: none; border: none; cursor: pointer; font-size: 0.7em; color: #007bff;">▼</button>
+        <div id="sticky-header" class="sticky-header">
+          <div class="sticky-content" style="padding-left: 5px;">
+            <img src="icon/main.png" id="header-toggle-icon" class="header-main-icon-btn" title="메인으로 이동">
+            <span id="sticky-header-title">동여성 공방</span>
+            <div id="header-shortcuts" class="header-shortcuts-area">
+              <img src="icon/main-m.png" class="header-shortcut-icon" data-id="char-list" title="캐릭터 목록"
+                style="width: 24px; height: 24px; margin-right: 2px;">
+              <img src="icon/compe-m.png" class="header-shortcut-icon" data-id="hero" title="딜량 비교 (Hero)">
+              <img src="icon/simul-m.png" class="header-shortcut-icon" data-id="simulator" title="전투 시뮬레이터">
+            </div>
+            <span id="sticky-attr"></span>
+            <span id="sticky-name"></span>
+            <span id="sticky-lv"></span>
+            <span id="sticky-br"></span>
+            <span id="sticky-fit"></span>
+            <button id="char-list-toggle-btn" class="header-btn">≡</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="content-display">
+      <button class="char-report-btn" title="캐릭터 분석 보고서" style="display: none;"><img src="icon/debuffer.webp"
+          style="width: 22px;"></button>
+      <button class="sim-shortcut-btn" title="이 캐릭터로 시뮬레이터 시작" style="display: none;"><img src="icon/bolt.png"
+          style="width: 24px;"></button>
+      <button class="char-fav-btn">☆</button>
+      <div id="internal-char-bg">
+        <img id="char-bg-img" src="" alt="" style="display: none;">
+      </div>
+      <!-- 상단 캐릭터 핵심 정보 (1열 고정) -->
+      <div class="char-header-row" style="margin-top: 10px !important;">
+        <h2 id="display-title"></h2>
+        <div id="info-display"
+          style="display: none; margin-top: 5px; margin-bottom: 15px; font-size: 0.95em; color: #666; justify-content: center; align-items: center; gap: 20px;">
+          <!-- 속성 and 포지션 will go here -->
+        </div>
+      </div>
+
+      <!-- 오른쪽 컬럼 (스탯/슬라이더) : 모바일에서는 상단 배치 -->
+      <div class="side-content-column">
+        <div id="calc-and-stats-row" style="display: none; gap: 15px; margin-top: 15px; align-items: center;">
+
+          <!-- 왼쪽: 슬라이더 영역 -->
+          <div id="calc-area" style="flex: 1; display: none; padding-top: 0; border-top: none;">
+
+            <!-- 레벨 슬라이더 -->
+            <div class="slider-group">
+              <label class="slider-label">Lv. <span id="level-val">1</span></label>
+              <div class="slider-box">
+                <input type="range" id="level-slider" min="1" max="60" value="1" list="level-ticks">
+              </div>
+              <datalist id="level-ticks">
+                <option value="1"></option>
+                <option value="5"></option>
+                <option value="10"></option>
+                <option value="15"></option>
+                <option value="20"></option>
+                <option value="25"></option>
+                <option value="30"></option>
+                <option value="35"></option>
+                <option value="40"></option>
+                <option value="45"></option>
+                <option value="50"></option>
+                <option value="55"></option>
+                <option value="60"></option>
+              </datalist>
+            </div>
+
+            <!-- 추가 슬라이더들 (이제 세로로 쌓임) -->
+            <div id="bonus-sliders" style="display: none; flex-direction: column;">
+
+              <!-- 돌파 슬라이더 -->
+              <div class="slider-group">
+                <label class="slider-label"
+                  style="display: flex; align-items: center; justify-content: flex-start; gap: 5px;">
+                  돌파 <span id="extra1-val">0</span>
+                  <div style="display: flex; flex-direction: column; gap: 0; margin-top: 2px;">
+                    <button id="br-up-btn"
+                      style="padding: 0; line-height: 1; background: none; border: none; cursor: pointer; font-size: 0.7em; color: #007bff;">▲</button>
+                    <button id="br-down-btn"
+                      style="padding: 0; line-height: 1; background: none; border: none; cursor: pointer; font-size: 0.7em; color: #007bff;">▼</button>
+                  </div>
+                </label>
+                <div class="slider-box">
+                  <input type="range" id="extra1-slider" min="0" max="75" value="0" list="breakthrough-ticks"
+                    style="width: 100%;">
                 </div>
-            </label>
-            <div class="slider-box">
-              <input type="range" id="extra1-slider" min="0" max="75" value="0" list="breakthrough-ticks" style="width: 100%;">
+                <datalist id="breakthrough-ticks">
+                  <option value="0"></option>
+                  <option value="5"></option>
+                  <option value="15"></option>
+                  <option value="30"></option>
+                  <option value="50"></option>
+                  <option value="75"></option>
+                </datalist>
+              </div>
+
+              <!-- 적합도 슬라이더 -->
+              <div class="slider-group">
+                <label class="slider-label">적합도 <span id="extra2-val">0</span></label>
+                <div class="slider-box">
+                  <input type="range" id="extra2-slider" min="0" max="5" value="0" list="fitness-ticks"
+                    style="width: 100%;">
+                </div>
+                <datalist id="fitness-ticks">
+                  <option value="0"></option>
+                  <option value="1"></option>
+                  <option value="2"></option>
+                  <option value="3"></option>
+                  <option value="4"></option>
+                  <option value="5"></option>
+                </datalist>
+              </div>
             </div>
-            <datalist id="breakthrough-ticks">
-              <option value="0"></option>
-              <option value="5"></option>
-              <option value="15"></option>
-              <option value="30"></option>
-              <option value="50"></option>
-              <option value="75"></option>
-            </datalist>
           </div>
 
-          <!-- 적합도 슬라이더 -->
-          <div class="slider-group">
-            <label class="slider-label">적합도 <span id="extra2-val">0</span></label>
-            <div class="slider-box">
-              <input type="range" id="extra2-slider" min="0" max="5" value="0" list="fitness-ticks" style="width: 100%;">
-            </div>
-            <datalist id="fitness-ticks">
-              <option value="0"></option>
-              <option value="1"></option>
-              <option value="2"></option>
-              <option value="3"></option>
-              <option value="4"></option>
-              <option value="5"></option>
-            </datalist>
+          <!-- 오른쪽: 메인 스탯 영역 -->
+          <div id="stats-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+            <ul id="display-stats" class="stat-list" style="margin: 0;"></ul>
           </div>
-        </div>
+
+        </div> <!-- end row -->
+
+        <div id="sub-stats-wrapper"></div>
       </div>
 
-      <!-- 오른쪽: 메인 스탯 영역 -->
-      <div id="stats-wrapper" style="flex: 1; display: flex; flex-direction: column;">
-        <ul id="display-stats" class="stat-list" style="margin: 0;"></ul>
-      </div>
+      <!-- 왼쪽 컬럼 (스킬 정보/버프) : 모바일에서는 하단 배치 -->
+      <div class="main-content-column">
+        <!-- 초기 랜딩 페이지 -->
+        <div id="landing-page" class="hero-dashboard"
+          style="text-align: center; display: block; position: relative; padding-bottom: 20px;">
+          <!-- 절대로 사라지지 않는 물리적 여백 기둥 -->
+          <div style="height: 10px; width: 100%; display: block !important;"></div>
 
-    </div> <!-- end row -->
-
-    <div id="sub-stats-wrapper"></div>
-  </div>
-
-  <!-- 왼쪽 컬럼 (스킬 정보/버프) : 모바일에서는 하단 배치 -->
-  <div class="main-content-column">
-    <!-- 초기 랜딩 페이지 -->
-    <div id="landing-page" class="hero-dashboard" style="text-align: center; display: block; position: relative; padding-bottom: 20px;">
-        <!-- 절대로 사라지지 않는 물리적 여백 기둥 -->
-        <div style="height: 10px; width: 100%; display: block !important;"></div>
-        
-        <h2 class="landing-title" style="color: #ffa500; padding-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+          <h2 class="landing-title"
+            style="color: #ffa500; padding-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
             <img src="icon/main.png" style="width: 32px; height: 32px; vertical-align: middle;">
             동여성 공방
-        </h2>
+          </h2>
 
-        <!-- 메인 메뉴 그룹 -->
-        <div id="landing-menu-group" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; align-items: center; transition: opacity 0.3s;">
-                
+          <!-- 메인 메뉴 그룹 -->
+          <div id="landing-menu-group"
+            style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; align-items: center; transition: opacity 0.3s;">
+
             <!-- Random Character Row -->
             <div style="display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px;">
-                <button id="landing-char-list-btn" style="width: 100px; height: 70px; padding: 8px; background: rgba(40, 167, 69, 0.15); color: #74c67a; border: 1px solid #28a745; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0;">
-                    <img src="icon/main-m.png" style="width: 26px; height: 26px; filter: drop-shadow(0 0 8px rgba(40, 167, 69, 0.8));">
-                    <span style="font-size: 0.8em;">캐릭터</span>
-                </button>
-                <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
-                    전체 캐릭터 목록을 확인하고<br>원하는 캐릭터를 선택합니다.
-                </div>
+              <button id="landing-char-list-btn"
+                style="width: 100px; height: 70px; padding: 8px; background: rgba(40, 167, 69, 0.15); color: #74c67a; border: 1px solid #28a745; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0;">
+                <img src="icon/main-m.png"
+                  style="width: 26px; height: 26px; filter: drop-shadow(0 0 8px rgba(40, 167, 69, 0.8));">
+                <span style="font-size: 0.8em;">캐릭터</span>
+              </button>
+              <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
+                전체 캐릭터 목록을 확인하고<br>원하는 캐릭터를 선택합니다.
+              </div>
             </div>
 
             <!-- Hero Row -->
             <div style="display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px;">
-                <button id="landing-hero-btn" style="width: 100px; height: 70px; padding: 8px; background: rgba(111, 66, 193, 0.2); color: #c3a6ff; border: 1px solid #6f42c1; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0;">
-                    <img src="icon/compe-m.png" style="width: 32px; height: 32px; filter: drop-shadow(0 0 8px rgba(111, 66, 193, 0.8));">
-                    <span style="font-size: 0.8em;">딜량 비교</span>
-                </button>
-                <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
-                    저장한 캐릭터들의 딜표를<br>한눈에 비교하고 분석합니다.
-                </div>
+              <button id="landing-hero-btn"
+                style="width: 100px; height: 70px; padding: 8px; background: rgba(111, 66, 193, 0.2); color: #c3a6ff; border: 1px solid #6f42c1; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0;">
+                <img src="icon/compe-m.png"
+                  style="width: 32px; height: 32px; filter: drop-shadow(0 0 8px rgba(111, 66, 193, 0.8));">
+                <span style="font-size: 0.8em;">딜량 비교</span>
+              </button>
+              <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
+                저장한 캐릭터들의 딜표를<br>한눈에 비교하고 분석합니다.
+              </div>
             </div>
-                                
+
             <!-- Sim Row -->
             <div style="display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px;">
-                <button id="landing-sim-btn" style="width: 100px; height: 70px; padding: 8px; background: rgba(111, 66, 193, 0.2); color: #c3a6ff; border: 1px solid #6f42c1; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0;">
-                    <img src="icon/simul-m.png" style="width: 36px; height: 36px; filter: drop-shadow(0 0 8px rgba(111, 66, 193, 0.8));">
-                    <span style="font-size: 0.8em;">시뮬레이터</span>
-                </button>
-                <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
-                    행동 패턴을 직접 설정하여<br>기대 딜량을 분석합니다.
-                </div>
+              <button id="landing-sim-btn"
+                style="width: 100px; height: 70px; padding: 8px; background: rgba(111, 66, 193, 0.2); color: #c3a6ff; border: 1px solid #6f42c1; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0;">
+                <img src="icon/simul-m.png"
+                  style="width: 36px; height: 36px; filter: drop-shadow(0 0 8px rgba(111, 66, 193, 0.8));">
+                <span style="font-size: 0.8em;">시뮬레이터</span>
+              </button>
+              <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
+                행동 패턴을 직접 설정하여<br>기대 딜량을 분석합니다.
+              </div>
             </div>
-            
+
             <!-- Cloud Save Row -->
             <div style="display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px;">
-                <button id="landing-cloud-btn" style="width: 100px; height: 70px; padding: 8px; background: rgba(0, 123, 255, 0.15); border: 1px solid #007bff; border-radius: 10px; color: #007bff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0; font-family: inherit;">
-                    <img src="icon/buffer.webp" style="width: 28px; height: 28px; filter: drop-shadow(0 0 8px rgba(0, 123, 255, 0.8));">
-                    <span style="font-size: 0.8em; font-weight: bold;">설정 저장</span>
-                </button>
-                <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
-                    현재 스탯과 기록을 코드로<br>저장하거나 불러올 수 있습니다.
-                </div>
+              <button id="landing-cloud-btn"
+                style="width: 100px; height: 70px; padding: 8px; background: rgba(0, 123, 255, 0.15); border: 1px solid #007bff; border-radius: 10px; color: #007bff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0; font-family: inherit;">
+                <img src="icon/buffer.webp"
+                  style="width: 28px; height: 28px; filter: drop-shadow(0 0 8px rgba(0, 123, 255, 0.8));">
+                <span style="font-size: 0.8em; font-weight: bold;">설정 저장</span>
+              </button>
+              <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
+                현재 스탯과 기록을 코드로<br>저장하거나 불러올 수 있습니다.
+              </div>
             </div>
 
             <!-- Update & Report Row -->
             <div style="display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px;">
-                <button id="landing-report-btn" style="width: 100px; height: 70px; padding: 8px; background: rgba(255, 165, 0, 0.15); border: 1px solid #ffa500; border-radius: 10px; color: #ffa500; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0; font-family: inherit;">
-                    <img src="icon/heal.webp" style="width: 28px; height: 28px; filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.8));">
-                    <span style="font-size: 0.8em; font-weight: bold;">문의하기</span>
-                </button>
-                <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
-                    버그 제보나 건의 사항을<br>개발자에게 직접 전달합니다.
-                </div>
+              <button id="landing-report-btn"
+                style="width: 100px; height: 70px; padding: 8px; background: rgba(255, 165, 0, 0.15); border: 1px solid #ffa500; border-radius: 10px; color: #ffa500; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0; font-family: inherit;">
+                <img src="icon/heal.webp"
+                  style="width: 28px; height: 28px; filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.8));">
+                <span style="font-size: 0.8em; font-weight: bold;">문의하기</span>
+              </button>
+              <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
+                버그 제보나 건의 사항을<br>개발자에게 직접 전달합니다.
+              </div>
             </div>
 
             <!-- Reset Row -->
             <div style="display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px;">
-                <button id="landing-reset-btn" style="width: 100px; height: 70px; padding: 8px; background: rgba(220, 53, 69, 0.15); border: 1px solid #dc3545; border-radius: 10px; color: #dc3545; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0; font-family: inherit;">
-                    <img src="icon/attacker.webp" style="width: 28px; height: 28px; filter: drop-shadow(0 0 8px rgba(220, 53, 69, 0.8));">
-                    <span style="font-size: 0.8em; font-weight: bold;">초기화</span>
-                </button>
-                <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
-                    모든 캐릭터 스탯과 기록을<br>완전히 삭제하고 초기화합니다.
-                </div>
+              <button id="landing-reset-btn"
+                style="width: 100px; height: 70px; padding: 8px; background: rgba(220, 53, 69, 0.15); border: 1px solid #dc3545; border-radius: 10px; color: #dc3545; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; flex-shrink: 0; font-family: inherit;">
+                <img src="icon/attacker.webp"
+                  style="width: 28px; height: 28px; filter: drop-shadow(0 0 8px rgba(220, 53, 69, 0.8));">
+                <span style="font-size: 0.8em; font-weight: bold;">초기화</span>
+              </button>
+              <div style="color: #ddd; font-size: 0.8em; text-align: left; line-height: 1.4;">
+                모든 캐릭터 스탯과 기록을<br>완전히 삭제하고 초기화합니다.
+              </div>
             </div>
-        </div>
+          </div>
 
-        <!-- 캐릭터 선택 리스트 영역 (숨김 상태) -->
-        <div id="landing-char-list-area" style="display: none; width: 100%; max-width: 500px; margin: 0 auto; animation: fadeIn 0.3s;">
-            <div style="display: flex; justify-content: flex-start; align-items: center; margin-bottom: 10px; padding: 0 10px;">
-                <button id="landing-char-back-btn" style="background: none; border: none; color: #ccc; font-size: 1.1em; cursor: pointer;">◀ 뒤로가기</button>
+          <!-- 캐릭터 선택 리스트 영역 (숨김 상태) -->
+          <div id="landing-char-list-area"
+            style="display: none; width: 100%; max-width: 500px; margin: 0 auto; animation: fadeIn 0.3s;">
+            <div
+              style="display: flex; justify-content: flex-start; align-items: center; margin-bottom: 10px; padding: 0 10px;">
+              <button id="landing-char-back-btn"
+                style="background: none; border: none; color: #ccc; font-size: 1.1em; cursor: pointer;">◀ 뒤로가기</button>
             </div>
             <div id="landing-char-grid">
-                <!-- JS에서 동적으로 채움 -->
+              <!-- JS에서 동적으로 채움 -->
             </div>
-        </div>
-
-
-        <div style="position: absolute; bottom: -35px; right: 10px;">
-            <span style="font-size: 0.6em; color: #888; margin-right: 3px;">최근 업데이트</span>
-            <span style="font-weight: bold; font-size: 0.7em; color: #aaa;">2026-03-04</span>
-        </div>
-    </div>
-
-    <!-- 시뮬레이터 페이지 영역 -->
-    <div id="simulator-page" style="display: none; text-align: left; margin-top: 0; width: 100%;">
-        <div class="hero-tab-tag">
-            <div class="hero-tag-content">캐릭터 시뮬레이터</div>
-        </div>
-        <div class="hero-graph-container" style="background: #fffbf5; border: 1px solid #eee0d0; border-radius: 8px; padding: 20px; color: #333; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.1); margin-top: 0;">
-            <div id="simulator-content"></div>
-        </div>
-    </div>
-
-    <div id="new-section-area" style="display: none;">
-      <!-- 동적으로 캐릭터 스킬 정보 등이 렌더링됩니다 -->
-    </div>
-
-    <!-- 적용 버프 섹션 -->
-    <div id="buff-application-area" style="display: none;">
-      
-      <!-- Tab Header -->
-      <div style="display: flex; align-items: flex-end; margin-top: -46px; margin-bottom: 15px; margin-left: 0px;">
-          <div style="background: #30363d; color: #ffa500; font-size: 0.75em; font-weight: bold; padding: 6px 16px; border-radius: 8px 8px 0 0; border: 1px solid #444; border-bottom: none; z-index: 1; box-shadow: 0 -3px 6px rgba(0,0,0,0.3);">적용 버프</div>
-      </div>
-
-      <!-- Header Row: Reset Button + Search Input -->
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; position: relative;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-              <button id="reset-buffs-btn" style="padding: 2px 8px; font-size: 0.7em; background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; color: #666;">초기화</button>
           </div>
-          
-          <!-- Search Input Container -->
-          <div style="position: relative; width: 50%;">
-              <input type="text" id="buff-char-search" placeholder="캐릭터 이름을 입력" style="width: 100%; padding: 6px 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 0.9em; box-sizing: border-box; outline: none;">
-              
+
+
+          <div style="position: absolute; bottom: -35px; right: 10px;">
+            <span style="font-size: 0.6em; color: #888; margin-right: 3px;">최근 업데이트</span>
+            <span style="font-weight: bold; font-size: 0.7em; color: #aaa;">2026-03-13</span>
+          </div>
+        </div>
+
+        <!-- 시뮬레이터 페이지 영역 -->
+        <div id="simulator-page" style="display: none; text-align: left; margin-top: 0; width: 100%;">
+          <div class="hero-tab-tag">
+            <div class="hero-tag-content">캐릭터 시뮬레이터</div>
+          </div>
+          <div class="hero-graph-container"
+            style="background: #fffbf5; border: 1px solid #eee0d0; border-radius: 8px; padding: 20px; color: #333; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.1); margin-top: 0;">
+            <div id="simulator-content"></div>
+          </div>
+        </div>
+
+        <div id="new-section-area" style="display: none;">
+          <!-- 동적으로 캐릭터 스킬 정보 등이 렌더링됩니다 -->
+        </div>
+
+        <!-- 적용 버프 섹션 -->
+        <div id="buff-application-area" style="display: none;">
+
+          <!-- Tab Header -->
+          <div style="display: flex; align-items: flex-end; margin-top: -46px; margin-bottom: 15px; margin-left: 0px;">
+            <div
+              style="background: #30363d; color: #ffa500; font-size: 0.75em; font-weight: bold; padding: 6px 16px; border-radius: 8px 8px 0 0; border: 1px solid #444; border-bottom: none; z-index: 1; box-shadow: 0 -3px 6px rgba(0,0,0,0.3);">
+              적용 버프</div>
+          </div>
+
+          <!-- Header Row: Reset Button + Search Input -->
+          <div
+            style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; position: relative;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button id="reset-buffs-btn"
+                style="padding: 2px 8px; font-size: 0.7em; background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; color: #666;">초기화</button>
+            </div>
+
+            <!-- Search Input Container -->
+            <div style="position: relative; width: 50%;">
+              <input type="text" id="buff-char-search" placeholder="캐릭터 이름을 입력"
+                style="width: 100%; padding: 6px 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 0.9em; box-sizing: border-box; outline: none;">
+
               <!-- Search Results (Dropdown) -->
-              <div id="buff-search-results" style="display: none; position: absolute; top: 105%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 8px; background-color: #fff; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+              <div id="buff-search-results"
+                style="display: none; position: absolute; top: 105%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 8px; background-color: #fff; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                 <!-- 검색 결과가 여기에 표시됩니다 -->
               </div>
+            </div>
           </div>
-      </div>
 
-      <!-- Currently Applied Buffs Display -->
-      <div id="currently-applied-buffs" style="margin-top: 5px; padding-top: 5px; border-top: 1px solid #e0e0e0;">
-        <div id="applied-buffs-list">
-            <!-- 적용된 버프 스킬이 여기에 표시됩니다 -->
+          <!-- Currently Applied Buffs Display -->
+          <div id="currently-applied-buffs" style="margin-top: 5px; padding-top: 5px; border-top: 1px solid #e0e0e0;">
+            <div id="applied-buffs-list">
+              <!-- 적용된 버프 스킬이 여기에 표시됩니다 -->
+            </div>
+          </div>
+
+          <div id="buff-skill-selection-area"
+            style="border: 1px solid #eee; border-radius: 5px; background-color: #fff; padding: 10px; min-height: 100px; display: none;">
+            <!-- 선택된 캐릭터의 스킬이 여기에 표시됩니다 -->
+          </div>
         </div>
+
+        <!-- 스킬 섹션 (2열 그리드) -->
+        <div id="skill-container" class="skill-grid" style="display: none;"></div>
       </div>
 
-      <div id="buff-skill-selection-area" style="border: 1px solid #eee; border-radius: 5px; background-color: #fff; padding: 10px; min-height: 100px; display: none;">
-        <!-- 선택된 캐릭터의 스킬이 여기에 표시됩니다 -->
-      </div>
     </div>
 
-    <!-- 스킬 섹션 (2열 그리드) -->
-    <div id="skill-container" class="skill-grid" style="display: none;"></div>
-  </div>
+    <!-- ▼▼▼ 외부 데이터 파일 로드 ▼▼▼ -->
 
-</div>
-
-<!-- ▼▼▼ 외부 데이터 파일 로드 ▼▼▼ -->
-
-<!-- 설정 저장 모달 -->
-<div id="cloud-save-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
+    <!-- 설정 저장 모달 -->
+    <div id="cloud-save-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
         <h3 style="margin-top: 0; color: #333;">💾 설정 저장 및 불러오기</h3>
-        <p style="font-size: 0.85em; color: #666; margin-bottom: 15px; line-height: 1.4;">현재 설정된 스탯과 딜표를 서버에 저장하여 코드를 발급받거나, 발급받은 코드로 데이터를 복원할 수 있습니다.</p>
-        
+        <p style="font-size: 0.85em; color: #666; margin-bottom: 15px; line-height: 1.4;">현재 설정된 스탯과 딜표를 서버에 저장하여 코드를
+          발급받거나, 발급받은 코드로 데이터를 복원할 수 있습니다.</p>
+
         <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-            <button id="cloud-save-btn" style="flex: 1; padding: 10px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9em;">
-                현재 설정으로 코드 발급
-            </button>
+          <button id="cloud-save-btn"
+            style="flex: 1; padding: 10px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9em;">
+            현재 설정으로 코드 발급
+          </button>
         </div>
 
         <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-            <input type="text" id="cloud-load-id" placeholder="코드 8자리 숫자" style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9em; outline: none; color: #333; background: #fff;">
-            <button id="cloud-load-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
-                불러오기
-            </button>
+          <input type="text" id="cloud-load-id" placeholder="코드 8자리 숫자"
+            style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9em; outline: none; color: #333; background: #fff;">
+          <button id="cloud-load-btn"
+            style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+            불러오기
+          </button>
         </div>
 
         <!-- 발급된 코드 표시 영역 -->
-        <div id="cloud-issued-code-area" style="display: none; background: #f0f7ff; border: 1px dashed #007bff; border-radius: 6px; padding: 10px; text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 0.75em; color: #666; margin-bottom: 4px;">발급된 공유 코드</div>
-            <div id="cloud-issued-code-val" style="font-family: monospace; font-size: 1.4em; font-weight: bold; color: #007bff; letter-spacing: 2px;">00000000</div>
-            <div style="font-size: 0.7em; color: #888; margin-top: 4px;">위 코드를 복사하여 공유하세요.</div>
+        <div id="cloud-issued-code-area"
+          style="display: none; background: #f0f7ff; border: 1px dashed #007bff; border-radius: 6px; padding: 10px; text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 0.75em; color: #666; margin-bottom: 4px;">발급된 공유 코드</div>
+          <div id="cloud-issued-code-val"
+            style="font-family: monospace; font-size: 1.4em; font-weight: bold; color: #007bff; letter-spacing: 2px;">
+            00000000</div>
+          <div style="font-size: 0.7em; color: #888; margin-top: 4px;">위 코드를 복사하여 공유하세요.</div>
         </div>
 
         <div style="display: flex; justify-content: flex-end;">
-            <button id="cloud-modal-close-btn" style="padding: 8px 16px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">닫기</button>
+          <button id="cloud-modal-close-btn"
+            style="padding: 8px 16px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">닫기</button>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- 이용자 제보 플로팅 버튼 -->
-<button id="report-open-btn" title="버그 제보 및 문의" style="position: fixed; bottom: 20px; right: 20px; width: 44px; height: 44px; border-radius: 50%; background: #ffa500; color: white; border: none; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999; display: flex; align-items: center; justify-content: center;">📝</button>
+    <!-- 이용자 제보 플로팅 버튼 -->
+    <button id="report-open-btn" title="버그 제보 및 문의"
+      style="position: fixed; bottom: 20px; right: 20px; width: 44px; height: 44px; border-radius: 50%; background: #ffa500; color: white; border: none; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999; display: flex; align-items: center; justify-content: center;">📝</button>
 
-<!-- 제보 모달 -->
-<div id="report-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
+    <!-- 제보 모달 -->
+    <div id="report-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
         <h3 style="margin-top: 0; color: #333;">📢 버그 제보 및 건의</h3>
-        <textarea id="report-text" maxlength="200" placeholder="오류 내용이나 개선 사항을 자유롭게 적어주세요. (최대 200자)" style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: none; font-family: inherit; margin-bottom: 5px;"></textarea>
-        <div id="char-count" style="text-align: right; font-size: 0.75em; color: #888; margin-bottom: 10px;">0 / 200</div>
+        <textarea id="report-text" maxlength="200" placeholder="오류 내용이나 개선 사항을 자유롭게 적어주세요. (최대 200자)"
+          style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: none; font-family: inherit; margin-bottom: 5px;"></textarea>
+        <div id="char-count" style="text-align: right; font-size: 0.75em; color: #888; margin-bottom: 10px;">0 / 200
+        </div>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button id="report-close-btn" style="padding: 8px 16px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">취소</button>
-            <button id="report-submit-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">보내기</button>
+          <button id="report-close-btn"
+            style="padding: 8px 16px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">취소</button>
+          <button id="report-submit-btn"
+            style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">보내기</button>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- 캐릭터 보고서 모달 -->
-<div id="char-report-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content" style="max-width: 600px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; padding: 10px; position: relative;">
-        <button id="report-modal-top-close-btn" style="position: absolute; top: 10px; right: 22px; font-size: 28px; cursor: pointer; background: none; border: none; color: white; z-index: 10; line-height: 1; text-shadow: 0 0 5px rgba(0,0,0,0.5);">&times;</button>
-        <div id="report-modal-body" style="flex: 1; overflow-y: auto; min-height: 200px; font-size: 0.9em; line-height: 1.6; color: #444; border-radius: 4px; padding-top: 0; scrollbar-width: thin;">
-            <!-- 보고서 내용이 여기에 들어갑니다 -->
+    <!-- 캐릭터 보고서 모달 -->
+    <div id="char-report-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-content"
+        style="max-width: 600px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; padding: 10px; position: relative;">
+        <button id="report-modal-top-close-btn"
+          style="position: absolute; top: 10px; right: 22px; font-size: 28px; cursor: pointer; background: none; border: none; color: white; z-index: 10; line-height: 1; text-shadow: 0 0 5px rgba(0,0,0,0.5);">&times;</button>
+        <div id="report-modal-body"
+          style="flex: 1; overflow-y: auto; min-height: 200px; font-size: 0.9em; line-height: 1.6; color: #444; border-radius: 4px; padding-top: 0; scrollbar-width: thin;">
+          <!-- 보고서 내용이 여기에 들어갑니다 -->
         </div>
+      </div>
     </div>
-</div>
 
-<script type="module" src="main.js?v=20260119"></script>
+    <script type="module" src="main.js?v=20260313"></script>
 
 </body>
+
 </html>

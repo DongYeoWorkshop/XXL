@@ -50,7 +50,19 @@ export function getSkillValue(charData, stats, skillIdx, effectKey, isStamp = fa
             }
             // [수정] 아이콘 이름, isStamp 인자, 그리고 isUltExtra 여부를 모두 확인
             const useStampVal = isStamp || isStampIcon || forceStamp;
-            e = (typeof calcItem === 'object') ? (useStampVal ? (calcItem.stampMax || calcItem.max) : calcItem.max) : calcItem;
+            
+            if (typeof calcItem === 'object') {
+                // [수정] fixed 또는 stampFixed가 있으면 우선 사용, 없으면 max/stampMax 사용
+                if (useStampVal) {
+                    e = (calcItem.stampFixed !== undefined) ? calcItem : (calcItem.stampMax !== undefined ? calcItem : (calcItem.fixed !== undefined ? calcItem : calcItem.max));
+                } else {
+                    e = (calcItem.fixed !== undefined) ? calcItem : calcItem.max;
+                }
+                // 만약 e가 여전히 undefined면 calcItem 자체를 반환
+                if (e === undefined) e = calcItem;
+            } else {
+                e = calcItem;
+            }
         }
     } else {
         const effects = (isStamp || forceStamp) ? (skill.stampBuffEffects || {}) : (skill.buffEffects || {});
@@ -67,28 +79,41 @@ export function getSkillValue(charData, stats, skillIdx, effectKey, isStamp = fa
     
     // [수정] 메인 계산기와 동일하게 엄격한 속성 체크 적용
     let val = 0;
+    let isFixedVal = false;
+    
     if (typeof e === 'object' && e !== null) {
         // [수정] forceStamp도 고려하여 도장 수치 적용
         if (isStamp || forceStamp) {
-            // stampMax가 없으면 max를 차선책으로 선택
-            val = e.stampMax !== undefined ? e.stampMax : (e.max !== undefined ? e.max : (e.stampFixed !== undefined ? e.stampFixed : (e.fixed || e.attributeMax || 0)));
+            if (e.stampFixed !== undefined) {
+                val = e.stampFixed;
+                isFixedVal = true;
+            } else if (e.fixed !== undefined) {
+                val = e.fixed;
+                isFixedVal = true;
+            } else {
+                val = e.stampMax !== undefined ? e.stampMax : (e.max !== undefined ? e.max : (e.attributeMax || 0));
+            }
         } else {
-            if (e.targetAttribute !== undefined) {
+            if (e.fixed !== undefined) {
+                val = e.fixed;
+                isFixedVal = true;
+            } else if (e.targetAttribute !== undefined) {
                 if (charData.info.속성 === e.targetAttribute) {
                     val = e.attributeMax || e.max || 0;
                 } else {
-                    // 속성이 맞지 않는데 별도의 기본 수치(attributeMax)가 정의되어 있지 않다면 0점 처리
                     val = e.attributeMax !== undefined ? e.max : 0;
                 }
             } else {
-                val = e.max || e.fixed || 0;
+                val = e.max || 0;
             }
         }
     } else {
         val = e || 0;
     }
     
-    // [수정] 개별 startRate가 있는지 확인하여 배율(rate) 결정
+    // [수정] 고정 수치(fixed)가 아닐 때만 배율(rate) 결정 및 적용
+    if (isFixedVal) return Number(val) || 0;
+
     let finalRate = rate;
     if (typeof e === 'object' && e !== null) {
         const specificStartRate = isStamp ? (e.stampStartRate ?? e.startRate) : e.startRate;
@@ -260,6 +285,19 @@ export function createSimulationContext(baseData) {
             return "";
         },
 
+        // [v2 전용] 즉시 데미지 실행
+        execHit: (event) => {
+            const idx = ctx.getSkillIdx(event.originalId || event.skillId);
+            const valKey = event.valKey !== undefined ? event.valKey : '추가공격';
+            const val = event.val !== undefined ? event.val : (event.valIdx !== undefined ? ctx.getVal(idx, event.valIdx) : ctx.getVal(idx, valKey));
+            
+            // 엔진에서 주입해줄 프로세서(onExecHit) 호출
+            if (ctx.onExecHit) {
+                const hitInfo = { ...event, val };
+                ctx.onExecHit(hitInfo);
+            }
+        },
+
         applyHit: (skillParam, val) => {
             const { prob, label, originalId, skipTrigger, customTag, scaleProb, startRate, icon, hitType } = skillParam;
             
@@ -290,11 +328,13 @@ export function createSimulationContext(baseData) {
         },
 
         gainStack: (skillParam, chance) => {
-            const { maxStacks, label, originalId, customTag } = skillParam;
+            const { maxStacks, label, originalId, customTag, val } = skillParam;
             // [수정] 자동 접미사 제거: id를 그대로 키로 사용
             const stateKey = skillParam.stateKey || skillParam.id;
             if (!stateKey) return "";
-            simState[stateKey] = Math.min(maxStacks, (simState[stateKey] || 0) + 1);
+            
+            const amount = val !== undefined ? val : 1;
+            simState[stateKey] = Math.min(maxStacks, (simState[stateKey] || 0) + amount);
             
             // [수정] 파라미터 객체 전체를 전달하여 태그/아이콘 정보 보존
             return ctx.log(skillParam, label, chance, null, false, customTag);
@@ -377,6 +417,7 @@ export function createSimulationContext(baseData) {
                 }
                 if (typeof c === 'string') {
                     if (c === "isUlt") return !!ctx.isUlt;
+                    if (c === "!isUlt") return !ctx.isUlt;
                     if (c === "isNormal") return !ctx.isUlt && !ctx.isDefend;
                     if (c === "isDefend") return !!ctx.isDefend;
                     if (c === "!isDefend") return !ctx.isDefend;

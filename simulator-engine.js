@@ -2,6 +2,8 @@
 import { calculateDamage, calculateBaseStats, assembleFinalStats } from './calculations.js';
 import { commonControls } from './simulator-common.js';
 import { getStatusInfo, formatStatusMessage, formatStatusAction } from './simulator-status.js';
+import { simCharData } from './sim_data.js';
+import { simDataV2 } from './sim_data2.js';
 import { simParams } from './sim_params.js';
 import { createSimulationContext, getSkillValue } from './sim_ctx.js';
 import { initSupportState, processSupportTurn, processSupportEnemyHit, processSupportAttack, processSupportPostAttack, processSupportAfterHit, processSupportAfterAction, processSupportStepEnd, getSupportBonuses } from './sim_support.js';
@@ -11,8 +13,8 @@ import { getCharacterCommonControls, getDefaultActionPattern } from './simulator
 /**
  * [추가] 시뮬레이션 실행 전 모든 설정 데이터를 수집함 (localStorage 기반)
  */
-export function collectSimulationConfig(charId, charData, simCharData) {
-    const sData = simCharData[charId] || {};
+export function collectSimulationConfig(charId, charData) {
+    const sData = simDataV2[charId] || simCharData[charId] || {};
     const turns = parseInt(localStorage.getItem('sim_last_turns') || "10");
     const iterations = parseInt(localStorage.getItem('sim_last_iters') || "100");
     const targetCount = parseInt(localStorage.getItem(`sim_last_target_${charId}`) || "1");
@@ -41,7 +43,7 @@ export function collectSimulationConfig(charId, charData, simCharData) {
     
     const fetchSupportValues = (sid, slotNum) => {
         if (sid === 'none') return;
-        const sd = simCharData[sid]; if (!sd) return;
+        const sd = simDataV2[sid] || simCharData[sid]; if (!sd) return;
         const ctrlList = [...(sd.customControls || []), ...getCharacterCommonControls(sd.commonControls)];
         ctrlList.forEach(c => {
             const v = localStorage.getItem(`sim_ctrl_${sid}_${c.id}`);
@@ -70,7 +72,8 @@ export function collectSimulationConfig(charId, charData, simCharData) {
     };
 }
 
-export function formatBuffState(charId, state, charDataObj, sData, stats) {
+export function formatBuffState(charId, state, charDataObj, stats) {
+    const sData = simDataV2[charId] || simCharData[charId] || {};
     const entries = [];
     const charParams = simParams[charId] || {};
     const getSkillInfo = (idx) => {
@@ -123,8 +126,9 @@ export function formatBuffState(charId, state, charDataObj, sData, stats) {
 }
 
 export function runSimulationCore(context) {
-    // [수정] supportIds 배열 처리 (구형 호환성을 위해 supportId가 있으면 배열로 변환)
-    let { charId, charData, sData, stats, turns, iterations, targetCount, manualPattern, enemyAttrIdx, customValues, defaultGrowthRate, supportId, supportIds } = context;
+    let { charId, charData, stats, turns, iterations, targetCount, manualPattern, enemyAttrIdx, customValues, defaultGrowthRate, supportId, supportIds } = context;
+    const sData = simDataV2[charId] || simCharData[charId] || {};
+    const isV2 = !!simDataV2[charId];
     
     if (!supportIds) {
         supportIds = supportId ? [supportId] : [];
@@ -158,6 +162,11 @@ export function runSimulationCore(context) {
 
             const isAllyUltTurn = sData.isAllyUltTurn ? sData.isAllyUltTurn(t) : (t > 1 && (t - 1) % 3 === 0);
             const dynCtx = createSimulationContext({ t, turns, charId, charData, stats, baseStats, simState, isUlt, targetCount, isDefend, isAllyUltTurn, customValues, logs, debugLogs: turnDebugLogs, extraPattern: context.extraPattern });
+            
+            // [v2 지원] 즉시 데미지 계산 및 로그 예약 프로세서 주입
+            dynCtx.onExecHit = (hitInfo) => {
+                calculateAndLogHit(hitInfo);
+            };
             
             // [추가] 캐릭터 로직에서 현재 최종 공격력을 스냅샷할 수 있도록 헬퍼 연결
             dynCtx.getAtk = (isMulti = true) => getLatestSubStats(isMulti).atk;
@@ -272,6 +281,9 @@ export function runSimulationCore(context) {
             };
 
             const calculateAndLogHit = (event) => {
+                // [추가] 타입이 stack이면 데미지 계산 및 공격 로그 출력을 생략 (이미 gainStack에서 처리됨)
+                if (event.type === "stack") return;
+
                 // [행동 재실행] 추가행동 시 유저가 설정한 패턴(보통/필살/방어)에 따라 재실행
                 if (event.isActionReplay) {
                     const extraAction = event.extraActionType || 'ult';
@@ -413,7 +425,7 @@ export function runSimulationCore(context) {
                 // 엔진이 현재 performAction에서 설정한 isDefend 상태를 무시하지 못하도록 함
                 if (e.condition && !dynCtx.checkCondition(e.condition)) return;
                 
-                if (e.type === "buff" || e.type === "hit" || (e.type === "action" && e.action === "all_consume") || e.type === "stack") {
+                if (e.type === "buff" || e.type === "hit" || e.type === "action" || e.type === "stack") {
                     if (e.type === "buff") dynCtx.applyBuff(e);
                     else if (e.type === "hit") {
                         const idx = dynCtx.getSkillIdx(e.originalId);
@@ -421,8 +433,12 @@ export function runSimulationCore(context) {
                         const val = e.val !== undefined ? e.val : (e.valIdx !== undefined ? dynCtx.getVal(idx, e.valIdx) : dynCtx.getVal(idx, valKey));
                         const res = dynCtx.applyHit(e, val);
                         if (res) calculateAndLogHit({ ...res, isMulti: e.isMulti });
-                    } else if (e.type === "action" && e.action === "all_consume") {
-                        const key = e.stateKey || (e.id + "_stacks"); dynCtx.simState[key] = 0; dynCtx.log(e, "all_consume");
+                    } else if (e.type === "action") {
+                        if (e.action === "all_consume") {
+                            const key = e.stateKey || (e.id + "_stacks"); dynCtx.simState[key] = 0; dynCtx.log(e, "all_consume");
+                        } else if (typeof e.action === 'function') {
+                            e.action(dynCtx);
+                        }
                     } else if (e.type === "stack") dynCtx.gainStack(e);
                     return;
                 }
@@ -460,7 +476,7 @@ export function runSimulationCore(context) {
                     handleHook('onTurn'); autoExecuteParams(step);
                     turnDebugLogs.forEach(item => detailedLogs.push({ t, ...(typeof item === 'string' ? { type: 'debug', msg: item } : item) }));
                     turnDebugLogs.length = 0;
-                    stateLogs.push(formatBuffState(charId, simState, charData, sData, stats));
+                    stateLogs.push(formatBuffState(charId, simState, charData, stats));
                 } else if (step === 'onCalculateDamage') {
                     handleHook('onCalculateDamage'); autoExecuteParams(step);
                     turnDebugLogs.forEach(item => detailedLogs.push({ t, ...(typeof item === 'string' ? { type: 'debug', msg: item } : item) }));
